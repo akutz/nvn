@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>net.sf</groupId>
+    <artifactId>nvn</artifactId>
+    <packaging>pom</packaging>
+    <name>nvn</name>
+    <version>0.0.1-SNAPSHOT</version>
+    <description>nvn is a new approach to integrating .NET on Windows with the Maven build platform by driving builds with MSBuild and MSTest.</description>
+    <url>http://sourceforge.net/projects/nvn</url>
+    <inceptionYear>2009</inceptionYear>
+    <developers>
+        <developer>
+            <id>0</id>
+            <name>Schley Andrew Kutz</name>
+            <email>sakutz@gmail.com</email>
+            <url>http://akutz.wordpress.com/</url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+</project>
