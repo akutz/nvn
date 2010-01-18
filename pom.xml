@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>net.sf</groupId>
+    <groupId>net.sf.nvn</groupId>
     <artifactId>nvn</artifactId>
     <packaging>pom</packaging>
     <name>nvn</name>
@@ -20,6 +20,12 @@
             </roles>
         </developer>
     </developers>
+    <organization>
+        <name>foo</name>
+    </organization>
+    <modules>
+        <module>nvn-plugins</module>
+    </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
