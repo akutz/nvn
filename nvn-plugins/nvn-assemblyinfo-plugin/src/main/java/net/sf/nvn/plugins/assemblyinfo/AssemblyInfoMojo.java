@@ -2,11 +2,14 @@ package net.sf.nvn.plugins.assemblyinfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -19,22 +22,15 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class AssemblyInfoMojo extends AbstractMojo
 {
     /**
-     * The directory containing the pom.
-     * 
-     * @parameter expression="${basedir}"
-     */
-    private File basedir;
-
-    /**
      * The value used for the AssemblyVersion, AssemblyFileVersion, and
      * AssemblyInformationVersion attributes. The default value is parsed from
      * "project.version". For the first two attributes all characters in the
      * version property after the last digit are stripped from the string in
      * order to comply with .NET version rules.
      * 
-     * @parameter expression="${project.version}"
+     * @parameter expression="${project.version}" default-value="0.0.0.0"
      */
-    private String version;
+    String version;
 
     /**
      * The value used for the AssemblyTitle and AssemblyProduct (which is formed
@@ -43,7 +39,7 @@ public class AssemblyInfoMojo extends AbstractMojo
      * 
      * @parameter expression="${project.name}"
      */
-    private String name;
+    String name;
 
     /**
      * The value used for the AssemblyProduct attribute (which is formed by
@@ -52,7 +48,7 @@ public class AssemblyInfoMojo extends AbstractMojo
      * 
      * @parameter expression="${project.organization.name}"
      */
-    private String company;
+    String company;
 
     /**
      * The value used for the AssemblyDescription attribute. The default value
@@ -60,54 +56,15 @@ public class AssemblyInfoMojo extends AbstractMojo
      * 
      * @parameter expression="${project.description}"
      */
-    private String description;
+    String description;
 
     /**
      * The location of the .NET AssemblyInfo file to output.
      * 
      * @parameter expression="${assemblyinfo.outputfile}"
+     *            default-value="${basedir}/Properties/AssemblyInfo.cs"
      */
-    private File outputFile;
-
-    /**
-     * Gets the directory containing the pom.
-     * 
-     * @return The directory containing the pom.
-     */
-    public File getBasedir()
-    {
-        return this.basedir;
-    }
-
-    /**
-     * Sets the directory containing the pom.
-     * 
-     * @param toSet The directory containing the pom.
-     */
-    public void setBasedir(File toSet)
-    {
-        this.basedir = toSet;
-    }
-
-    /**
-     * Gets the location of the .NET AssemblyInfo file to output.
-     * 
-     * @return The location of the .NET AssemblyInfo file to output.
-     */
-    public File getOutputFile()
-    {
-        return this.outputFile;
-    }
-
-    /**
-     * Sets the location of the .NET AssemblyInfo file to output.
-     * 
-     * @param outputFile The location of the .NET AssemblyInfo file to output.
-     */
-    public void setOutputFile(File toSet)
-    {
-        this.outputFile = toSet;
-    }
+    File outputFile;
 
     /**
      * The .NET assembly's GUID. If left blank then a random GUID will be
@@ -115,186 +72,33 @@ public class AssemblyInfoMojo extends AbstractMojo
      * 
      * @parameter expression="${assemblyinfo.guid}"
      */
-    private String guid;
+    String guid;
 
     /**
-     * Gets the .NET assembly's GUID. If left blank then a random GUID will be
-     * generated when the plug-in is executed.
-     * 
-     * @return The .NET assembly's GUID.
+     * The type of the output file that will be created.
      */
-    public String getGuid()
-    {
-        return this.guid;
-    }
+    OutputFileType outputFileType;
 
     /**
-     * Sets the .NET assembly's GUID. If left blank then a random GUID will be
-     * generated when the plug-in is executed.
-     * 
-     * @param toSet The .NET assembly's GUID.
+     * The safe version.
      */
-    public void setGuid(String toSet)
-    {
-        this.guid = toSet;
-    }
-
-    /**
-     * Gets the value used for the AssemblyVersion, AssemblyFileVersion, and
-     * AssemblyInformationVersion attributes. The default value is parsed from
-     * "project.version". For the first two attributes all characters in the
-     * version property after the last digit are stripped from the string in
-     * order to comply with .NET version rules.
-     * 
-     * @return The value used for the AssemblyVersion, AssemblyFileVersion, and
-     *         AssemblyInformationVersion attributes. The default value is
-     *         parsed from "project.version". For the first two attributes all
-     *         characters in the version property after the last digit are
-     *         stripped from the string in order to comply with .NET version
-     *         rules.
-     */
-    public String getVersion()
-    {
-        return this.version;
-    }
-
-    /**
-     * Sets the value used for the AssemblyVersion, AssemblyFileVersion, and
-     * AssemblyInformationVersion attributes. The default value is parsed from
-     * "project.version". For the first two attributes all characters in the
-     * version property after the last digit are stripped from the string in
-     * order to comply with .NET version rules.
-     * 
-     * @param toSet The value used for the AssemblyVersion, AssemblyFileVersion,
-     *        and AssemblyInformationVersion attributes. The default value is
-     *        parsed from "project.version". For the first two attributes all
-     *        characters in the version property after the last digit are
-     *        stripped from the string in order to comply with .NET version
-     *        rules.
-     */
-    public void setVersion(String toSet)
-    {
-        this.version = toSet;
-    }
-
-    /**
-     * Gets the value used for the AssemblyTitle and AssemblyProduct (which is
-     * formed by combining this class's "company" and "name" properties
-     * separated by a space) attributes. The default value is parsed from
-     * "project.name".
-     * 
-     * @return The value used for the AssemblyTitle and AssemblyProduct (which
-     *         is formed by combining this class's "company" and "name"
-     *         properties separated by a space) attributes. The default value is
-     *         parsed from "project.name".
-     */
-    public String getName()
-    {
-        return this.name;
-    }
-
-    /**
-     * Sets the value used for the AssemblyTitle and AssemblyProduct (which is
-     * formed by combining this class's "company" and "name" properties
-     * separated by a space) attributes. The default value is parsed from
-     * "project.name".
-     * 
-     * @param toSet The value used for the AssemblyTitle and AssemblyProduct
-     *        (which is formed by combining this class's "company" and "name"
-     *        properties separated by a space) attributes. The default value is
-     *        parsed from "project.name".
-     */
-    public void setName(String toSet)
-    {
-        this.name = toSet;
-    }
-
-    /**
-     * Gets the value used for the AssemblyProduct attribute (which is formed by
-     * combining this class's "company" and "name" properties separated by a
-     * space). The default value is parsed from "project.organization.name".
-     * 
-     * @return The value used for the AssemblyProduct attribute (which is formed
-     *         by combining this class's "company" and "name" properties
-     *         separated by a space). The default value is parsed from
-     *         "project.organization.name".
-     */
-    public String getCompany()
-    {
-        return this.company;
-    }
-
-    /**
-     * Sets the value used for the AssemblyProduct attribute (which is formed by
-     * combining this class's "company" and "name" properties separated by a
-     * space). The default value is parsed from "project.organization.name".
-     * 
-     * @param toSet The value used for the AssemblyProduct attribute (which is
-     *        formed by combining this class's "company" and "name" properties
-     *        separated by a space). The default value is parsed from
-     *        "project.organization.name".
-     */
-    public void setCompany(String toSet)
-    {
-        this.company = toSet;
-    }
-
-    /**
-     * Gets the value used for the AssemblyDescription attribute. The default
-     * value is parsed from "project.description".
-     * 
-     * @return The value used for the AssemblyDescription attribute. The default
-     *         value is parsed from "project.description".
-     */
-    public String getDescription()
-    {
-        return this.description;
-    }
-
-    /**
-     * Sets the value used for the AssemblyDescription attribute. The default
-     * value is parsed from "project.description".
-     * 
-     * @param toSet The value used for the AssemblyDescription attribute. The
-     *        default value is parsed from "project.description".
-     */
-    public void setDescription(String toSet)
-    {
-        this.description = toSet;
-    }
+    String safeVersion;
 
     public void execute() throws MojoExecutionException
     {
-        String outputFileType = getOutputFileType();
+        createOutputDirectories();
 
-        String outputFilePath =
-            this.basedir.getAbsolutePath() + "/" + outputFile.getPath();
-        File basedirAndOutputFile = new File(outputFilePath);
+        parseOutputFileType();
 
-        File outputDir =
-            new File(FilenameUtils.getFullPath(basedirAndOutputFile.getPath()));
+        parseSafeVersion();
 
-        // Create the directory specified in the outputFile path.
-        if (!outputDir.exists() && !outputDir.mkdirs())
-        {
-            throw new MojoExecutionException("Error creating output directory "
-                + outputDir.getAbsolutePath());
-        }
+        parseGuid();
 
-        String assemblyInfoText = null;
-
-        if (outputFileType.equals("cs"))
-        {
-            assemblyInfoText = createCSharpAssemblyInfoText();
-        }
-        else if (outputFileType.equals("vb"))
-        {
-            assemblyInfoText = createVisualBasicAssemblyInfoText();
-        }
+        String assemblyInfoText = createAssemblyInfoText();
 
         try
         {
-            FileUtils.writeStringToFile(basedirAndOutputFile, assemblyInfoText);
+            FileUtils.writeStringToFile(this.outputFile, assemblyInfoText);
         }
         catch (IOException e)
         {
@@ -303,149 +107,135 @@ public class AssemblyInfoMojo extends AbstractMojo
         }
     }
 
-    public static String parseSafeVersion(String unsafeVersion)
+    public void createOutputDirectories() throws MojoExecutionException
     {
-        Pattern p = Pattern.compile("(?:\\d|\\.)+");
-        Matcher m = p.matcher(unsafeVersion);
+        File outputDir =
+            new File(FilenameUtils.getFullPath(this.outputFile
+                .getAbsolutePath()));
 
-        if (m.find())
+        // Create the directory specified in the outputFile path.
+        if (!outputDir.exists() && !outputDir.mkdirs())
         {
-            return m.group();
-        }
-        else
-        {
-            return null;
+            throw new MojoExecutionException("Error creating output directory "
+                + outputDir.getAbsolutePath());
         }
     }
 
-    public String getOutputFileType() throws MojoExecutionException
+    public void parseGuid()
     {
-        if (this.outputFile == null)
+        if (StringUtils.isEmpty(this.guid))
         {
-            this.outputFile = new File("Properties/AssemblyInfo.cs");
+            this.guid = UUID.randomUUID().toString();
         }
+    }
 
+    public void parseSafeVersion() throws MojoExecutionException
+    {
+        Pattern p = Pattern.compile("(?:\\d|\\.)+");
+        Matcher m = p.matcher(this.version);
+
+        if (m.find())
+        {
+            this.safeVersion = m.group();
+        }
+        else
+        {
+            throw new MojoExecutionException("Error parsing safe version from "
+                + this.version);
+        }
+    }
+
+    public void parseOutputFileType() throws MojoExecutionException
+    {
         String filename = this.outputFile.getName();
 
         // Get the output file's type.
-        String outputFileType =
-            FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename);
 
-        if (!(outputFileType.equals("cs") || outputFileType.equals("vb")))
+        if (extension.equalsIgnoreCase("cs"))
+        {
+            this.outputFileType = OutputFileType.CSharp;
+        }
+        else if (extension.equalsIgnoreCase("vb"))
+        {
+            this.outputFileType = OutputFileType.VisualBasic;
+        }
+        else
         {
             throw new MojoExecutionException(
                 "The parameter outputFile's file type/extension "
                     + "must be either \"cs\" (C#) or \"vb\" (VisualBasic).");
         }
-
-        return outputFileType;
     }
 
-    public String createCSharpAssemblyInfoText()
+    private void outImport(Writer out, String toWrite) throws IOException
     {
-        StringBuilder out = new StringBuilder();
-
-        out.append("using System.Reflection;\r\n");
-        out.append("using System.Runtime.InteropServices;\r\n\r\n");
-
-        if (this.name != null && !this.name.equals(""))
+        if (this.outputFileType == OutputFileType.CSharp)
         {
-            out.append("[assembly : AssemblyTitle(\"" + this.name + "\")]\r\n");
-
-            if (this.company != null && !this.company.equals(""))
-            {
-                out.append("[assembly : AssemblyProduct(\"" + this.company
-                    + " " + this.name + "\")]\r\n");
-            }
+            out.write("using " + toWrite + ";\r\n");
         }
-
-        if (this.description != null && !this.description.equals(""))
+        else if (this.outputFileType == OutputFileType.VisualBasic)
         {
-            out.append("[assembly : AssemblyDescription(\"" + this.description
-                + "\")]\r\n");
+            out.write("Imports " + toWrite + "\r\n");
         }
-
-        if (this.guid == null || this.guid.equals(""))
-        {
-            this.guid = UUID.randomUUID().toString();
-        }
-
-        out.append("[assembly : Guid(\"" + this.guid + "\")]\r\n");
-
-        if (this.version != null && !this.version.equals(""))
-        {
-            String safeVersion = parseSafeVersion(this.version);
-
-            if (safeVersion == null)
-            {
-                safeVersion = "0.0.0.1";
-                version = "0.0.0.1";
-            }
-
-            out.append("[assembly : AssemblyVersion(\"" + safeVersion
-                + "\")]\r\n");
-
-            out.append("[assembly : AssemblyFileVersion(\"" + safeVersion
-                + "\")]\r\n");
-            out.append("[assembly : AssemblyInformationalVersionAttribute(\""
-                + version + "\")]");
-
-        }
-
-        return out.toString();
     }
 
-    public String createVisualBasicAssemblyInfoText()
+    private void outAttr(Writer out, String toWrite) throws IOException
     {
-        StringBuilder out = new StringBuilder();
-
-        out.append("Imports System.Reflection\r\n");
-        out.append("Imports System.Runtime.InteropServices\r\n\r\n");
-
-        if (this.name != null && !this.name.equals(""))
+        if (this.outputFileType == OutputFileType.CSharp)
         {
-            out.append("<Assembly : AssemblyTitle(\"" + this.name + "\")>\r\n");
+            out.write("[assembly : " + toWrite + "]\r\n");
+        }
+        else if (this.outputFileType == OutputFileType.VisualBasic)
+        {
+            out.write("<Assembly : " + toWrite + ">\r\n");
+        }
+    }
 
-            if (this.company != null && !this.company.equals(""))
+    public String createAssemblyInfoText() throws MojoExecutionException
+    {
+        try
+        {
+            StringWriter out = new StringWriter();
+
+            outImport(out, "System.Reflection");
+            outImport(out, "System.Runtime.InteropServices");
+
+            out.write("\r\n");
+
+            if (StringUtils.isNotEmpty(this.name))
             {
-                out.append("<Assembly : AssemblyProduct(\"" + this.company
-                    + " " + this.name + "\")>\r\n");
-            }
-        }
+                outAttr(out, "AssemblyTitle(\"" + this.name + "\")");
 
-        if (this.description != null && !this.description.equals(""))
-        {
-            out.append("<Assembly : AssemblyDescription(\"" + this.description
-                + "\")>\r\n");
-        }
-
-        if (this.guid == null || this.guid.equals(""))
-        {
-            this.guid = UUID.randomUUID().toString();
-        }
-
-        out.append("<Assembly : Guid(\"" + this.guid + "\")>\r\n");
-
-        if (this.version != null && !this.version.equals(""))
-        {
-            String safeVersion = parseSafeVersion(this.version);
-
-            if (safeVersion == null)
-            {
-                safeVersion = "0.0.0.1";
-                version = "0.0.0.1";
+                if (StringUtils.isNotEmpty(this.company))
+                {
+                    outAttr(out, "AssemblyProduct(\"" + this.company + " "
+                        + this.name + "\")");
+                }
             }
 
-            out.append("<Assembly : AssemblyVersion(\"" + safeVersion
-                + "\")>\r\n");
+            if (StringUtils.isNotEmpty(this.description))
+            {
+                outAttr(out, "AssemblyDescription(\"" + this.description
+                    + "\")");
+            }
 
-            out.append("<Assembly : AssemblyFileVersion(\"" + safeVersion
-                + "\")>\r\n");
-            out.append("<Assembly : AssemblyInformationalVersionAttribute(\""
-                + version + "\")>");
+            outAttr(out, "Guid(\"" + this.guid + "\")");
 
+            outAttr(out, "AssemblyVersion(\"" + this.safeVersion + "\")");
+            outAttr(out, "AssemblyFileVersion(\"" + this.safeVersion + "\")");
+            outAttr(out, "AssemblyInformationalVersionAttribute(\""
+                + this.version + "\")");
+
+            out.close();
+
+            return out.toString();
         }
-
-        return out.toString();
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(
+                "Error creating assembly information",
+                e);
+        }
     }
 }
