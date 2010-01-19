@@ -1,0 +1,19 @@
+<component-set>
+    <components>
+        <component>
+            <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
+            </role>
+            <role-hint>nvn</role-hint>
+            <implementation>
+                org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+            </implementation>
+            <configuration>
+                <phases>
+                    <generate-sources>
+                        net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info
+                    </generate-sources>
+                </phases>
+            </configuration>
+        </component>
+    </components>
+</component-set>

@@ -14,13 +14,21 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
- * A MOJO which creates a .NET AssemblyInfo file.
+ * A Maven plug-in for creating .NET assembly information files.
  * 
  * @goal generate-assembly-info
  * @phase generate-sources
+ * @description A Maven plug-in for creating .NET assembly information files.
  */
 public class AssemblyInfoMojo extends AbstractMojo
 {
+    /**
+     * Set to true to skip this plug-in.
+     * 
+     * @parameter expression="${assemblyinfo.skip}" default-value="false"
+     */
+    boolean skip;
+    
     /**
      * The value used for the AssemblyVersion, AssemblyFileVersion, and
      * AssemblyInformationVersion attributes. The default value is parsed from
@@ -86,6 +94,11 @@ public class AssemblyInfoMojo extends AbstractMojo
 
     public void execute() throws MojoExecutionException
     {
+        if (this.skip)
+        {
+            return;
+        }
+        
         createOutputDirectories();
 
         parseOutputFileType();
