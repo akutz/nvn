@@ -1,4 +1,4 @@
-package net.sf.nvn.plugins.assemblyinfo;
+package net.sf.nvn;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class AssemblyInfoMojo extends AbstractMojo
     /**
      * The location of the .NET AssemblyInfo file to output.
      * 
-     * @parameter expression="${assemblyinfo.outputfile}"
+     * @parameter expression="${assemblyinfo.outputFile}"
      *            default-value="${basedir}/Properties/AssemblyInfo.cs"
      */
     File outputFile;

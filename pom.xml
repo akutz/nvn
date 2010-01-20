@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.sf.nvn</groupId>
     <artifactId>nvn</artifactId>
-    <packaging>pom</packaging>
-    <name>nvn</name>
+    <packaging>maven-plugin</packaging>
+    <name>nvn Maven Plug-in</name>
     <version>0.0.1-SNAPSHOT</version>
     <description>nvn is a new approach to integrating .NET on Windows with the Maven build platform by driving builds with MSBuild and MSTest.</description>
     <url>http://sourceforge.net/projects/nvn</url>
@@ -20,13 +20,54 @@
             </roles>
         </developer>
     </developers>
-    <organization>
-        <name>foo</name>
-    </organization>
-    <modules>
-        <module>nvn-plugins</module>
-    </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.commons</groupId>
+        	<artifactId>commons-exec</artifactId>
+        	<version>1.0.1</version>
+        	<type>jar</type>
+        	<scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>

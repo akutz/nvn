@@ -1,4 +1,4 @@
-package net.sf.nvn.plugins.assemblyinfo;
+package net.sf.nvn;
 
 /**
  * The type of AssemblyInfo file to write.

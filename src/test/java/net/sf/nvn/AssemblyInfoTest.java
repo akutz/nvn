@@ -1,4 +1,4 @@
-package net.sf.nvn.plugins.assemblyinfo;
+package net.sf.nvn;
 
 import java.io.File;
 import junit.framework.Assert;
