@@ -15,6 +15,7 @@
     <description>The parent project for nvn plug-ins.</description>
     <modules>
         <module>nvn-assemblyinfo-plugin</module>
+        <module>nvn-msbuild-plugin</module>
     </modules>
     <dependencies>
         <dependency>
