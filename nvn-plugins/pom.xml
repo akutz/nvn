@@ -14,14 +14,36 @@
     <version>0.0.1-SNAPSHOT</version>
     <description>The parent project for nvn plug-ins.</description>
     <modules>
+        <module>nvn-plugins-commons</module>
         <module>nvn-assemblyinfo-plugin</module>
         <module>nvn-msbuild-plugin</module>
+        <module>nvn-mstest-plugin</module>
     </modules>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.commons</groupId>
+        	<artifactId>commons-exec</artifactId>
+        	<version>1.0.1</version>
+        	<type>jar</type>
+        	<scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
