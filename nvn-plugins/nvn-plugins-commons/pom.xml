@@ -11,13 +11,4 @@
     <name>nvn Plug-ins Commons</name>
     <description>A commons library for nvn plug-ins.</description>
     <version>${parent.version}</version>
-    <dependencies>
-    	<dependency>
-    		<groupId>org.apache.commons</groupId>
-    		<artifactId>commons-exec</artifactId>
-    		<version>1.0.1</version>
-    		<type>jar</type>
-    		<scope>compile</scope>
-    	</dependency>
-    </dependencies>
 </project>
