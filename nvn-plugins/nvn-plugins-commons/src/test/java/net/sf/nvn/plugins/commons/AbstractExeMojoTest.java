@@ -11,9 +11,9 @@ import org.junit.Test;
  * @author akutz
  * 
  */
-public class BaseExeMojoTest
+public class AbstractExeMojoTest
 {
-    private static class BaseExeMojoImpl extends BaseExeMojo
+    private static class BaseExeMojoImpl extends AbstractExeMojo
     {
         @Override
         public void execute() throws MojoExecutionException
@@ -37,7 +37,7 @@ public class BaseExeMojoTest
     @Test
     public void buildEnvVarsTest() throws Exception
     {
-        BaseExeMojo mojo = new BaseExeMojoImpl();
+        AbstractExeMojo mojo = new BaseExeMojoImpl();
         mojo.inheritEnvVars = true;
         Map ev = mojo.buildEnvVars();
         Assert.assertTrue(ev.size() > 0);

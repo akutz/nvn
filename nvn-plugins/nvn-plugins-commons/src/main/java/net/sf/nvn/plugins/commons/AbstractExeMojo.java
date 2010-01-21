@@ -16,17 +16,17 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
- * A base Mojo for Mojos that call external programs.
+ * An abstract Mojo for nvn Mojos that call external programs.
  * 
  */
-public abstract class BaseExeMojo extends AbstractMojo
+public abstract class AbstractExeMojo extends AbstractMojo
 {
     /**
      * The base directory.
      * 
      * @parameter expression="${basedir}"
      */
-    public File baseDir;
+    File baseDir;
 
     /**
      * The number of milliseconds to wait before the msbuild process is
@@ -34,7 +34,7 @@ public abstract class BaseExeMojo extends AbstractMojo
      * 
      * @parameter expression="${msbuild.timeout}" default-value="300000"
      */
-    public Long timeout;
+    Long timeout;
 
     /**
      * This content of this parameter, if specified, will override all other of
@@ -43,7 +43,7 @@ public abstract class BaseExeMojo extends AbstractMojo
      * 
      * @parameter expression="${msbuild.commandLineArgs}"
      */
-    public String commandLineArgs;
+    String commandLineArgs;
 
     /**
      * Set this parameter to true to specify that the msbuild process should
@@ -51,14 +51,14 @@ public abstract class BaseExeMojo extends AbstractMojo
      * 
      * @parameter expression="${msbuild.inheritEnvVars}" default-value="true"
      */
-    public boolean inheritEnvVars;
+    boolean inheritEnvVars;
 
     /**
      * Environment variables to specify for the msbuild process.
      * 
      * @parameter expression="${msbuild.envVars}"
      */
-    public Properties envVars;
+    Properties envVars;
 
     abstract public String buildCommandLineString();
 
