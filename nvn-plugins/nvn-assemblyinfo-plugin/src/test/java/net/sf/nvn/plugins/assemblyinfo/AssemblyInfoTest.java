@@ -22,6 +22,7 @@ public class AssemblyInfoTest
         mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
         mojo.outputFile = new File(tmpdir + "/Properties/AssemblyInfo.cs");
         mojo.version = "0.0.0.0";
+        mojo.baseDir = new File(tmpdir);
 
         mojo.execute();
 

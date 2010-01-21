@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,11 +24,27 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class AssemblyInfoMojo extends AbstractMojo
 {
     /**
+     * The base directory from Maven's perspective.
+     * 
+     * @parameter expression="${basedir}"
+     */
+    File baseDir;
+
+    /**
      * Set to true to skip this plug-in.
      * 
      * @parameter expression="${assemblyinfo.skip}" default-value="false"
      */
     boolean skip;
+
+    /**
+     * Set to true to force generation. Normally an AssemblyInfo file is only
+     * generated when a csproj or vbproj file is detected. Settings skip to true
+     * still skips this plug-in even if force is also set to true.
+     * 
+     * @parameter expression="${assemblyinfo.force}" default-value="false"
+     */
+    boolean force;
 
     /**
      * The value used for the AssemblyVersion, AssemblyFileVersion, and
@@ -99,7 +116,15 @@ public class AssemblyInfoMojo extends AbstractMojo
             return;
         }
 
-        createOutputDirectories();  
+        if (!this.force)
+        {
+            if (!shouldExecute())
+            {
+                return;
+            }
+        }
+
+        createOutputDirectories();
 
         parseOutputFileType();
 
@@ -118,6 +143,17 @@ public class AssemblyInfoMojo extends AbstractMojo
             throw new MojoExecutionException("Error writing "
                 + this.outputFile.getAbsolutePath(), e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public boolean shouldExecute() throws MojoExecutionException
+    {
+        Collection projFiles = FileUtils.listFiles(this.baseDir, new String[]
+        {
+            "csproj", "vbproj"
+        }, false);
+
+        return projFiles != null && projFiles.size() > 0;
     }
 
     public void createOutputDirectories() throws MojoExecutionException
