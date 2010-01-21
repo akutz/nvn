@@ -1,23 +1,13 @@
 package net.sf.nvn.plugins.msbuild;
 
+import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteStreamHandler;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.exec.environment.EnvironmentUtils;
-import org.apache.commons.exec.util.MapUtils;
+import net.sf.nvn.plugins.commons.BaseExeMojo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 
 /**
  * A Maven plug-in for building .NET solutions and/or projects with MSBuild.
@@ -27,14 +17,8 @@ import static org.apache.commons.exec.util.StringUtils.quoteArgument;
  * @description A Maven plug-in for building .NET solutions and/or projects with
  *              MSBuild.
  */
-public class MSBuildMojo extends AbstractMojo
+public class MSBuildMojo extends BaseExeMojo
 {
-    /**
-     * The base directory.
-     * 
-     * @parameter expression="${basedir}"
-     */
-    File baseDir;
     /**
      * The path to the msbuild executable.
      * 
@@ -48,38 +32,6 @@ public class MSBuildMojo extends AbstractMojo
      * @parameter expression="${msbuild.buildFile}"
      */
     File buildFile;
-
-    /**
-     * The number of milliseconds to wait before the msbuild process is
-     * considered hung and destroyed.
-     * 
-     * @parameter expression="${msbuild.timeout}" default-value="300000"
-     */
-    Long timeout;
-
-    /**
-     * This content of this parameter, if specified, will override all other of
-     * this plug-in's parameters and execute MSBuild with this string as its
-     * sole command line argument(s).
-     * 
-     * @parameter expression="${msbuild.commandLineArgs}"
-     */
-    String commandLineArgs;
-
-    /**
-     * Set this parameter to true to specify that the msbuild process should
-     * inherit the environment variables of the current process.
-     * 
-     * @parameter expression="${msbuild.inheritEnvVars}" default-value="true"
-     */
-    boolean inheritEnvVars;
-
-    /**
-     * Environment variables to specify for the msbuild process.
-     * 
-     * @parameter expression="${msbuild.envVars}"
-     */
-    Properties envVars;
 
     /**
      * Hides the startup banner and copyright message.
@@ -336,7 +288,6 @@ public class MSBuildMojo extends AbstractMojo
      */
     boolean nodeReuse;
 
-    @SuppressWarnings("unchecked")
     public void execute() throws MojoExecutionException
     {
         loadBuildFile();
@@ -345,62 +296,18 @@ public class MSBuildMojo extends AbstractMojo
 
         loadTargets();
 
-        String cls = buildCommandLineString();
-
-        getLog().info("NVN-MSBuild: " + cls.toString());
-
-        Map ev;
-
-        try
-        {
-            ev = buildEnvVars();
-        }
-        catch (IOException e)
-        {
-            throw new MojoExecutionException(
-                "Error building environment variable map",
-                e);
-        }
-
-        try
-        {
-            DefaultExecutor executor = new DefaultExecutor();
-            executor.setExitValue(0);
-
-            ExecuteWatchdog watchdog = new ExecuteWatchdog(this.timeout);
-            executor.setWatchdog(watchdog);
-
-            ExecuteStreamHandler streamHandler =
-                new PumpStreamHandler(System.out, System.err);
-            executor.setStreamHandler(streamHandler);
-
-            CommandLine cl = CommandLine.parse(cls);
-
-            int exitCode = executor.execute(cl, ev);
-
-            if (exitCode != 0)
-            {
-                throw new MojoExecutionException(
-                    "MSBuild exited with an unsuccessful error code: "
-                        + exitCode);
-            }
-        }
-        catch (Exception e)
-        {
-            throw new MojoExecutionException("Error running msbuild: ", e);
-        }
+        exec();
     }
 
     public String buildCommandLineString()
     {
-        StringBuilder cmdLineBuff = new StringBuilder();
-
         if (StringUtils.isNotEmpty(this.commandLineArgs))
         {
             String cmd = this.msbuild.getName() + " " + this.commandLineArgs;
-
             return cmd;
         }
+
+        StringBuilder cmdLineBuff = new StringBuilder();
 
         cmdLineBuff.append(quoteArgument(this.msbuild.getName()));
         cmdLineBuff.append(" ");
@@ -598,28 +505,6 @@ public class MSBuildMojo extends AbstractMojo
             "Error finding solution or project file");
     }
 
-    @SuppressWarnings("unchecked")
-    public Map buildEnvVars() throws IOException
-    {
-        Map ev;
-
-        if (this.inheritEnvVars)
-        {
-            ev = EnvironmentUtils.getProcEnvironment();
-        }
-        else
-        {
-            ev = new HashMap();
-        }
-
-        if (this.envVars != null)
-        {
-            MapUtils.merge(ev, this.envVars);
-        }
-
-        return ev;
-    }
-
     public void loadTargets()
     {
         if (this.targets != null && this.targets.length > 0)
@@ -651,5 +536,11 @@ public class MSBuildMojo extends AbstractMojo
         {
             this.buildFile = findBuildFile();
         }
+    }
+
+    @Override
+    public String getExeDisplayName()
+    {
+        return "msbuild";
     }
 }

@@ -1,7 +1,6 @@
 package net.sf.nvn.plugins.msbuild;
 
 import java.io.File;
-import java.util.Map;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -19,19 +18,6 @@ public class MSBuildMojoTest
         mojo.loadProperties();
         mojo.loadTargets();
         return mojo;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testBuildEnvVars() throws Exception
-    {
-        MSBuildMojo mojo = loadMojo();
-        Map ev = mojo.buildEnvVars();
-        Assert.assertTrue(ev.size() > 0);
-
-        mojo.inheritEnvVars = false;
-        ev = mojo.buildEnvVars();
-        Assert.assertEquals(0, ev.size());
     }
 
     @Test
