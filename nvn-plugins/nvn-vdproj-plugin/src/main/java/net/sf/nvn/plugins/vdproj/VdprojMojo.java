@@ -4,6 +4,7 @@ import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 import java.io.File;
 import java.util.Collection;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -40,6 +41,13 @@ public class VdprojMojo extends AbstractExeMojo
      */
     File devEnv;
 
+    /**
+     * The name of the setup project.
+     * 
+     * @parameter
+     */
+    String projectName;
+
     @Override
     public String buildCommandLineString()
     {
@@ -59,6 +67,11 @@ public class VdprojMojo extends AbstractExeMojo
         cmdLineBuff.append(quoteArgument(this.buildConfiguration));
         cmdLineBuff.append(" ");
 
+        cmdLineBuff.append("/Project");
+        cmdLineBuff.append(" ");
+        cmdLineBuff.append(quoteArgument(this.projectName));
+        cmdLineBuff.append(" ");
+
         cmdLineBuff.append(quoteArgument(this.vdProjFile.getName()));
 
         String clbs = cmdLineBuff.toString();
@@ -75,12 +88,25 @@ public class VdprojMojo extends AbstractExeMojo
     public void prepareForExecute() throws MojoExecutionException
     {
         loadVdprojFile();
+
+        loadProjectName();
+    }
+
+    public void loadProjectName()
+    {
+        if (StringUtils.isNotEmpty(this.projectName))
+        {
+            return;
+        }
+
+        this.projectName = FilenameUtils.getBaseName(this.vdProjFile.getName());
     }
 
     @Override
     public boolean shouldExecute() throws MojoExecutionException
     {
-        if (!this.devEnv.exists())
+        if (!this.devEnv.getName().matches("(?i)devenv(\\.exe)?")
+            && !this.devEnv.exists())
         {
             getLog().error(
                 "nvn-" + getMojoName() + ": could not find "
@@ -123,5 +149,11 @@ public class VdprojMojo extends AbstractExeMojo
         {
             return null;
         }
+    }
+
+    @Override
+    public boolean isProjectTypeValid()
+    {
+        return isVdprojProject();
     }
 }

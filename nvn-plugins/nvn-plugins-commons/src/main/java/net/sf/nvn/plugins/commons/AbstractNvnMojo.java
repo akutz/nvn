@@ -19,19 +19,28 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     MavenProject mavenProject;
 
     /**
-     * Skip this plug-in. Skip beats force.
+     * Skip this plug-in. Skip beats forceProjectType and
+     * ignoreExecutionRequirements.
      * 
      * @parameter default-value="false"
      */
     boolean skip;
 
     /**
-     * Force the execution of this plug-in even if its requirements are not met.
-     * Skip beats force.
+     * Force the execution of this plug-in even if its project type requirement
+     * is not met. Skip beats ignoreProjectType.
      * 
-     * default-value="false"
+     * @parameter default-value="false"
      */
-    boolean force;
+    boolean ignoreProjectType;
+
+    /**
+     * Force the execution of this plug-in even if its execution requirements
+     * are not met. Skip beats ignoreExecutionRequirements.
+     * 
+     * @parameter default-value="false"
+     */
+    boolean ignoreExecutionRequirements;
 
     @SuppressWarnings("unchecked")
     public boolean isSolution()
@@ -44,9 +53,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         return files != null && files.size() > 0;
     }
-    
+
     @SuppressWarnings("unchecked")
-    public boolean isSetupProject()
+    public boolean isVdprojProject()
     {
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
@@ -100,6 +109,8 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
     abstract public boolean shouldExecute() throws MojoExecutionException;
 
+    abstract public boolean isProjectTypeValid();
+
     @Override
     final public void execute() throws MojoExecutionException
     {
@@ -108,10 +119,15 @@ public abstract class AbstractNvnMojo extends AbstractMojo
             getLog().info("nvn-" + getMojoName() + ": skipping execution");
             return;
         }
-        
+
+        if (!this.ignoreProjectType && !isProjectTypeValid())
+        {
+            return;
+        }
+
         prepareForExecute();
 
-        if (!this.force && !shouldExecute())
+        if (!this.ignoreExecutionRequirements && !shouldExecute())
         {
             getLog().debug(
                 "nvn-" + getMojoName() + ": execution requirements not met");

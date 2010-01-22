@@ -30,8 +30,9 @@ public class VdprojMojoTest
     public void buildCommandLineStringTest() throws Exception
     {
         VdprojMojo mojo = loadMojo();
+        mojo.prepareForExecute();
         Assert.assertEquals(
-            "devenv.exe /Build Debug MySetupProject.vdproj",
+            "devenv.exe /Build Debug /Project MySetupProject MySetupProject.vdproj",
             mojo.buildCommandLineString());
     }
 }

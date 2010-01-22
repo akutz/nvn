@@ -37,6 +37,12 @@ public class AbstractExeMojoTest
         {
             return false;
         }
+
+        @Override
+        public boolean isProjectTypeValid()
+        {
+            return false;
+        }
         
     }
 
