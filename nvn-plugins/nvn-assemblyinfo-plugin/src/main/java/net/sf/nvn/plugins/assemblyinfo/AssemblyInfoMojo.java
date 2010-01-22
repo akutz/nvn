@@ -109,7 +109,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     @Override
     public boolean shouldExecute() throws MojoExecutionException
     {
-        return isProject();
+        return true;
     }
 
     public void createOutputDirectories() throws MojoExecutionException
@@ -246,5 +246,11 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
                 "Error creating assembly information",
                 e);
         }
+    }
+
+    @Override
+    public boolean isProjectTypeValid()
+    {
+        return isProject();
     }
 }
