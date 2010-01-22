@@ -74,6 +74,8 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
                     return;
                 }
             }
+            
+            createOutputDirectories();
 
             FileUtils.writeStringToFile(this.outputFile, assemblyInfoText);
         }
@@ -87,8 +89,6 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     @Override
     public void prepareForExecute() throws MojoExecutionException
     {
-        createOutputDirectories();
-
         parseOutputFileType();
 
         loadVersion();
