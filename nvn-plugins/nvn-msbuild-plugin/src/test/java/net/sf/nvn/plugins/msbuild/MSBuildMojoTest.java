@@ -2,6 +2,7 @@ package net.sf.nvn.plugins.msbuild;
 
 import java.io.File;
 import junit.framework.Assert;
+import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
 public class MSBuildMojoTest
@@ -9,7 +10,8 @@ public class MSBuildMojoTest
     private MSBuildMojo loadMojo() throws Exception
     {
         MSBuildMojo mojo = new MSBuildMojo();
-        mojo.baseDir = new File(".");
+        mojo.mavenProject = new MavenProject();
+        mojo.mavenProject.setBasedir(new File("."));
         mojo.msbuild = new File("msbuild.exe");
         mojo.buildFile = new File("MySolution.sln");
         mojo.timeout = new Long(300000);
@@ -27,7 +29,7 @@ public class MSBuildMojoTest
         String cls = mojo.buildCommandLineString();
         Assert
             .assertEquals(
-                "msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug /nodeReuse:false MySolution.sln",
+                "msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug /nodeReuse:false .\\MySolution.sln",
                 cls);
     }
 }

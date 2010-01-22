@@ -4,7 +4,6 @@ import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 import java.io.File;
 import java.util.Collection;
 import java.util.Properties;
-import net.sf.nvn.plugins.commons.BaseExeMojo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -17,7 +16,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @description A Maven plug-in for building .NET solutions and/or projects with
  *              MSBuild.
  */
-public class MSBuildMojo extends BaseExeMojo
+public class MSBuildMojo extends AbstractExeMojo
 {
     /**
      * The path to the msbuild executable.
@@ -288,17 +287,30 @@ public class MSBuildMojo extends BaseExeMojo
      */
     boolean nodeReuse;
 
-    public void execute() throws MojoExecutionException
+    @Override
+    public boolean shouldExecute()
+    {
+        if (super.mavenProject.isExecutionRoot())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    @Override
+    public void prepareForExecute() throws MojoExecutionException
     {
         loadBuildFile();
 
         loadProperties();
 
         loadTargets();
-
-        exec();
     }
 
+    @Override
     public String buildCommandLineString()
     {
         if (StringUtils.isNotEmpty(this.commandLineArgs))
@@ -471,7 +483,8 @@ public class MSBuildMojo extends BaseExeMojo
             cmdLineBuff.append(" ");
         }
 
-        cmdLineBuff.append(quoteArgument(this.buildFile.getName()));
+        cmdLineBuff.append(quoteArgument(super.mavenProject.getBasedir() + "\\"
+            + this.buildFile.getName()));
 
         String clbs = cmdLineBuff.toString();
 
@@ -481,7 +494,7 @@ public class MSBuildMojo extends BaseExeMojo
     @SuppressWarnings("unchecked")
     public File findBuildFile() throws MojoExecutionException
     {
-        Collection slnFiles = FileUtils.listFiles(this.baseDir, new String[]
+        Collection slnFiles = FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
         {
             "sln"
         }, false);
@@ -491,7 +504,7 @@ public class MSBuildMojo extends BaseExeMojo
             return (File) slnFiles.iterator().next();
         }
 
-        Collection projFiles = FileUtils.listFiles(this.baseDir, new String[]
+        Collection projFiles = FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
         {
             "csproj", "vbproj"
         }, false);
@@ -528,6 +541,11 @@ public class MSBuildMojo extends BaseExeMojo
         this.properties = new Properties();
         this.properties.put("Configuration", "Debug");
         this.properties.put("Platform", "Any CPU");
+
+        if (super.mavenProject.isExecutionRoot() && isProject() && !isSolution())
+        {
+            this.properties.put("OutputPath", "bin\\Debug");
+        }
     }
 
     public void loadBuildFile() throws MojoExecutionException
@@ -539,7 +557,7 @@ public class MSBuildMojo extends BaseExeMojo
     }
 
     @Override
-    public String getExeDisplayName()
+    public String getMojoName()
     {
         return "msbuild";
     }
