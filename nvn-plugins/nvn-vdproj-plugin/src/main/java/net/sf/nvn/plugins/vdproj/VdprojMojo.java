@@ -47,7 +47,7 @@ public class VdprojMojo extends AbstractExeMojo
      * @parameter
      */
     String projectName;
-
+    
     @Override
     public String buildCommandLineString()
     {

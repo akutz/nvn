@@ -31,7 +31,9 @@
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
             <configuration>
-                <phases />
+                <phases>
+                    <package>net.sf.nvn:nvn-vdproj-plugin:package</package>
+                </phases>
             </configuration>
         </component>
         
