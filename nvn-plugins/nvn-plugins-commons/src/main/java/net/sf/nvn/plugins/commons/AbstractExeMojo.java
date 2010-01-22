@@ -1,6 +1,5 @@
 package net.sf.nvn.plugins.commons;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,22 +11,14 @@ import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.environment.EnvironmentUtils;
 import org.apache.commons.exec.util.MapUtils;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * An abstract Mojo for nvn Mojos that call external programs.
  * 
  */
-public abstract class AbstractExeMojo extends AbstractMojo
+public abstract class AbstractExeMojo extends AbstractNvnMojo
 {
-    /**
-     * The base directory.
-     * 
-     * @parameter expression="${basedir}"
-     */
-    File baseDir;
-
     /**
      * The number of milliseconds to wait before the msbuild process is
      * considered hung and destroyed.
@@ -62,16 +53,20 @@ public abstract class AbstractExeMojo extends AbstractMojo
 
     abstract public String buildCommandLineString();
 
-    abstract public String getExeDisplayName();
+    @Override
+    final public void nvnExecute() throws MojoExecutionException
+    {
+        exec();
+    }
 
     @SuppressWarnings("unchecked")
-    public void exec() throws MojoExecutionException
+    final public void exec() throws MojoExecutionException
     {
         try
         {
             String cls = buildCommandLineString();
-            
-            getLog().info("nvn-" + getExeDisplayName() + ": " + cls);
+
+            getLog().info("nvn-" + getMojoName() + ": " + cls);
 
             Map ev = loadEnvVars();
 
@@ -91,14 +86,14 @@ public abstract class AbstractExeMojo extends AbstractMojo
 
             if (exitCode != 0)
             {
-                throw new MojoExecutionException(getExeDisplayName()
+                throw new MojoExecutionException(getMojoName()
                     + " exited with an unsuccessful error code: " + exitCode);
             }
         }
         catch (Exception e)
         {
-            throw new MojoExecutionException("Error running "
-                + getExeDisplayName() + ": ", e);
+            throw new MojoExecutionException("Error running " + getMojoName()
+                + ": ", e);
         }
     }
 

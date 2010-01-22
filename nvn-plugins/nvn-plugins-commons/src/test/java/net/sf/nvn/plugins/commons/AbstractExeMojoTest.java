@@ -16,21 +16,28 @@ public class AbstractExeMojoTest
     private static class BaseExeMojoImpl extends AbstractExeMojo
     {
         @Override
-        public void execute() throws MojoExecutionException
-        {
-        }
-
-        @Override
         public String buildCommandLineString()
         {
             return null;
         }
 
         @Override
-        public String getExeDisplayName()
+        public String getMojoName()
         {
             return null;
         }
+
+        @Override
+        public void prepareForExecute() throws MojoExecutionException
+        {
+        }
+
+        @Override
+        public boolean shouldExecute() throws MojoExecutionException
+        {
+            return false;
+        }
+        
     }
 
     @SuppressWarnings("unchecked")
