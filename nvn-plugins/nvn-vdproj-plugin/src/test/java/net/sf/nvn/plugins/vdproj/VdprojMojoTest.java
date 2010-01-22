@@ -32,7 +32,7 @@ public class VdprojMojoTest
         VdprojMojo mojo = loadMojo();
         mojo.prepareForExecute();
         Assert.assertEquals(
-            "devenv.exe /Build Debug /Project MySetupProject MySetupProject.vdproj",
+            "devenv.exe /Build Debug /Project MySetupProject .\\MySetupProject.vdproj",
             mojo.buildCommandLineString());
     }
 }
