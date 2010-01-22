@@ -44,6 +44,18 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         return files != null && files.size() > 0;
     }
+    
+    @SuppressWarnings("unchecked")
+    public boolean isSetupProject()
+    {
+        Collection files =
+            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
+            {
+                "vdproj"
+            }, false);
+
+        return files != null && files.size() > 0;
+    }
 
     @SuppressWarnings("unchecked")
     public boolean isProject()

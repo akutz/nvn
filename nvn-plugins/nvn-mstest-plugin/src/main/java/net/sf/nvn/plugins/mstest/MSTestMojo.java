@@ -144,12 +144,22 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     public void prepareForExecute() throws MojoExecutionException
     {
+        if (isSetupProject())
+        {
+            return;
+        }
+        
         loadTestMetaData();
     }
 
     @Override
     public boolean shouldExecute()
     {
+        if (isSetupProject())
+        {
+            return false;
+        }
+        
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
             return true;

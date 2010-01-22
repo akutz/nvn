@@ -290,7 +290,11 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     public boolean shouldExecute()
     {
-        if (super.mavenProject.isExecutionRoot())
+        if (isSetupProject())
+        {
+            return false;
+        }
+        else if (super.mavenProject.isExecutionRoot())
         {
             return true;
         }
@@ -303,6 +307,11 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     public void prepareForExecute() throws MojoExecutionException
     {
+        if (isSetupProject())
+        {
+            return;
+        }
+        
         loadBuildFile();
 
         loadProperties();
