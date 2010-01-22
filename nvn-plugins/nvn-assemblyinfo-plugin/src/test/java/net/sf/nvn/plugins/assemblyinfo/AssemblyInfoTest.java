@@ -2,6 +2,8 @@ package net.sf.nvn.plugins.assemblyinfo;
 
 import java.io.File;
 import junit.framework.Assert;
+import org.apache.maven.model.Organization;
+import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
 /**
@@ -18,12 +20,11 @@ public class AssemblyInfoTest
         String tmpdir = System.getProperty("java.io.tmpdir");
 
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
-
         mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
         mojo.outputFile = new File(tmpdir + "/Properties/AssemblyInfo.cs");
-        mojo.version = "0.0.0.0";
-        mojo.baseDir = new File(tmpdir);
-
+        mojo.mavenProject = new MavenProject();
+        mojo.mavenProject.setBasedir(new File(tmpdir));
+        
         mojo.execute();
 
         mojo.outputFile = new File(tmpdir + "/Properties/AssemblyInfo.vB");
@@ -47,11 +48,12 @@ public class AssemblyInfoTest
     public void testParseSafeVersion() throws Exception
     {
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
-        mojo.version = "0.1.0-SNAPSHOT";
+        mojo.mavenProject = new MavenProject();
+        mojo.mavenProject.setVersion("0.0.1-SNAPSHOT");
         mojo.parseSafeVersion();
-        Assert.assertEquals("0.1.0", mojo.safeVersion);
+        Assert.assertEquals("0.0.1", mojo.safeVersion);
 
-        mojo.version = "0.1.0.989-SNAPSHOT-1.0";
+        mojo.mavenProject.setVersion("0.1.0.989-SNAPSHOT-1.0");
         mojo.parseSafeVersion();
         Assert.assertEquals("0.1.0.989", mojo.safeVersion);
     }
@@ -60,13 +62,12 @@ public class AssemblyInfoTest
     public void testCreateAssemblyInfoTextCSharp() throws Exception
     {
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
-
+        mojo.mavenProject = new MavenProject();
+        mojo.mavenProject.setOrganization(new Organization());
         mojo.outputFile = new File("Properties/AssemblyInfo.cs");
         mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
-        mojo.version = "0.0.0.0";
         
-        mojo.parseOutputFileType();
-        mojo.parseSafeVersion();
+        mojo.prepareForExecute();
         
         String text = mojo.createAssemblyInfoText();
         Assert
@@ -79,7 +80,7 @@ public class AssemblyInfoTest
                     + "[assembly : AssemblyInformationalVersionAttribute(\"0.0.0.0\")]\r\n",
                 text);
 
-        mojo.name = "MojoTest";
+        mojo.mavenProject.setName("MojoTest");
         text = mojo.createAssemblyInfoText();
         Assert
             .assertEquals(
@@ -92,7 +93,7 @@ public class AssemblyInfoTest
                     + "[assembly : AssemblyInformationalVersionAttribute(\"0.0.0.0\")]\r\n",
                 text);
 
-        mojo.company = "SourceForge";
+        mojo.mavenProject.getOrganization().setName("SourceForge");
         text = mojo.createAssemblyInfoText();
         Assert
             .assertEquals(
@@ -106,7 +107,7 @@ public class AssemblyInfoTest
                     + "[assembly : AssemblyInformationalVersionAttribute(\"0.0.0.0\")]\r\n",
                 text);
 
-        mojo.description = "Pants on the ground!";
+        mojo.mavenProject.setDescription("Pants on the ground!");
         text = mojo.createAssemblyInfoText();
         Assert
             .assertEquals(
@@ -121,7 +122,7 @@ public class AssemblyInfoTest
                     + "[assembly : AssemblyInformationalVersionAttribute(\"0.0.0.0\")]\r\n",
                 text);
 
-        mojo.version = "0.0.1-SNAPSHOT";
+        mojo.mavenProject.setVersion("0.0.1-SNAPSHOT");
         mojo.parseSafeVersion();
         text = mojo.createAssemblyInfoText();
         Assert
