@@ -96,6 +96,8 @@ public abstract class AbstractNvnMojo extends AbstractMojo
             getLog().info("nvn-" + getMojoName() + ": skipping execution");
             return;
         }
+        
+        prepareForExecute();
 
         if (!this.force && !shouldExecute())
         {
@@ -103,8 +105,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
                 "nvn-" + getMojoName() + ": execution requirements not met");
             return;
         }
-
-        prepareForExecute();
 
         nvnExecute();
     }
