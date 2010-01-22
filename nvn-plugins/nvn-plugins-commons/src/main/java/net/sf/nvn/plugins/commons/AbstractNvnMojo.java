@@ -101,7 +101,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         if (!this.force && !shouldExecute())
         {
-            getLog().info(
+            getLog().debug(
                 "nvn-" + getMojoName() + ": execution requirements not met");
             return;
         }
