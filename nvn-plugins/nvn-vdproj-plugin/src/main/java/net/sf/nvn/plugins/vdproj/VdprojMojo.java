@@ -72,7 +72,7 @@ public class VdprojMojo extends AbstractExeMojo
         cmdLineBuff.append(quoteArgument(this.projectName));
         cmdLineBuff.append(" ");
 
-        cmdLineBuff.append(quoteArgument(this.vdProjFile.getName()));
+        cmdLineBuff.append(getPath(this.vdProjFile));
 
         String clbs = cmdLineBuff.toString();
         return clbs;
@@ -115,6 +115,12 @@ public class VdprojMojo extends AbstractExeMojo
         }
 
         if (this.vdProjFile == null)
+        {
+            getLog().error(
+                "nvn-" + getMojoName() + ": could not find a vdproj file");
+            return false;
+        }
+        else if (!this.vdProjFile.exists())
         {
             getLog().error(
                 "nvn-" + getMojoName() + ": could not find a vdproj file");

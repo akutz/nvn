@@ -483,8 +483,7 @@ public class MSBuildMojo extends AbstractExeMojo
             cmdLineBuff.append(" ");
         }
 
-        cmdLineBuff.append(quoteArgument(super.mavenProject.getBasedir() + "\\"
-            + this.buildFile.getName()));
+        cmdLineBuff.append(getPath(this.buildFile));
 
         String clbs = cmdLineBuff.toString();
 

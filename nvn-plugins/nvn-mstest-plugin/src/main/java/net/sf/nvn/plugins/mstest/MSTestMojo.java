@@ -181,7 +181,7 @@ public class MSTestMojo extends AbstractExeMojo
         if (this.testContainer != null)
         {
             cmdLineBuff.append("/testcontainer:");
-            cmdLineBuff.append(quoteArgument(this.testContainer.getName()));
+            cmdLineBuff.append(getPath(this.testContainer));
             cmdLineBuff.append(" ");
         }
 
@@ -190,7 +190,7 @@ public class MSTestMojo extends AbstractExeMojo
             for (File f : this.testMetaDatas)
             {
                 cmdLineBuff.append("/testmetadata:");
-                cmdLineBuff.append(quoteArgument(f.getName()));
+                cmdLineBuff.append(getPath(f));
                 cmdLineBuff.append(" ");
             }
         }
@@ -224,14 +224,14 @@ public class MSTestMojo extends AbstractExeMojo
         if (this.runConfig != null)
         {
             cmdLineBuff.append("/runconfig:");
-            cmdLineBuff.append(quoteArgument(this.runConfig.getName()));
+            cmdLineBuff.append(getPath(this.runConfig));
             cmdLineBuff.append(" ");
         }
 
         if (this.resultsFile != null)
         {
             cmdLineBuff.append("/resultsfile:");
-            cmdLineBuff.append(quoteArgument(this.resultsFile.getName()));
+            cmdLineBuff.append(getPath(this.resultsFile));
             cmdLineBuff.append(" ");
         }
 
@@ -268,7 +268,7 @@ public class MSTestMojo extends AbstractExeMojo
         {
             cmdLineBuff.append("/publishresultsfile:");
             cmdLineBuff
-                .append(quoteArgument(this.publishResultsFile.getName()));
+                .append(getPath(this.publishResultsFile));
             cmdLineBuff.append(" ");
         }
 

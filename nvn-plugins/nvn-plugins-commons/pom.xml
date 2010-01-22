@@ -20,7 +20,7 @@
                 <executions>
                     <execution>
                         <id>copy-abstractexemojo-to-msbuild</id>
-                        <phase>generate-resources</phase>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -55,7 +55,7 @@
                     </execution>
                     <execution>
                         <id>copy-abstractexemojo-to-mstest</id>
-                        <phase>generate-resources</phase>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -90,7 +90,7 @@
                     </execution>
                     <execution>
                         <id>copy-abstractexemojo-to-assemblyinfo</id>
-                        <phase>generate-resources</phase>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -123,7 +123,7 @@
                     </execution>
                     <execution>
                         <id>copy-abstractexemojo-to-vdproj</id>
-                        <phase>generate-resources</phase>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>

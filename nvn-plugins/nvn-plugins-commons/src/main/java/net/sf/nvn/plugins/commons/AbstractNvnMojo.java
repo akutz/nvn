@@ -1,5 +1,6 @@
 package net.sf.nvn.plugins.commons;
 
+import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 import java.io.File;
 import java.util.Collection;
 import org.apache.commons.io.FileUtils;
@@ -135,5 +136,15 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         }
 
         nvnExecute();
+    }
+    
+    public String getPath(File file)
+    {
+        return getPath(file.getName());
+    }
+    
+    public String getPath(String fileName)
+    {
+        return quoteArgument(mavenProject.getBasedir() + "\\" + fileName);
     }
 }
