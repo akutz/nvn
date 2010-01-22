@@ -60,6 +60,21 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
 
         try
         {
+            if (this.outputFile.exists())
+            {
+                String oldText = FileUtils.readFileToString(this.outputFile);
+
+                if (oldText.equals(assemblyInfoText))
+                {
+                    getLog()
+                        .debug(
+                            "nvn-"
+                                + getMojoName()
+                                + ": not generating assembly info file, same content as existing one");
+                    return;
+                }
+            }
+
             FileUtils.writeStringToFile(this.outputFile, assemblyInfoText);
         }
         catch (IOException e)
