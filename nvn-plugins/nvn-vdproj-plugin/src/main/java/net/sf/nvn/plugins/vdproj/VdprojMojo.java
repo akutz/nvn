@@ -22,7 +22,7 @@ public class VdprojMojo extends AbstractExeMojo
      * The build configuration.
      * 
      * @parameter expression="${vdproj.buildConfiguration}"
-     *            default-value="debug"
+     *            default-value="Debug"
      */
     String buildConfiguration;
 
