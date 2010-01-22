@@ -2,7 +2,6 @@ package net.sf.nvn.plugins.mstest;
 
 import java.io.File;
 import java.util.Collection;
-import net.sf.nvn.plugins.commons.BaseExeMojo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -16,7 +15,7 @@ import static org.apache.commons.exec.util.StringUtils.quoteArgument;
  * @description A Maven plug-in for testing .NET solutions and/or projects with
  *              MSTest.
  */
-public class MSTestMojo extends BaseExeMojo
+public class MSTestMojo extends AbstractExeMojo
 {
     /**
      * The path to the mstest executable.
@@ -143,11 +142,26 @@ public class MSTestMojo extends BaseExeMojo
     String teamProject;
 
     @Override
-    public void execute() throws MojoExecutionException
+    public void prepareForExecute() throws MojoExecutionException
     {
         loadTestMetaData();
+    }
 
-        exec();
+    @Override
+    public boolean shouldExecute()
+    {
+        if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
+        {
+            return true;
+        }
+
+        if (this.testContainer != null)
+        {
+            return true;
+        }
+
+        getLog().info("nvn-" + getMojoName() + ": no tests found");
+        return false;
     }
 
     @Override
@@ -190,7 +204,7 @@ public class MSTestMojo extends BaseExeMojo
                 cmdLineBuff.append(" ");
             }
         }
-        
+
         if (this.noIsolation)
         {
             cmdLineBuff.append("/noisolation");
@@ -292,7 +306,7 @@ public class MSTestMojo extends BaseExeMojo
     }
 
     @Override
-    public String getExeDisplayName()
+    public String getMojoName()
     {
         return "mstest";
     }
@@ -310,10 +324,11 @@ public class MSTestMojo extends BaseExeMojo
     @SuppressWarnings("unchecked")
     public File[] findVsmdi()
     {
-        Collection vsmdiFiles = FileUtils.listFiles(this.baseDir, new String[]
-        {
-            "vsmdi"
-        }, false);
+        Collection vsmdiFiles =
+            FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
+            {
+                "vsmdi"
+            }, false);
 
         if (vsmdiFiles == null || vsmdiFiles.size() == 0)
         {
