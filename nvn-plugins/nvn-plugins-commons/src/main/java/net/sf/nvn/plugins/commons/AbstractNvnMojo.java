@@ -3,7 +3,9 @@ package net.sf.nvn.plugins.commons;
 import static org.apache.commons.exec.util.StringUtils.quoteArgument;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -18,6 +20,23 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @readonly
      */
     MavenProject mavenProject;
+
+    /**
+     * The local maven repository.
+     * 
+     * @parameter expression="${localRepository}"
+     */
+    ArtifactRepository localRepository;
+
+    /**
+     * The reactor projects.
+     * 
+     * @parameter expression="${reactorProjects}"
+     * @required
+     * @readonly
+     */
+    @SuppressWarnings("unchecked")
+    List reactorProjects;
 
     /**
      * Skip this plug-in. Skip beats forceProjectType and
@@ -137,12 +156,12 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         nvnExecute();
     }
-    
+
     public String getPath(File file)
     {
         return getPath(file.getName());
     }
-    
+
     public String getPath(String fileName)
     {
         return quoteArgument(mavenProject.getBasedir() + "\\" + fileName);
