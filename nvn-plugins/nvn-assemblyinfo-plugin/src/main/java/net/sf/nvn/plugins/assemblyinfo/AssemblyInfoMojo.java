@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
 /**
  * A Maven plug-in for creating .NET assembly information files.
@@ -74,7 +75,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
                     return;
                 }
             }
-            
+
             createOutputDirectories();
 
             FileUtils.writeStringToFile(this.outputFile, assemblyInfoText);
@@ -100,7 +101,8 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
 
     public void loadVersion()
     {
-        if (super.mavenProject.getVersion().equals("0"))
+        if (super.mavenProject.getVersion().equals(
+            MavenProject.EMPTY_PROJECT_VERSION))
         {
             super.mavenProject.setVersion("0.0.0.0");
         }
