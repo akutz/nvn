@@ -25,14 +25,6 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     File command;
 
     /**
-     * The number of milliseconds to wait before the process is considered hung
-     * and destroyed.
-     * 
-     * @parameter default-value="300000"
-     */
-    Long timeout;
-
-    /**
      * This content of this parameter, if specified, will override all other of
      * this plug-in's parameters and execute this process with this string as
      * its sole command line argument(s).
