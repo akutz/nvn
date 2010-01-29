@@ -3,7 +3,7 @@
         <component>
             <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
             </role>
-            <role-hint>dotnet:dll</role-hint>
+            <role-hint>dll</role-hint>
             <implementation>
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
@@ -14,7 +14,7 @@
         <component>
             <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
             </role>
-            <role-hint>dotnet:exe</role-hint>
+            <role-hint>exe</role-hint>
             <implementation>
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
@@ -26,7 +26,7 @@
         <component>
             <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
             </role>
-            <role-hint>dotnet:vdproj</role-hint>
+            <role-hint>vdproj</role-hint>
             <implementation>
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
@@ -40,11 +40,11 @@
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
-            <role-hint>dotnet:exe</role-hint>
+            <role-hint>exe</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
             </implementation>
             <configuration>
-                <type>dotnet:exe</type>
+                <type>exe</type>
                 <extension>exe</extension>
                 <language>dotnet</language>
                 <addedToClasspath>false</addedToClasspath>
@@ -54,26 +54,12 @@
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
-            <role-hint>dotnet:dll</role-hint>
+            <role-hint>dll</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
             </implementation>
             <configuration>
-                <type>dotnet:dll</type>
+                <type>dll</type>
                 <extension>dll</extension>
-                <language>dotnet</language>
-                <addedToClasspath>false</addedToClasspath>
-            </configuration>
-        </component>
-        
-        <component>
-            <role>org.apache.maven.artifact.handler.ArtifactHandler
-            </role>
-            <role-hint>dotnet:vdproj</role-hint>
-            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
-            </implementation>
-            <configuration>
-                <type>dotnet:vdproj</type>
-                <extension>msi</extension>
                 <language>dotnet</language>
                 <addedToClasspath>false</addedToClasspath>
             </configuration>
