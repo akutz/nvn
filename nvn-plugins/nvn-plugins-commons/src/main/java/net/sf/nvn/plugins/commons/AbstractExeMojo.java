@@ -1,17 +1,15 @@
 package net.sf.nvn.plugins.commons;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteStreamHandler;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.exec.environment.EnvironmentUtils;
-import org.apache.commons.exec.util.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.CollectionUtils;
 
 /**
  * An abstract Mojo for nvn Mojos that call external programs.
@@ -20,19 +18,26 @@ import org.apache.maven.plugin.MojoExecutionException;
 public abstract class AbstractExeMojo extends AbstractNvnMojo
 {
     /**
-     * The number of milliseconds to wait before the msbuild process is
-     * considered hung and destroyed.
+     * The command used to start this process.
      * 
-     * @parameter expression="${msbuild.timeout}" default-value="300000"
+     * @parameter
+     */
+    File command;
+
+    /**
+     * The number of milliseconds to wait before the process is considered hung
+     * and destroyed.
+     * 
+     * @parameter default-value="300000"
      */
     Long timeout;
 
     /**
      * This content of this parameter, if specified, will override all other of
-     * this plug-in's parameters and execute MSBuild with this string as its
-     * sole command line argument(s).
+     * this plug-in's parameters and execute this process with this string as
+     * its sole command line argument(s).
      * 
-     * @parameter expression="${msbuild.commandLineArgs}"
+     * @parameter
      */
     String commandLineArgs;
 
@@ -40,49 +45,51 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * Set this parameter to true to specify that the msbuild process should
      * inherit the environment variables of the current process.
      * 
-     * @parameter expression="${msbuild.inheritEnvVars}" default-value="true"
+     * @parameter default-value="true"
      */
     boolean inheritEnvVars;
 
     /**
      * Environment variables to specify for the msbuild process.
      * 
-     * @parameter expression="${msbuild.envVars}"
+     * @parameter
      */
     Properties envVars;
 
-    abstract public String buildCommandLineString();
+    /**
+     * The environment variables to use for the executable process.
+     */
+    @SuppressWarnings("unchecked")
+    Map envVarsToUseForProc;
+
+    abstract String getArgs();
+
+    final String buildCmdLineString()
+    {
+        String args =
+            StringUtils.isEmpty(this.commandLineArgs) ? getArgs()
+                : this.commandLineArgs;
+
+        String cmd = String.format("%s %s", getPath(this.command), args);
+
+        return cmd;
+    }
 
     @Override
-    final public void nvnExecute() throws MojoExecutionException
+    final void nvnExecute() throws MojoExecutionException
     {
         exec();
     }
 
-    @SuppressWarnings("unchecked")
-    final public void exec() throws MojoExecutionException
+    final void exec(String cmd) throws MojoExecutionException
     {
         try
         {
-            String cls = buildCommandLineString();
+            final Process p = Runtime.getRuntime().exec(cmd, getEnvVarArray());
 
-            getLog().info("nvn-" + getMojoName() + ": " + cls);
+            pipe(p);
 
-            Map ev = loadEnvVars();
-
-            DefaultExecutor executor = new DefaultExecutor();
-            executor.setExitValue(0);
-
-            ExecuteWatchdog watchdog = new ExecuteWatchdog(this.timeout);
-            executor.setWatchdog(watchdog);
-
-            ExecuteStreamHandler streamHandler =
-                new PumpStreamHandler(System.out, System.err);
-            executor.setStreamHandler(streamHandler);
-
-            CommandLine cl = CommandLine.parse(cls);
-
-            int exitCode = executor.execute(cl, ev);
+            int exitCode = p.waitFor();
 
             if (exitCode != 0)
             {
@@ -96,45 +103,123 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                 + ": ", e);
         }
     }
-
-    @SuppressWarnings("unchecked")
-    public Map buildEnvVars() throws IOException
+    
+    final String[] getEnvVarArray()
     {
-        Map ev;
-
-        if (this.inheritEnvVars)
+        String[] arr = new String[this.envVarsToUseForProc.size()];
+        
+        int x = 0;
+        for (Object ok : this.envVarsToUseForProc.keySet())
         {
-            ev = EnvironmentUtils.getProcEnvironment();
+            Object ov = this.envVarsToUseForProc.get(ok);
+            arr[x] = String.format("%s=%s", ok, ov);
+            ++x;
         }
-        else
-        {
-            ev = new HashMap();
-        }
+        
+        return arr;
+    }
 
-        if (this.envVars != null)
-        {
-            MapUtils.merge(ev, this.envVars);
-        }
+    final void pipe(Process p)
+    {
+        pipe(p.getInputStream(), System.out);
+        pipe(p.getErrorStream(), System.out);
+    }
 
-        return ev;
+    final void pipe(final InputStream in, final OutputStream out)
+    {
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    byte[] buff = new byte[1024];
+                    int read;
+                    while ((read = in.read(buff)) > 0)
+                    {
+                        out.write(buff, 0, read);
+                    }
+                }
+                catch (IOException e)
+                {
+                    // Do nothing
+                }
+            }
+        }).start();
+    }
+
+    final public void exec() throws MojoExecutionException
+    {
+        loadEnvVars();
+
+        String cmd = buildCmdLineString();
+
+        info(cmd);
+
+        exec(cmd);
     }
 
     @SuppressWarnings("unchecked")
-    public Map loadEnvVars() throws MojoExecutionException
+    void loadEnvVars()
     {
-        Map ev;
-
-        try
+        if (this.inheritEnvVars && this.envVars != null)
         {
-            ev = buildEnvVars();
+            this.envVarsToUseForProc =
+                CollectionUtils.mergeMaps(this.envVars, System.getenv());
         }
-        catch (IOException e)
+        else if (this.inheritEnvVars && this.envVars == null)
         {
-            throw new MojoExecutionException(
-                "Error building environment variable map",
-                e);
+            this.envVarsToUseForProc = System.getenv();
+        }
+        else if (!this.inheritEnvVars && this.envVars != null)
+        {
+            this.envVarsToUseForProc = this.envVars;
+        }
+        else if (!this.inheritEnvVars && this.envVars == null)
+        {
+            this.envVarsToUseForProc = new HashMap();
+        }
+    }
+
+    @Override
+    boolean isInPath(File file)
+    {
+        if (this.envVarsToUseForProc == null)
+        {
+            debug("isInPath returning false because env vars is null");
+            return false;
         }
 
-        return ev;
+        String fileName = file.getName();
+
+        if (!this.envVarsToUseForProc.containsKey("Path"))
+        {
+            debug("isInPath returning false because \"Path\" env var does not exist");
+            return false;
+        }
+
+        String path = String.valueOf(this.envVarsToUseForProc.get("Path"));
+        String[] pathParts = path.split("\\;|\\,");
+
+        for (String pp : pathParts)
+        {
+            File ep = new File(pp);
+            String p = ep + "\\" + fileName;
+            File epf = new File(p);
+
+            if (epf.exists())
+            {
+                debug("isInPath returning true = " + p);
+                return true;
+            }
+            else
+            {
+                debug("isInPath did not find = " + p);
+            }
+        }
+
+        debug("isInPath returning false because file not found in path");
+        return false;
     }
 }

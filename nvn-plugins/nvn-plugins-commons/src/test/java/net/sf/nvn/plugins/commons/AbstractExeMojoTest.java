@@ -1,6 +1,5 @@
 package net.sf.nvn.plugins.commons;
 
-import java.util.Map;
 import junit.framework.Assert;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
@@ -16,7 +15,7 @@ public class AbstractExeMojoTest
     private static class BaseExeMojoImpl extends AbstractExeMojo
     {
         @Override
-        public String buildCommandLineString()
+        public String getArgs()
         {
             return null;
         }
@@ -46,17 +45,18 @@ public class AbstractExeMojoTest
         
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void buildEnvVarsTest() throws Exception
+    public void loadEnvVarsTest() throws Exception
     {
         AbstractExeMojo mojo = new BaseExeMojoImpl();
         mojo.inheritEnvVars = true;
-        Map ev = mojo.buildEnvVars();
-        Assert.assertTrue(ev.size() > 0);
+        mojo.loadEnvVars();
+        Assert.assertTrue(mojo.envVarsToUseForProc.size() > 0);
+        Assert.assertTrue(mojo.getEnvVarArray().length > 0);
 
         mojo.inheritEnvVars = false;
-        ev = mojo.buildEnvVars();
-        Assert.assertEquals(0, ev.size());
+        mojo.loadEnvVars();
+        Assert.assertEquals(0, mojo.envVarsToUseForProc.size());
+        Assert.assertEquals(0, mojo.getEnvVarArray().length);
     }
 }

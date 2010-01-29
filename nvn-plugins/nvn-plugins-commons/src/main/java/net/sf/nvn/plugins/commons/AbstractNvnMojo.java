@@ -1,6 +1,6 @@
 package net.sf.nvn.plugins.commons;
 
-import static org.apache.commons.exec.util.StringUtils.quoteArgument;
+import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -63,7 +63,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     boolean ignoreExecutionRequirements;
 
     @SuppressWarnings("unchecked")
-    public boolean isSolution()
+    boolean isSolution()
     {
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
@@ -75,7 +75,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     }
 
     @SuppressWarnings("unchecked")
-    public boolean isVdprojProject()
+    boolean isVdprojProject()
     {
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
@@ -87,7 +87,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     }
 
     @SuppressWarnings("unchecked")
-    public boolean isProject()
+    boolean isProject()
     {
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
@@ -103,40 +103,22 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return isSolution() && isProject();
     }
 
-    @SuppressWarnings("unchecked")
-    public boolean isModularProject()
-    {
-        File parentDir = this.mavenProject.getBasedir().getParentFile();
+    abstract void nvnExecute() throws MojoExecutionException;
 
-        if (parentDir == null)
-        {
-            return false;
-        }
+    abstract void prepareForExecute() throws MojoExecutionException;
 
-        Collection files = FileUtils.listFiles(parentDir, new String[]
-        {
-            "sln"
-        }, false);
+    abstract String getMojoName();
 
-        return files != null && files.size() > 0;
-    }
+    abstract boolean shouldExecute() throws MojoExecutionException;
 
-    abstract public void nvnExecute() throws MojoExecutionException;
-
-    abstract public void prepareForExecute() throws MojoExecutionException;
-
-    abstract public String getMojoName();
-
-    abstract public boolean shouldExecute() throws MojoExecutionException;
-
-    abstract public boolean isProjectTypeValid();
+    abstract boolean isProjectTypeValid();
 
     @Override
     final public void execute() throws MojoExecutionException
     {
         if (this.skip)
         {
-            getLog().info("nvn-" + getMojoName() + ": skipping execution");
+            info("skipping execution");
             return;
         }
 
@@ -149,21 +131,79 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         if (!this.ignoreExecutionRequirements && !shouldExecute())
         {
-            getLog().debug(
-                "nvn-" + getMojoName() + ": execution requirements not met");
+            debug("execution requirements not met");
             return;
         }
 
         nvnExecute();
     }
 
-    public String getPath(File file)
+    String getPath(File file, boolean quote)
     {
-        return getPath(file.getName());
+        String fp = file.getPath();
+
+        debug("getPath(" + fp + ")");
+
+        String path;
+
+        if (fp.contains("\\") || fp.contains("/"))
+        {
+            debug("getPath - file path contains a \\ or /");
+
+            if (fp.matches("^\\w\\:.*+"))
+            {
+                path = fp;
+                debug("getPath detected a drive letter thus using file path as is");
+            }
+            else
+            {
+                path = this.mavenProject.getBasedir() + "\\" + fp;
+                debug("getPath using basedir and file path as is");
+            }
+        }
+        else if (isInPath(file))
+        {
+            path = fp;
+            debug("getPath file is in path via path environment variable");
+        }
+        else
+        {
+            path = this.mavenProject.getBasedir() + "\\" + fp;
+            debug("getPath using basedir and file path as is");
+        }
+
+        if (quote)
+        {
+            path = quote(path);
+        }
+
+        debug("getPath returned " + path);
+
+        return path;
     }
 
-    public String getPath(String fileName)
+    String getPath(File file)
     {
-        return quoteArgument(mavenProject.getBasedir() + "\\" + fileName);
+        return getPath(file, true);
+    }
+
+    boolean isInPath(File file)
+    {
+        return false;
+    }
+
+    void debug(String message)
+    {
+        getLog().debug("NVN-" + getMojoName() + ": " + message);
+    }
+
+    void info(String message)
+    {
+        getLog().info("NVN-" + getMojoName() + ": " + message);
+    }
+
+    void error(String message)
+    {
+        getLog().error("NVN-" + getMojoName() + ": " + message);
     }
 }
