@@ -67,11 +67,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
 
                 if (oldText.equals(assemblyInfoText))
                 {
-                    getLog()
-                        .debug(
-                            "nvn-"
-                                + getMojoName()
-                                + ": not generating assembly info file, same content as existing one");
+                    debug("not generating assembly info file, same content as existing one");
                     return;
                 }
             }
