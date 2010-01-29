@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import static org.apache.commons.exec.util.StringUtils.quoteArgument;
+import static net.sf.nvn.commons.StringUtils.quote;
 
 /**
  * A Maven plug-in for testing .NET solutions and/or projects with MSTest.
@@ -17,13 +17,6 @@ import static org.apache.commons.exec.util.StringUtils.quoteArgument;
  */
 public class MSTestMojo extends AbstractExeMojo
 {
-    /**
-     * The path to the mstest executable.
-     * 
-     * @parameter expression="${mstest.mstest}" default-value="mstest.exe"
-     */
-    File mstest;
-
     /**
      * An assembly that contains tests.
      * 
@@ -144,6 +137,11 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     public void prepareForExecute() throws MojoExecutionException
     {
+        if (super.command == null)
+        {
+            super.command = new File("mstest.exe");
+        }
+        
         loadTestMetaData();
     }
 
@@ -160,23 +158,14 @@ public class MSTestMojo extends AbstractExeMojo
             return true;
         }
 
-        getLog().info("nvn-" + getMojoName() + ": no tests found");
+        info("no tests found");
         return false;
     }
 
     @Override
-    public String buildCommandLineString()
+    public String getArgs()
     {
-        if (StringUtils.isNotEmpty(this.commandLineArgs))
-        {
-            String cmd = this.mstest.getName() + " " + this.commandLineArgs;
-            return cmd;
-        }
-
         StringBuilder cmdLineBuff = new StringBuilder();
-
-        cmdLineBuff.append(quoteArgument(this.mstest.getName()));
-        cmdLineBuff.append(" ");
 
         if (this.testContainer != null)
         {
@@ -200,7 +189,7 @@ public class MSTestMojo extends AbstractExeMojo
             for (String s : this.testLists)
             {
                 cmdLineBuff.append("/testlist:");
-                cmdLineBuff.append(quoteArgument(s));
+                cmdLineBuff.append(quote(s));
                 cmdLineBuff.append(" ");
             }
         }
@@ -216,7 +205,7 @@ public class MSTestMojo extends AbstractExeMojo
             for (String s : this.tests)
             {
                 cmdLineBuff.append("/test:");
-                cmdLineBuff.append(quoteArgument(s));
+                cmdLineBuff.append(quote(s));
                 cmdLineBuff.append(" ");
             }
         }
@@ -246,7 +235,7 @@ public class MSTestMojo extends AbstractExeMojo
             for (String s : this.details)
             {
                 cmdLineBuff.append("/detail:");
-                cmdLineBuff.append(quoteArgument(s));
+                cmdLineBuff.append(quote(s));
                 cmdLineBuff.append(" ");
             }
         }
@@ -260,7 +249,7 @@ public class MSTestMojo extends AbstractExeMojo
         if (StringUtils.isNotEmpty(this.publish))
         {
             cmdLineBuff.append("/publish:");
-            cmdLineBuff.append(quoteArgument(this.publish));
+            cmdLineBuff.append(quote(this.publish));
             cmdLineBuff.append(" ");
         }
 
@@ -275,28 +264,28 @@ public class MSTestMojo extends AbstractExeMojo
         if (StringUtils.isNotEmpty(this.publishBuild))
         {
             cmdLineBuff.append("/publishbuild:");
-            cmdLineBuff.append(quoteArgument(this.publishBuild));
+            cmdLineBuff.append(quote(this.publishBuild));
             cmdLineBuff.append(" ");
         }
 
         if (StringUtils.isNotEmpty(this.teamProject))
         {
             cmdLineBuff.append("/teamproject:");
-            cmdLineBuff.append(quoteArgument(this.teamProject));
+            cmdLineBuff.append(quote(this.teamProject));
             cmdLineBuff.append(" ");
         }
 
         if (StringUtils.isNotEmpty(this.platform))
         {
             cmdLineBuff.append("/platform:");
-            cmdLineBuff.append(quoteArgument(this.platform));
+            cmdLineBuff.append(quote(this.platform));
             cmdLineBuff.append(" ");
         }
 
         if (StringUtils.isNotEmpty(this.flavor))
         {
             cmdLineBuff.append("/flavor:");
-            cmdLineBuff.append(quoteArgument(this.flavor));
+            cmdLineBuff.append(quote(this.flavor));
             cmdLineBuff.append(" ");
         }
 

@@ -18,7 +18,7 @@ public class MSTestMojoTest
         MSTestMojo mojo = new MSTestMojo();
         mojo.mavenProject = new MavenProject();
         mojo.mavenProject.setBasedir(new File("."));
-        mojo.mstest = new File("mstest.exe");
+        mojo.command = new File("mstest.exe");
         mojo.timeout = new Long(300000);
         mojo.inheritEnvVars = true;
         mojo.testMetaDatas = new File[]
@@ -30,9 +30,9 @@ public class MSTestMojoTest
     }
     
     @Test
-    public void buildCommandLineStringTest() throws Exception
+    public void testBuildCmdLineString() throws Exception
     {
         MSTestMojo mojo = loadMojo();
-        Assert.assertEquals("mstest.exe /testmetadata:MyTests.vsmdi ", mojo.buildCommandLineString());
+        Assert.assertEquals("mstest.exe /testmetadata:MyTests.vsmdi ", mojo.buildCmdLineString());
     }
 }
