@@ -1,6 +1,6 @@
 package net.sf.nvn.plugins.vdproj;
 
-import static org.apache.commons.exec.util.StringUtils.quoteArgument;
+import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
 import java.util.Collection;
 import org.apache.commons.io.FileUtils;
@@ -35,13 +35,6 @@ public class VdprojMojo extends AbstractExeMojo
     File vdProjFile;
 
     /**
-     * The devenv executable.
-     * 
-     * @parameter expression="${vdproj.devenv}" default-value="devenv.exe"
-     */
-    File devEnv;
-
-    /**
      * The name of the setup project.
      * 
      * @parameter
@@ -49,27 +42,18 @@ public class VdprojMojo extends AbstractExeMojo
     String projectName;
     
     @Override
-    public String buildCommandLineString()
+    public String getArgs()
     {
-        if (StringUtils.isNotEmpty(super.commandLineArgs))
-        {
-            String cmd = this.devEnv.getName() + " " + this.commandLineArgs;
-            return cmd;
-        }
-
         StringBuilder cmdLineBuff = new StringBuilder();
-
-        cmdLineBuff.append(quoteArgument(this.devEnv.getName()));
-        cmdLineBuff.append(" ");
 
         cmdLineBuff.append("/Build");
         cmdLineBuff.append(" ");
-        cmdLineBuff.append(quoteArgument(this.buildConfiguration));
+        cmdLineBuff.append(quote(this.buildConfiguration));
         cmdLineBuff.append(" ");
 
         cmdLineBuff.append("/Project");
         cmdLineBuff.append(" ");
-        cmdLineBuff.append(quoteArgument(this.projectName));
+        cmdLineBuff.append(quote(this.projectName));
         cmdLineBuff.append(" ");
 
         cmdLineBuff.append(getPath(this.vdProjFile));
@@ -105,15 +89,6 @@ public class VdprojMojo extends AbstractExeMojo
     @Override
     public boolean shouldExecute() throws MojoExecutionException
     {
-        if (!this.devEnv.getName().matches("(?i)devenv(\\.exe)?")
-            && !this.devEnv.exists())
-        {
-            getLog().error(
-                "nvn-" + getMojoName() + ": could not find "
-                    + this.devEnv.getName());
-            return false;
-        }
-
         if (this.vdProjFile == null)
         {
             getLog().error(

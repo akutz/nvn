@@ -19,7 +19,7 @@ public class VdprojMojoTest
         mojo.mavenProject = new MavenProject();
         mojo.mavenProject.setBasedir(new File("."));
         mojo.buildConfiguration = "Debug";
-        mojo.devEnv = new File("devenv.exe");
+        mojo.command = new File("devenv.exe");
         mojo.vdProjFile = new File("MySetupProject.vdproj");
         mojo.timeout = new Long(300000);
         mojo.inheritEnvVars = true;
@@ -27,12 +27,12 @@ public class VdprojMojoTest
     }
 
     @Test
-    public void buildCommandLineStringTest() throws Exception
+    public void testBuildCmdLineString() throws Exception
     {
         VdprojMojo mojo = loadMojo();
         mojo.prepareForExecute();
         Assert.assertEquals(
-            "devenv.exe /Build Debug /Project MySetupProject .\\MySetupProject.vdproj",
-            mojo.buildCommandLineString());
+            ".\\devenv.exe /Build Debug /Project MySetupProject .\\MySetupProject.vdproj",
+            mojo.buildCmdLineString());
     }
 }
