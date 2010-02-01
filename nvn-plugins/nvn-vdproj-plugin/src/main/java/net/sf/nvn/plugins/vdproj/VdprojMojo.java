@@ -71,8 +71,12 @@ public class VdprojMojo extends AbstractExeMojo
     @Override
     public void prepareForExecute() throws MojoExecutionException
     {
+        if (super.command == null)
+        {
+            super.command = new File("devenv.exe");
+        }
+        
         loadVdprojFile();
-
         loadProjectName();
     }
 

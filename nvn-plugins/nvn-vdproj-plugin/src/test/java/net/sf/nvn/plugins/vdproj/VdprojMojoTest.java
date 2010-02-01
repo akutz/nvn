@@ -21,7 +21,6 @@ public class VdprojMojoTest
         mojo.buildConfiguration = "Debug";
         mojo.command = new File("devenv.exe");
         mojo.vdProjFile = new File("MySetupProject.vdproj");
-        mojo.timeout = new Long(300000);
         mojo.inheritEnvVars = true;
         return mojo;
     }
