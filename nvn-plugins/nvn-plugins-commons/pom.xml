@@ -31,7 +31,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-msbuild-plugin/target/generated-sources/net/sf/nvn/plugins/msbuild
+                            <outputDirectory>${basedir}/../nvn-msbuild-plugin/src/main/java/net/sf/nvn/plugins/msbuild
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/msbuild.properties
@@ -66,7 +66,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-mstest-plugin/target/generated-sources/net/sf/nvn/plugins/mstest
+                            <outputDirectory>${basedir}/../nvn-mstest-plugin/src/main/java/net/sf/nvn/plugins/mstest
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/mstest.properties
@@ -101,7 +101,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-assemblyinfo-plugin/target/generated-sources/net/sf/nvn/plugins/assemblyinfo
+                            <outputDirectory>${basedir}/../nvn-assemblyinfo-plugin/src/main/java/net/sf/nvn/plugins/assemblyinfo
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/assemblyinfo.properties
@@ -134,7 +134,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-vdproj-plugin/target/generated-sources/net/sf/nvn/plugins/vdproj
+                            <outputDirectory>${basedir}/../nvn-vdproj-plugin/src/main/java/net/sf/nvn/plugins/vdproj
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/vdproj.properties
@@ -169,7 +169,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-xsd-plugin/target/generated-sources/net/sf/nvn/plugins/xsd
+                            <outputDirectory>${basedir}/../nvn-xsd-plugin/src/main/java/net/sf/nvn/plugins/xsd
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/xsd.properties

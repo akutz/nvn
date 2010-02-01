@@ -144,12 +144,24 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     abstract String getArgs();
 
     /**
+     * Gets a file with the default command to execute.
+     * 
+     * @return A file with the default command to execute.
+     */
+    abstract File getDefaultCommand();
+
+    /**
      * Builds the string that is executed by Runtime.exec(String, String[]).
      * 
      * @return The string that is executed by Runtime.exec(String, String[]).
      */
     final String buildCmdLineString()
     {
+        if (this.command == null)
+        {
+            this.command = getDefaultCommand();
+        }
+
         String args = StringUtils.isEmpty(this.args) ? getArgs() : this.args;
         String cmd = String.format("%s %s", getPath(this.command), args);
         return cmd;
@@ -165,6 +177,25 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * Invoked after exec(String cmd) has completed.
+     * 
+     * @param process The process that was executed.
+     */
+    void postExec(Process process) throws MojoExecutionException
+    {
+    }
+
+    /**
+     * Returns a flag indicating whether or not to show the process's output.
+     * 
+     * @return A flag indicating whether or not to show the process's output.
+     */
+    boolean showExecOutput()
+    {
+        return true;
+    }
+
+    /**
      * Executes the given command with Runtime.exec(String, String[]).
      * 
      * @param cmd The command line string to execute.
@@ -174,9 +205,12 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     {
         try
         {
-            Process p = ProcessUtils.exec(cmd, this.procEnvVars);
+            Process p =
+                ProcessUtils.exec(cmd, this.procEnvVars, showExecOutput());
 
             int exitCode = p.waitFor();
+
+            postExec(p);
 
             if (exitCode != 0)
             {

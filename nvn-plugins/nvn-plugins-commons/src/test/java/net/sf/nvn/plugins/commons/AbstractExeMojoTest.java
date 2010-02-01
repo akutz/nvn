@@ -1,5 +1,6 @@
 package net.sf.nvn.plugins.commons;
 
+import java.io.File;
 import junit.framework.Assert;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
@@ -41,6 +42,12 @@ public class AbstractExeMojoTest
         public boolean isProjectTypeValid()
         {
             return false;
+        }
+
+        @Override
+        File getDefaultCommand()
+        {
+            return new File("echo");
         }
         
     }
