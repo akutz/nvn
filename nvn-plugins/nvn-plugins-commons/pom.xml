@@ -19,7 +19,7 @@
                 <version>2.4.1</version>
                 <executions>
                     <execution>
-                        <id>copy-abstractexemojo-to-msbuild</id>
+                        <id>copy-to-msbuild</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -31,7 +31,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-msbuild-plugin/src/main/java/net/sf/nvn/plugins/msbuild
+                            <outputDirectory>${basedir}/../nvn-msbuild-plugin/target/generated-sources/net/sf/nvn/plugins/msbuild
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/msbuild.properties
@@ -54,7 +54,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-abstractexemojo-to-mstest</id>
+                        <id>copy-to-mstest</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -66,7 +66,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-mstest-plugin/src/main/java/net/sf/nvn/plugins/mstest
+                            <outputDirectory>${basedir}/../nvn-mstest-plugin/target/generated-sources/net/sf/nvn/plugins/mstest
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/mstest.properties
@@ -89,7 +89,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-abstractexemojo-to-assemblyinfo</id>
+                        <id>copy-to-assemblyinfo</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -101,7 +101,7 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-assemblyinfo-plugin/src/main/java/net/sf/nvn/plugins/assemblyinfo
+                            <outputDirectory>${basedir}/../nvn-assemblyinfo-plugin/target/generated-sources/net/sf/nvn/plugins/assemblyinfo
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/assemblyinfo.properties
@@ -122,7 +122,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-abstractexemojo-to-vdproj</id>
+                        <id>copy-to-vdproj</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -134,10 +134,45 @@
                                 <delimiter>package *;</delimiter>
                             </delimiters>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${basedir}/../nvn-vdproj-plugin/src/main/java/net/sf/nvn/plugins/vdproj
+                            <outputDirectory>${basedir}/../nvn-vdproj-plugin/target/generated-sources/net/sf/nvn/plugins/vdproj
                             </outputDirectory>
                             <filters>
                                 <filter>${basedir}/src/main/conf/vdproj.properties
+                                </filter>
+                            </filters>
+                            <resources>
+                                <resource>
+                                    <filtering>true</filtering>
+                                    <directory>
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                    </directory>
+                                    <includes>
+                                        <include>AbstractNvnMojo.java
+                                        </include>
+                                        <include>AbstractExeMojo.java
+                                        </include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-to-xsd</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <useDefaultDelimiters>false
+                            </useDefaultDelimiters>
+                            <delimiters>
+                                <delimiter>package *;</delimiter>
+                            </delimiters>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${basedir}/../nvn-xsd-plugin/target/generated-sources/net/sf/nvn/plugins/xsd
+                            </outputDirectory>
+                            <filters>
+                                <filter>${basedir}/src/main/conf/xsd.properties
                                 </filter>
                             </filters>
                             <resources>
