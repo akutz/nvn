@@ -308,11 +308,6 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     void prepareForExecute() throws MojoExecutionException
     {
-        if (super.command == null)
-        {
-            super.command = new File("msbuild.exe");
-        }
-
         loadBuildFile();
 
         loadProperties();
@@ -836,5 +831,11 @@ public class MSBuildMojo extends AbstractExeMojo
     boolean isProjectTypeValid()
     {
         return isSolution() || isProject();
+    }
+
+    @Override
+    File getDefaultCommand()
+    {
+        return new File("msbuild.exe");
     }
 }
