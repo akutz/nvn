@@ -19,7 +19,6 @@ public class MSTestMojoTest
         mojo.mavenProject = new MavenProject();
         mojo.mavenProject.setBasedir(new File("."));
         mojo.command = new File("mstest.exe");
-        mojo.timeout = new Long(300000);
         mojo.inheritEnvVars = true;
         mojo.testMetaDatas = new File[]
         {
