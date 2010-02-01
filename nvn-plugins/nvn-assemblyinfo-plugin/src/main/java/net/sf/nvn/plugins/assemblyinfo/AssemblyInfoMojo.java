@@ -95,7 +95,10 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         parseGuid();
     }
 
-    public void loadVersion()
+    /**
+     * Loads the version.
+     */
+    void loadVersion()
     {
         if (super.mavenProject.getVersion().equals(
             MavenProject.EMPTY_PROJECT_VERSION))
@@ -105,12 +108,18 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     }
 
     @Override
-    public boolean shouldExecute() throws MojoExecutionException
+    boolean shouldExecute() throws MojoExecutionException
     {
         return true;
     }
 
-    public void createOutputDirectories() throws MojoExecutionException
+    /**
+     * Creates the output directories necessary for the assembly information
+     * file.
+     * 
+     * @throws MojoExecutionException
+     */
+    void createOutputDirectories() throws MojoExecutionException
     {
         File outputDir =
             new File(FilenameUtils.getFullPath(this.outputFile
@@ -124,7 +133,10 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
-    public void parseGuid()
+    /**
+     * Parses the GUID.
+     */
+    void parseGuid()
     {
         if (StringUtils.isEmpty(this.guid))
         {
@@ -132,7 +144,12 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
-    public void parseSafeVersion() throws MojoExecutionException
+    /**
+     * Parses the numeric version from the project's version.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
+    void parseSafeVersion() throws MojoExecutionException
     {
         Pattern p = Pattern.compile("(?:\\d|\\.)+");
         Matcher m = p.matcher(super.mavenProject.getVersion());
@@ -148,7 +165,12 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
-    public void parseOutputFileType() throws MojoExecutionException
+    /**
+     * Parses the output file type from the output file's extension.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
+    void parseOutputFileType() throws MojoExecutionException
     {
         String filename = this.outputFile.getName();
 
@@ -171,6 +193,13 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
+    /**
+     * Writes an import statement.
+     * 
+     * @param out The out stream.
+     * @param toWrite The text to write.
+     * @throws IOException When error occurs.
+     */
     private void outImport(Writer out, String toWrite) throws IOException
     {
         if (this.outputFileType == OutputFileType.CSharp)
@@ -183,6 +212,13 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
+    /**
+     * Writes an attribute.
+     * 
+     * @param out The out stream.
+     * @param toWrite The text to write.
+     * @throws IOException When error occurs.
+     */
     private void outAttr(Writer out, String toWrite) throws IOException
     {
         if (this.outputFileType == OutputFileType.CSharp)
@@ -195,7 +231,13 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
-    public String createAssemblyInfoText() throws MojoExecutionException
+    /**
+     * Creates the assembly information text.
+     * 
+     * @return The assembly information text.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String createAssemblyInfoText() throws MojoExecutionException
     {
         try
         {
