@@ -62,6 +62,11 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     boolean ignoreExecutionRequirements;
 
+    /**
+     * Gets a flag indicating whether or not this project is a solution.
+     * 
+     * @return A flag indicating whether or not this project is a solution.
+     */
     @SuppressWarnings("unchecked")
     boolean isSolution()
     {
@@ -74,6 +79,11 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return files != null && files.size() > 0;
     }
 
+    /**
+     * Gets a flag indicating whether or not this project is a setup project.
+     * 
+     * @return A flag indicating whether or not this project is a setup project.
+     */
     @SuppressWarnings("unchecked")
     boolean isVdprojProject()
     {
@@ -86,6 +96,13 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return files != null && files.size() > 0;
     }
 
+    /**
+     * Gets a flag indicating whether or not this project is a non-setup
+     * project.
+     * 
+     * @return A flag indicating whether or not this project is a non-setup
+     *         project.
+     */
     @SuppressWarnings("unchecked")
     boolean isProject()
     {
@@ -98,19 +115,58 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return files != null && files.size() > 0;
     }
 
+    /**
+     * Gets a flag indicating whether or not this project is a solution and
+     * non-setup project.
+     * 
+     * @return A flag indicating whether or not this project is a solution and a
+     *         non-setup project.
+     */
     public boolean isSolutionAndProject()
     {
         return isSolution() && isProject();
     }
 
+    /**
+     * The NVN execute method. NVN mojos override this method instead of the
+     * normal MOJO execute() method.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     abstract void nvnExecute() throws MojoExecutionException;
 
+    /**
+     * This method is invoked after "isProjectTypeValid()" but before
+     * "shouldExecute()".
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     abstract void prepareForExecute() throws MojoExecutionException;
 
+    /**
+     * Gets this mojo's name. Will be used for logging.
+     * 
+     * @return This mojo's name.
+     */
     abstract String getMojoName();
 
+    /**
+     * Gets a flag indicating whether or not this mojo should execute. This
+     * method is invoked after "isProjectTypeValid()" and "prepareForExecute()".
+     * 
+     * @return A flag indicating whether or not this mojo should execute.
+     * @throws MojoExecutionException When an error occurs.
+     */
     abstract boolean shouldExecute() throws MojoExecutionException;
 
+    /**
+     * Returns a flag indicating whether or not this mojo is valid for this
+     * project type. This method is invoked before "prepareForExecute()" and
+     * "shouldExecute()".
+     * 
+     * @return A flag indicating whether or not this mojo is valid for this
+     *         project type.
+     */
     abstract boolean isProjectTypeValid();
 
     @Override
@@ -138,6 +194,13 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         nvnExecute();
     }
 
+    /**
+     * Gets a file's path.
+     * 
+     * @param file A file.
+     * @param quote Whether or not to quote the file path.
+     * @return A file's path.
+     */
     String getPath(File file, boolean quote)
     {
         String fp = file.getPath();
@@ -181,26 +244,53 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return path;
     }
 
+    /**
+     * Get a file's path.
+     * 
+     * @param file A file.
+     * @return A file's path.
+     */
     String getPath(File file)
     {
         return getPath(file, true);
     }
 
+    /**
+     * Get a file's full path if it is in the Path environment variable.
+     * 
+     * @param file A file.
+     * @return A file's full path if it is in the Path environment variable.
+     */
     String getFullPathFromPath(File file)
     {
         return null;
     }
 
+    /**
+     * Emits a debug message to the mojo logger.
+     * 
+     * @param message The message to emit.
+     */
     void debug(String message)
     {
         getLog().debug("NVN-" + getMojoName() + ": " + message);
     }
 
+    /**
+     * Emits an info message to the mojo logger.
+     * 
+     * @param message The message to emit.
+     */
     void info(String message)
     {
         getLog().info("NVN-" + getMojoName() + ": " + message);
     }
 
+    /**
+     * Emits an error message to the mojo logger.
+     * 
+     * @param message The message to emit.
+     */
     void error(String message)
     {
         getLog().error("NVN-" + getMojoName() + ": " + message);

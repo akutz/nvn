@@ -266,6 +266,13 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         debug("Path=" + path);
     }
 
+    /**
+     * Puts a value in the process environment variable map if the value's key
+     * does not already exist.
+     * 
+     * @param key An environment variable key.
+     * @param val An environment variable value.
+     */
     @SuppressWarnings("unchecked")
     void putEnvVar(String key, String val)
     {
@@ -319,6 +326,12 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         }
     }
 
+    /**
+     * Gets the Visual Studio .NET 2008 installation directory.
+     * 
+     * @return The Visual Studio .NET 2008 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
     String getVSNet2008Dir() throws MojoExecutionException
     {
         try
@@ -335,6 +348,12 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         }
     }
 
+    /**
+     * Gets the Windows SDK 6.1 installation directory.
+     * 
+     * @return The Windows SDK 6.1 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
     String getWinSdk61Dir() throws MojoExecutionException
     {
         try
