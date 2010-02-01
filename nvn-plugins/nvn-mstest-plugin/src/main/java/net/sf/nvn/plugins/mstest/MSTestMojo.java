@@ -23,7 +23,7 @@ public class MSTestMojo extends AbstractExeMojo
      * @parameter expression="${mstest.testContainer}"
      */
     File testContainer;
-
+    
     /**
      * One or more files with the extension "vsmdi" that contains test metadata.
      * 
@@ -44,6 +44,13 @@ public class MSTestMojo extends AbstractExeMojo
      * @parameter expression="${mstest.tests}"
      */
     String[] tests;
+    
+    /**
+     * Set to true to skip the tests.
+     * 
+     * @parameter expression="${skipTests}" default-value="false"
+     */
+    boolean skipTests;
 
     /**
      * Run tests within the MSTest.exe process. This choice improves test run
@@ -137,17 +144,18 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     void prepareForExecute() throws MojoExecutionException
     {
-        if (super.command == null)
-        {
-            super.command = new File("mstest.exe");
-        }
-
         loadTestMetaData();
     }
 
     @Override
     boolean shouldExecute()
     {
+        if (skipTests)
+        {
+            info("tests are skipped");
+            return false;
+        }
+        
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
             return true;
@@ -347,5 +355,11 @@ public class MSTestMojo extends AbstractExeMojo
     boolean isProjectTypeValid()
     {
         return isSolution() || isProject();
+    }
+
+    @Override
+    File getDefaultCommand()
+    {
+        return new File("mstest.exe");
     }
 }
