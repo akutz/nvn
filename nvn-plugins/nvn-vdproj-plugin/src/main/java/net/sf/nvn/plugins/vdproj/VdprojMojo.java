@@ -71,11 +71,6 @@ public class VdprojMojo extends AbstractExeMojo
     @Override
     void prepareForExecute() throws MojoExecutionException
     {
-        if (super.command == null)
-        {
-            super.command = new File("devenv.exe");
-        }
-        
         loadVdprojFile();
         loadProjectName();
     }
@@ -150,5 +145,11 @@ public class VdprojMojo extends AbstractExeMojo
     boolean isProjectTypeValid()
     {
         return isVdprojProject();
+    }
+
+    @Override
+    File getDefaultCommand()
+    {
+        return new File("devenv.exe");
     }
 }
