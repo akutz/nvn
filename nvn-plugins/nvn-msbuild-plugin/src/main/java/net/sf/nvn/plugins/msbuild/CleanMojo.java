@@ -11,7 +11,7 @@ package net.sf.nvn.plugins.msbuild;
 public class CleanMojo extends MSBuildMojo
 {
     @Override
-    public void loadTargets()
+    void loadTargets()
     {
         if (this.targets != null && this.targets.length > 0)
         {

@@ -493,6 +493,12 @@ public class MSBuildMojo extends AbstractExeMojo
         return clbs;
     }
 
+    /**
+     * Finds the build file (either a sln, csproj, or vbproj file).
+     * 
+     * @return The build file.
+     * @throws MojoExecutionException When an error occurs.
+     */
     @SuppressWarnings("unchecked")
     File findBuildFile() throws MojoExecutionException
     {
@@ -522,6 +528,9 @@ public class MSBuildMojo extends AbstractExeMojo
             "Error finding solution or project file");
     }
 
+    /**
+     * Loads the build's target.
+     */
     void loadTargets()
     {
         if (this.targets != null && this.targets.length > 0)
@@ -535,6 +544,9 @@ public class MSBuildMojo extends AbstractExeMojo
         };
     }
 
+    /**
+     * Loads the build's properties.
+     */
     void loadProperties()
     {
         if (this.properties != null && this.properties.size() > 0)
@@ -553,6 +565,13 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Loads a maven project's dependencies and adds them to the build's
+     * ReferencePath property.
+     * 
+     * @param project The maven project.
+     * @throws MojoExecutionException
+     */
     @SuppressWarnings("unchecked")
     void loadProjectDependencies(MavenProject project)
         throws MojoExecutionException
@@ -614,6 +633,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * @param dir The artifact directory.
      * @param artifactId The artifact ID.
      * @param version The artifact version.
+     * @throws MojoExecutionException When an error occurs.
      */
     void copyDepSansVer(File dir, String artifactId, String version)
         throws MojoExecutionException
@@ -628,6 +648,17 @@ public class MSBuildMojo extends AbstractExeMojo
         copyDepSansVer(dir, artifactId, version, "pdb");
     }
 
+    /**
+     * Creates a copy of the artifact dependency without the version number so
+     * that msbuild can find the file that the developer may have originally
+     * referenced.
+     * 
+     * @param dir The artifact directory.
+     * @param artifactId The artifact ID.
+     * @param version The artifact version.
+     * @param extension The artifact's file extension.
+     * @throws MojoExecutionException When an error occurs.
+     */
     void copyDepSansVer(
         File dir,
         String artifactId,
@@ -640,6 +671,15 @@ public class MSBuildMojo extends AbstractExeMojo
         copyDepSansVer(orig, copy);
     }
 
+    /**
+     * Creates a copy of the artifact dependency without the version number so
+     * that msbuild can find the file that the developer may have originally
+     * referenced.
+     * 
+     * @param ver The versioned file.
+     * @param nonVer The non-versioned file.
+     * @throws MojoExecutionException When an error occurs.
+     */
     void copyDepSansVer(File ver, File nonVer) throws MojoExecutionException
     {
         try
@@ -662,11 +702,22 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Loads this project's dependencies into the msbuild property
+     * ReferencePath.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     void loadMyDependencies() throws MojoExecutionException
     {
         loadProjectDependencies(this.mavenProject);
     }
 
+    /**
+     * Loads the collected dependencies into the msbuild property ReferencePath.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     @SuppressWarnings("unchecked")
     void loadCollectedDependencies() throws MojoExecutionException
     {
@@ -684,6 +735,11 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Loads all the dependencies into the msbuild property ReferencePath.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     void loadDependencies() throws MojoExecutionException
     {
         loadMyDependencies();
@@ -694,6 +750,11 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Loads the reference paths and build the property string.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     void loadReferencePaths() throws MojoExecutionException
     {
         loadDependencies();
@@ -752,6 +813,11 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Load the build file to use.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
     void loadBuildFile() throws MojoExecutionException
     {
         if (this.buildFile == null)
