@@ -28,7 +28,6 @@ public class MSBuildMojoTest
         mojo.mavenProject.setBasedir(new File("."));
         mojo.command = new File("msbuild.exe");
         mojo.buildFile = new File("MySolution.sln");
-        mojo.timeout = new Long(300000);
         mojo.inheritEnvVars = false;
         mojo.localRepository = localRepo;
 

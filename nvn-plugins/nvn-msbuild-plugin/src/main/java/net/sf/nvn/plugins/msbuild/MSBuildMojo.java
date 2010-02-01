@@ -2,6 +2,7 @@ package net.sf.nvn.plugins.msbuild;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -554,6 +555,7 @@ public class MSBuildMojo extends AbstractExeMojo
 
     @SuppressWarnings("unchecked")
     void loadProjectDependencies(MavenProject project)
+        throws MojoExecutionException
     {
         List deps = project.getDependencies();
 
@@ -599,17 +601,74 @@ public class MSBuildMojo extends AbstractExeMojo
             if (!this.referencePaths.contains(dpf))
             {
                 this.referencePaths.add(dpf);
+                copyDepSansVer(dpf, daid, dver);
             }
         }
     }
 
-    void loadMyDependencies()
+    /**
+     * Creates a copy of the artifact dependency without the version number so
+     * that msbuild can find the file that the developer may have originally
+     * referenced.
+     * 
+     * @param dir The artifact directory.
+     * @param artifactId The artifact ID.
+     * @param version The artifact version.
+     */
+    void copyDepSansVer(File dir, String artifactId, String version)
+        throws MojoExecutionException
+    {
+        if (!dir.exists())
+        {
+            return;
+        }
+
+        copyDepSansVer(dir, artifactId, version, "dll");
+        copyDepSansVer(dir, artifactId, version, "exe");
+        copyDepSansVer(dir, artifactId, version, "pdb");
+    }
+
+    void copyDepSansVer(
+        File dir,
+        String artifactId,
+        String version,
+        String extension) throws MojoExecutionException
+    {
+        String artVer = artifactId + "-" + version;
+        File orig = new File(dir, artVer + "." + extension);
+        File copy = new File(dir, artifactId + "." + extension);
+        copyDepSansVer(orig, copy);
+    }
+
+    void copyDepSansVer(File ver, File nonVer) throws MojoExecutionException
+    {
+        try
+        {
+            if (ver.exists() && !nonVer.exists())
+            {
+                FileUtils.copyFile(ver, nonVer);
+            }
+        }
+        catch (IOException e)
+        {
+            String msg =
+                String
+                    .format(
+                        "Error copying versioned file, %s, to non-versioned file, %s",
+                        ver.getPath(),
+                        nonVer.getPath());
+
+            throw new MojoExecutionException(msg, e);
+        }
+    }
+
+    void loadMyDependencies() throws MojoExecutionException
     {
         loadProjectDependencies(this.mavenProject);
     }
 
     @SuppressWarnings("unchecked")
-    void loadCollectedDependencies()
+    void loadCollectedDependencies() throws MojoExecutionException
     {
         List projects = this.mavenProject.getCollectedProjects();
 
@@ -625,7 +684,7 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
-    void loadDependencies()
+    void loadDependencies() throws MojoExecutionException
     {
         loadMyDependencies();
 
@@ -635,7 +694,7 @@ public class MSBuildMojo extends AbstractExeMojo
         }
     }
 
-    void loadReferencePaths()
+    void loadReferencePaths() throws MojoExecutionException
     {
         loadDependencies();
 
@@ -661,7 +720,7 @@ public class MSBuildMojo extends AbstractExeMojo
 
                 if (s != rps[rps.length - 1])
                 {
-                    rpsb.append(",");
+                    rpsb.append(";");
                 }
             }
         }
@@ -681,7 +740,7 @@ public class MSBuildMojo extends AbstractExeMojo
                 if (of != this.referencePaths
                     .get(this.referencePaths.size() - 1))
                 {
-                    rpsb.append(",");
+                    rpsb.append(";");
                 }
             }
         }
