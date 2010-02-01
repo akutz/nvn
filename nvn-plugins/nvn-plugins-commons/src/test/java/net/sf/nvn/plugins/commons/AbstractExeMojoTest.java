@@ -51,12 +51,10 @@ public class AbstractExeMojoTest
         AbstractExeMojo mojo = new BaseExeMojoImpl();
         mojo.inheritEnvVars = true;
         mojo.loadEnvVars();
-        Assert.assertTrue(mojo.envVarsToUseForProc.size() > 0);
-        Assert.assertTrue(mojo.getEnvVarArray().length > 0);
-
+        Assert.assertTrue(mojo.procEnvVars.size() > 0);
+        
         mojo.inheritEnvVars = false;
         mojo.loadEnvVars();
-        Assert.assertEquals(0, mojo.envVarsToUseForProc.size());
-        Assert.assertEquals(0, mojo.getEnvVarArray().length);
+        Assert.assertEquals(0, mojo.procEnvVars.size());
     }
 }

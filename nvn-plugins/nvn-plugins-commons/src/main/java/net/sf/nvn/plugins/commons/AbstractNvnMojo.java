@@ -161,9 +161,8 @@ public abstract class AbstractNvnMojo extends AbstractMojo
                 debug("getPath using basedir and file path as is");
             }
         }
-        else if (isInPath(file))
+        else if ((path = getFullPathFromPath(file)) != null)
         {
-            path = fp;
             debug("getPath file is in path via path environment variable");
         }
         else
@@ -187,9 +186,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return getPath(file, true);
     }
 
-    boolean isInPath(File file)
+    String getFullPathFromPath(File file)
     {
-        return false;
+        return null;
     }
 
     void debug(String message)
