@@ -42,7 +42,7 @@ public class VdprojMojo extends AbstractExeMojo
     String projectName;
     
     @Override
-    public String getArgs()
+    String getArgs()
     {
         StringBuilder cmdLineBuff = new StringBuilder();
 
@@ -63,13 +63,13 @@ public class VdprojMojo extends AbstractExeMojo
     }
 
     @Override
-    public String getMojoName()
+    String getMojoName()
     {
         return "vdproj";
     }
 
     @Override
-    public void prepareForExecute() throws MojoExecutionException
+    void prepareForExecute() throws MojoExecutionException
     {
         if (super.command == null)
         {
@@ -80,7 +80,10 @@ public class VdprojMojo extends AbstractExeMojo
         loadProjectName();
     }
 
-    public void loadProjectName()
+    /**
+     * Loads the project's name.
+     */
+    void loadProjectName()
     {
         if (StringUtils.isNotEmpty(this.projectName))
         {
@@ -91,7 +94,7 @@ public class VdprojMojo extends AbstractExeMojo
     }
 
     @Override
-    public boolean shouldExecute() throws MojoExecutionException
+    boolean shouldExecute() throws MojoExecutionException
     {
         if (this.vdProjFile == null)
         {
@@ -109,7 +112,10 @@ public class VdprojMojo extends AbstractExeMojo
         return true;
     }
 
-    public void loadVdprojFile()
+    /**
+     * Loads the vdproj file.
+     */
+    void loadVdprojFile()
     {
         if (this.vdProjFile == null)
         {
@@ -117,8 +123,12 @@ public class VdprojMojo extends AbstractExeMojo
         }
     }
 
+    /**
+     * Finds the vdproj file.
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public File findVdprojFile()
+    File findVdprojFile()
     {
         Collection vdprojFiles =
             FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
@@ -137,7 +147,7 @@ public class VdprojMojo extends AbstractExeMojo
     }
 
     @Override
-    public boolean isProjectTypeValid()
+    boolean isProjectTypeValid()
     {
         return isVdprojProject();
     }
