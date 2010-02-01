@@ -135,18 +135,18 @@ public class MSTestMojo extends AbstractExeMojo
     String teamProject;
 
     @Override
-    public void prepareForExecute() throws MojoExecutionException
+    void prepareForExecute() throws MojoExecutionException
     {
         if (super.command == null)
         {
             super.command = new File("mstest.exe");
         }
-        
+
         loadTestMetaData();
     }
 
     @Override
-    public boolean shouldExecute()
+    boolean shouldExecute()
     {
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
@@ -163,7 +163,7 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    public String getArgs()
+    String getArgs()
     {
         StringBuilder cmdLineBuff = new StringBuilder();
 
@@ -256,8 +256,7 @@ public class MSTestMojo extends AbstractExeMojo
         if (this.publishResultsFile != null)
         {
             cmdLineBuff.append("/publishresultsfile:");
-            cmdLineBuff
-                .append(getPath(this.publishResultsFile));
+            cmdLineBuff.append(getPath(this.publishResultsFile));
             cmdLineBuff.append(" ");
         }
 
@@ -295,12 +294,15 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    public String getMojoName()
+    String getMojoName()
     {
         return "mstest";
     }
 
-    public void loadTestMetaData()
+    /**
+     * Loads the test metadata file.
+     */
+    void loadTestMetaData()
     {
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
@@ -310,8 +312,13 @@ public class MSTestMojo extends AbstractExeMojo
         this.testMetaDatas = findVsmdi();
     }
 
+    /**
+     * Finds one or more test list files.
+     * 
+     * @return One or more test list files.
+     */
     @SuppressWarnings("unchecked")
-    public File[] findVsmdi()
+    File[] findVsmdi()
     {
         Collection vsmdiFiles =
             FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
@@ -337,7 +344,7 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    public boolean isProjectTypeValid()
+    boolean isProjectTypeValid()
     {
         return isSolution() || isProject();
     }
