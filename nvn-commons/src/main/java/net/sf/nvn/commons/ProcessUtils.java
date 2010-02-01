@@ -38,8 +38,7 @@ public final class ProcessUtils
      * @throws IOException When an error occurs.
      */
     @SuppressWarnings("unchecked")
-    public static Process exec(String cmd, Map envVars)
-        throws IOException
+    public static Process exec(String cmd, Map envVars) throws IOException
     {
         return exec(cmd, envVars, true);
     }
@@ -93,11 +92,25 @@ public final class ProcessUtils
         return p;
     }
 
+    /**
+     * Gets the stdout stream from a process as a string.
+     * 
+     * @param p The process.
+     * @return The stdout stream from a process as a string.
+     * @throws IOException When an error occurs.
+     */
     public static String getStdOut(Process p) throws IOException
     {
         return IOUtils.toString(p.getInputStream());
     }
 
+    /**
+     * Gets the stderr stream from a process as a string.
+     * 
+     * @param p The process.
+     * @return The stderr stream from a process as a string.
+     * @throws IOException When an error occurs.
+     */
     public static String getStdErr(Process p) throws IOException
     {
         return IOUtils.toString(p.getErrorStream());
@@ -158,7 +171,7 @@ public final class ProcessUtils
         }
 
         String[] arr = new String[map.size()];
-        
+
         int x = 0;
         for (Object k : map.keySet())
         {
