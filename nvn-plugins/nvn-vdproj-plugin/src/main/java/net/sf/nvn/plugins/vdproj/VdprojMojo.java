@@ -5,7 +5,6 @@ import java.io.File;
 import java.util.Collection;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -28,21 +27,19 @@ public class VdprojMojo extends AbstractExeMojo
     String buildConfiguration;
 
     /**
-     * The vdproj file to build.
+     * The vdproj file(s) to build.
      * 
-     * @parameter expression="${vdproj.vdprojFile}"
+     * @parameter expression="${vdproj.vdprojFiles}"
      */
-    File vdProjFile;
+    File[] vdProjFiles;
 
     /**
-     * The name of the setup project.
-     * 
-     * @parameter
+     * The names of the setup project(s).
      */
-    String projectName;
-    
+    String[] projectNames;
+
     @Override
-    String getArgs()
+    String getArgs(int execution)
     {
         StringBuilder cmdLineBuff = new StringBuilder();
 
@@ -53,10 +50,10 @@ public class VdprojMojo extends AbstractExeMojo
 
         cmdLineBuff.append("/Project");
         cmdLineBuff.append(" ");
-        cmdLineBuff.append(quote(this.projectName));
+        cmdLineBuff.append(quote(this.projectNames[execution]));
         cmdLineBuff.append(" ");
 
-        cmdLineBuff.append(getPath(this.vdProjFile));
+        cmdLineBuff.append(getPath(this.vdProjFiles[execution]));
 
         String clbs = cmdLineBuff.toString();
         return clbs;
@@ -69,87 +66,90 @@ public class VdprojMojo extends AbstractExeMojo
     }
 
     @Override
-    void prepareForExecute() throws MojoExecutionException
+    void preExecute() throws MojoExecutionException
     {
-        loadVdprojFile();
-        loadProjectName();
+        initVdprojFiles();
+        initProjectName();
     }
 
     /**
-     * Loads the project's name.
+     * Initializes the projectName field.
      */
-    void loadProjectName()
+    void initProjectName()
     {
-        if (StringUtils.isNotEmpty(this.projectName))
-        {
-            return;
-        }
+        this.projectNames = new String[this.vdProjFiles.length];
 
-        this.projectName = FilenameUtils.getBaseName(this.vdProjFile.getName());
+        for (int x = 0; x < this.vdProjFiles.length; ++x)
+        {
+            this.projectNames[x] =
+                FilenameUtils.getBaseName(this.vdProjFiles[x].getName());
+        }
     }
 
     @Override
     boolean shouldExecute() throws MojoExecutionException
     {
-        if (this.vdProjFile == null)
-        {
-            getLog().error(
-                "nvn-" + getMojoName() + ": could not find a vdproj file");
-            return false;
-        }
-        else if (!this.vdProjFile.exists())
-        {
-            getLog().error(
-                "nvn-" + getMojoName() + ": could not find a vdproj file");
-            return false;
-        }
-
-        return true;
+        return this.vdProjFiles != null && this.vdProjFiles.length > 0;
     }
 
     /**
-     * Loads the vdproj file.
+     * Initializes the vdProjFile field.
      */
-    void loadVdprojFile()
+    void initVdprojFiles()
     {
-        if (this.vdProjFile == null)
+        if (this.vdProjFiles == null)
         {
-            this.vdProjFile = findVdprojFile();
+            this.vdProjFiles = findVdprojFiles();
         }
     }
 
     /**
-     * Finds the vdproj file.
+     * Finds the vdproj file(s).
+     * 
      * @return
      */
     @SuppressWarnings("unchecked")
-    File findVdprojFile()
+    File[] findVdprojFiles()
     {
         Collection vdprojFiles =
             FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
             {
                 "vdproj"
-            }, false);
+            }, true);
 
-        if (vdprojFiles != null && vdprojFiles.size() > 0)
+        if (vdprojFiles == null)
         {
-            return (File) vdprojFiles.iterator().next();
+            return new File[0];
         }
-        else
+
+        File[] files = new File[vdprojFiles.size()];
+
+        int x = 0;
+        for (Object of : vdprojFiles)
         {
-            return null;
+            files[x] = (File) of;
+            ++x;
         }
+
+        return files;
     }
 
     @Override
     boolean isProjectTypeValid()
     {
-        return isVdprojProject();
+        return isSolution() || isVdprojProject();
     }
 
     @Override
     File getDefaultCommand()
     {
         return new File("devenv.exe");
+    }
+
+    @Override
+    void postExecute(MojoExecutionException executionException)
+        throws MojoExecutionException
+    {
+        // Do nothing
     }
 }
