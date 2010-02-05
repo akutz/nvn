@@ -5,17 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.sf.nvn.commons.ProcessUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -61,30 +55,6 @@ public class XsdMojo extends AbstractExeMojo
      * @parameter
      */
     File inputFile;
-
-    /**
-     * This is similar to input file, but you can use a URL. If the URL is on a
-     * remote system then this mojo will get the remote file and process it.
-     * 
-     * @parameter
-     */
-    URL inputUrl;
-
-    /**
-     * The user name to use when getting the URL specified by input URL. Basic
-     * authentication only.
-     * 
-     * @parameter
-     */
-    String userName;
-
-    /**
-     * The password to use when getting the URL specified by input URL. Basic
-     * authentication only.
-     * 
-     * @parameter
-     */
-    String password;
 
     /**
      * <p>
@@ -174,6 +144,52 @@ public class XsdMojo extends AbstractExeMojo
     String[] types;
 
     /**
+     * Read options for various operation modes from the specified .xml file.
+     * 
+     * @parameter
+     */
+    File parameters;
+
+    /**
+     * Implements the <a href="http://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged.aspx"
+     * >INotifyPropertyChanged</a> interface on all generated types to enable
+     * data binding.
+     * 
+     * @parameter
+     */
+    boolean enableDataBinding;
+
+    /**
+     * Specifies that the generated DataSet can be queried against using LINQ to
+     * DataSet. This option is used when the <strong>dataset</strong> parameter
+     * is also specified. For more information, see <a
+     * href="http://msdn.microsoft.com/en-us/library/bb399399.aspx">LINQ to
+     * DataSet Overview</a> and <a
+     * href="http://msdn.microsoft.com/en-us/library/bb399351.aspx">Querying
+     * Typed DataSets</a>. For general information about using LINQ, see <a
+     * href="http://msdn.microsoft.com/en-us/library/bb397926.aspx">Language-
+     * Integrated Query (LINQ)</a>.
+     * 
+     * @parameter
+     */
+    boolean enableLinqDataSet;
+
+    /**
+     * Generates fields instead of properties. By default, properties are
+     * generated.
+     * 
+     * @parameter
+     */
+    boolean fields;
+
+    /**
+     * Generates explicit order identifiers on all particle members.
+     * 
+     * @parameter
+     */
+    boolean order;
+
+    /**
      * Attempts to correct the casing of generated classes so that the class
      * code syntax matches convention Microsoft syntax while the XSD matches XML
      * convention. For example, the property "foo" becomes "Foo" while still
@@ -184,7 +200,7 @@ public class XsdMojo extends AbstractExeMojo
     boolean correctCase;
 
     @Override
-    String getArgs()
+    String getArgs(int execution)
     {
         StringBuilder buff = new StringBuilder();
 
@@ -251,6 +267,37 @@ public class XsdMojo extends AbstractExeMojo
             }
         }
 
+        if (this.parameters != null)
+        {
+            buff.append("/Parameters:");
+            buff.append(getPath(this.parameters));
+            buff.append(" ");
+        }
+
+        if (this.enableDataBinding)
+        {
+            buff.append("/enableDataBinding");
+            buff.append(" ");
+        }
+
+        if (this.enableLinqDataSet)
+        {
+            buff.append("/enableLinqDataSet");
+            buff.append(" ");
+        }
+
+        if (this.fields)
+        {
+            buff.append("/fields");
+            buff.append(" ");
+        }
+
+        if (this.order)
+        {
+            buff.append("/order");
+            buff.append(" ");
+        }
+
         return buff.toString();
     }
 
@@ -266,55 +313,10 @@ public class XsdMojo extends AbstractExeMojo
         return true;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    void prepareForExecute() throws MojoExecutionException
-    {
-        if (this.inputUrl != null)
-        {
-            try
-            {
-                if (StringUtils.isNotEmpty(this.userName))
-                {
-                    if (this.password == null)
-                    {
-                        this.password = "";
-                    }
-
-                    Authenticator.setDefault(new Authenticator()
-                    {
-                        @Override
-                        protected PasswordAuthentication getPasswordAuthentication()
-                        {
-                            return new PasswordAuthentication(
-                                userName,
-                                password.toCharArray());
-                        }
-                    });
-                }
-
-                String ext =
-                    FilenameUtils.getExtension(this.inputUrl.getFile());
-                List lines = IOUtils.readLines(this.inputUrl.openStream());
-                String tmpFileName = "XsdMojo-" + UUID.randomUUID().toString();
-                File tmpFile = File.createTempFile(tmpFileName, "." + ext);
-                FileUtils.writeLines(tmpFile, lines);
-                this.inputFile = tmpFile;
-                info("retrieved " + this.inputUrl.toString() + " and saved as "
-                    + tmpFile.getAbsolutePath());
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException("Error retrieving "
-                    + this.inputUrl.toString(), e);
-            }
-        }
-    }
-
     @Override
     boolean shouldExecute() throws MojoExecutionException
     {
-        return true;
+        return this.inputFile != null;
     }
 
     @Override
@@ -329,12 +331,6 @@ public class XsdMojo extends AbstractExeMojo
         if (process.exitValue() != 0)
         {
             return;
-        }
-
-        if (this.inputUrl != null)
-        {
-            this.inputFile.delete();
-            debug("deleted " + this.inputFile.getAbsolutePath());
         }
 
         String stdout;
@@ -358,64 +354,81 @@ public class XsdMojo extends AbstractExeMojo
         }
 
         File genOutFile = new File(fileMatcher.group(2));
+        debug("Got generated output file " + genOutFile.getAbsolutePath());
 
-        if (this.outputFile == null)
+        if (this.outputFile == null && this.correctCase)
         {
-            this.outputFile = genOutFile;
-        }
-        else
-        {
+            String cc = getCorrectedContent(genOutFile);
+
             try
             {
-                if (this.outputFile.exists())
+                FileUtils.writeStringToFile(genOutFile, cc);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException(
+                    "Error writing corrected content to "
+                        + genOutFile.getAbsolutePath(),
+                    e);
+            }
+        }
+
+        // If no output file was specified then assign the generated file to the
+        // outputFile field.
+        else if (this.outputFile != null)
+        {
+            String oldContent = "";
+            String newContent;
+
+            if (this.outputFile.exists())
+            {
+                try
                 {
-                    if (!FileUtils.contentEquals(genOutFile, this.outputFile))
-                    {
-                        this.outputFile.delete();
-                    }
+                    oldContent = FileUtils.readFileToString(this.outputFile);
                 }
-                else
+                catch (IOException e)
                 {
-                    FileUtils.moveFile(genOutFile, this.outputFile);
-                    debug("moved " + genOutFile.getAbsolutePath() + " to "
+                    throw new MojoExecutionException("Error reading from "
                         + this.outputFile.getAbsolutePath());
                 }
             }
-            catch (IOException e)
+
+            if (this.correctCase)
             {
-                throw new MojoExecutionException("Error moving "
-                    + genOutFile.getAbsolutePath() + " to "
-                    + this.outputFile.getAbsolutePath(), e);
+                newContent = getCorrectedContent(genOutFile);
             }
-        }
-
-        if (this.correctCase)
-        {
-            StringWriter out = new StringWriter();
-            try
+            else
             {
-                doCorrectCase(this.outputFile, out);
-
-                String corrected = out.toString();
-                String original = FileUtils.readFileToString(this.outputFile);
-
-                if (corrected.equals(original))
+                try
                 {
-                    debug("did not correct "
-                        + this.outputFile.getAbsolutePath()
-                        + " because corrected file was same as original file");
+                    newContent = FileUtils.readFileToString(genOutFile);
                 }
-                else
+                catch (IOException e)
                 {
-                    FileUtils.writeStringToFile(this.outputFile, corrected);
-                    info("corrected " + this.outputFile.getAbsolutePath());
+                    throw new MojoExecutionException("Error reading from "
+                        + genOutFile.getAbsolutePath());
                 }
             }
-            catch (IOException e)
+
+            if (oldContent.equals(newContent))
             {
-                throw new MojoExecutionException("Error correcting case for "
-                    + this.outputFile.getAbsolutePath(), e);
+                info("not replacing " + this.outputFile.getAbsolutePath()
+                    + " because new content is same");
             }
+            else
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(this.outputFile, newContent);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException("Error writing to "
+                        + this.outputFile.getAbsolutePath(), e);
+                }
+            }
+
+            genOutFile.delete();
         }
     }
 
@@ -463,7 +476,24 @@ public class XsdMojo extends AbstractExeMojo
     /**
      * A pattern for matching an enumeration's elements.
      */
-    private static String ENUM_EL_PATT = "^([\\t\\s]*?)([^\\s\\,]*?),$";
+    private static String ENUM_EL_PATT = "^([\\t\\s]*?)([^\\s,]*?),$";
+
+    String getCorrectedContent(File fileToCorrect)
+        throws MojoExecutionException
+    {
+        try
+        {
+            StringWriter out = new StringWriter();
+            doCorrectCase(fileToCorrect, out);
+            return out.toString();
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(
+                "Error getting corrected content",
+                e);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     void doCorrectCase(File fileToCorrect, Writer out) throws IOException
@@ -472,13 +502,17 @@ public class XsdMojo extends AbstractExeMojo
         // list.
         List linesOfCode = FileUtils.readLines(fileToCorrect);
 
+        Pattern ignoreLocPatt = Pattern.compile(IGNORE_LOC_PATT);
+
         // Iterate over all of the lines of the file.
         for (int x = 0; x < linesOfCode.size(); ++x)
         {
             // Get the current line of code.
             String loc = (String) linesOfCode.get(x);
 
-            if (loc.matches(IGNORE_LOC_PATT))
+            Matcher ignoreLocMatcher = ignoreLocPatt.matcher(loc);
+
+            if (ignoreLocMatcher.find())
             {
                 String locPX1 = (String) linesOfCode.get(x + 1);
 
@@ -490,10 +524,10 @@ public class XsdMojo extends AbstractExeMojo
 
                 continue;
             }
-            
+
             Pattern propPatt = Pattern.compile(PROP_PATT);
             Matcher propMatcher = propPatt.matcher(loc);
-            
+
             Pattern enumPatt = Pattern.compile(ENUM_PATT);
             Matcher enumMatcher = enumPatt.matcher(loc);
 
@@ -506,7 +540,7 @@ public class XsdMojo extends AbstractExeMojo
 
                 if (rtype.endsWith("Enum"))
                 {
-                    rtype = StringUtils.capitalizeFirstLetter(rtype);
+                    rtype = upCaseFC(rtype);
                 }
 
                 String locMX1 = (String) linesOfCode.get(x - 1);
@@ -524,10 +558,10 @@ public class XsdMojo extends AbstractExeMojo
                 // Build the new auto-property.
                 String newProperty =
                     String.format(
-                        "%spublic %s %s {{get; set;}}",
+                        "%spublic %s %s {get; set;}",
                         ws,
                         rtype,
-                        StringUtils.capitalizeFirstLetter(pname));
+                        upCaseFC(pname));
 
                 println(out, newProperty);
 
@@ -545,8 +579,7 @@ public class XsdMojo extends AbstractExeMojo
 
                 // Build the new enum signature.
                 String newEnumSig =
-                    String.format("%spublic enum %s {{", ws, StringUtils
-                        .capitalizeFirstLetter(ename));
+                    String.format("%spublic enum %s {", ws, upCaseFC(ename));
 
                 // Write the new enum signature.
                 println(out, newEnumSig);
@@ -569,7 +602,7 @@ public class XsdMojo extends AbstractExeMojo
                         .contains("System.Xml.Serialization.XmlEnumAttribute"))
                     {
                         println(out, enumLoc.replace(
-                            "System.Xml.Serliazation",
+                            "System.Xml.Serliazation.",
                             ""));
                         ++y;
                         skipNextEnumAttrWrite = true;
@@ -596,8 +629,7 @@ public class XsdMojo extends AbstractExeMojo
                     }
 
                     String newEnumLoc =
-                        String.format("%s%s", ws, StringUtils
-                            .capitalizeFirstLetter(enumVal));
+                        String.format("%s%s,", ws, upCaseFC(enumVal));
 
                     println(out, newEnumLoc);
                     println(out);
@@ -650,6 +682,13 @@ public class XsdMojo extends AbstractExeMojo
         out.close();
     }
 
+    private static String upCaseFC(String input)
+    {
+        input = input.replaceAll("@", "");
+        input = StringUtils.capitalizeFirstLetter(input);
+        return input;
+    }
+
     private static void println(Writer out) throws IOException
     {
         println(out, "");
@@ -658,5 +697,18 @@ public class XsdMojo extends AbstractExeMojo
     private static void println(Writer out, String toPrint) throws IOException
     {
         out.write(String.format("%s\r\n", toPrint));
+    }
+
+    @Override
+    void postExecute(MojoExecutionException executionException)
+        throws MojoExecutionException
+    {
+        // Do nothing
+    }
+
+    @Override
+    void preExecute() throws MojoExecutionException
+    {
+        // Do nothing
     }
 }
