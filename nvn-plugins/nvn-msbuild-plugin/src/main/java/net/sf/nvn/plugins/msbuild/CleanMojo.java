@@ -1,5 +1,7 @@
 package net.sf.nvn.plugins.msbuild;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 /**
  * A Maven plug-in for cleaning .NET solutions and/or projects with MSBuild.
  * 
@@ -11,7 +13,7 @@ package net.sf.nvn.plugins.msbuild;
 public class CleanMojo extends MSBuildMojo
 {
     @Override
-    void loadTargets()
+    void initTargets()
     {
         if (this.targets != null && this.targets.length > 0)
         {
@@ -22,5 +24,11 @@ public class CleanMojo extends MSBuildMojo
         {
             "Clean"
         };
+    }
+    
+    @Override
+    void processModuleResources() throws MojoExecutionException
+    {
+        // Do nothing
     }
 }

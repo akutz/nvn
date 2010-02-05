@@ -306,19 +306,35 @@ public class MSBuildMojo extends AbstractExeMojo
     }
 
     @Override
-    void prepareForExecute() throws MojoExecutionException
+    void preExecute() throws MojoExecutionException
     {
         loadBuildFile();
 
-        loadProperties();
+        initBuildProperties();
 
-        loadReferencePaths();
+        initReferencePathProperty();
 
-        loadTargets();
+        initTargets();
+
+        processModuleResources();
+    }
+
+    /**
+     * Invokes the "process-resources" phase on any modules available to this
+     * Solution (if this <strong>is</strong> a solution).
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
+    void processModuleResources() throws MojoExecutionException
+    {
+        for (MavenProject module : getModules())
+        {
+            execute(module, "process-resources");
+        }
     }
 
     @Override
-    String getArgs()
+    String getArgs(int execution)
     {
         StringBuilder cmdLineBuff = new StringBuilder();
 
@@ -524,9 +540,9 @@ public class MSBuildMojo extends AbstractExeMojo
     }
 
     /**
-     * Loads the build's target.
+     * Initialize the build's target.
      */
-    void loadTargets()
+    void initTargets()
     {
         if (this.targets != null && this.targets.length > 0)
         {
@@ -540,9 +556,9 @@ public class MSBuildMojo extends AbstractExeMojo
     }
 
     /**
-     * Loads the build's properties.
+     * Initialize this build's properties.
      */
-    void loadProperties()
+    void initBuildProperties()
     {
         if (this.properties != null && this.properties.size() > 0)
         {
@@ -553,33 +569,34 @@ public class MSBuildMojo extends AbstractExeMojo
         this.properties.put("Configuration", "Debug");
         this.properties.put("Platform", "Any CPU");
 
-        if (super.mavenProject.isExecutionRoot() && isProject()
-            && !isSolution())
+        if (super.mavenProject.isExecutionRoot() && !isSolution())
         {
             this.properties.put("OutputPath", "bin\\Debug");
         }
     }
 
     /**
-     * Loads a maven project's dependencies and adds them to the build's
-     * ReferencePath property.
+     * Initializes the reference paths from the given project's dependencies.
      * 
      * @param project The maven project.
      * @throws MojoExecutionException
      */
     @SuppressWarnings("unchecked")
-    void loadProjectDependencies(MavenProject project)
-        throws MojoExecutionException
+    void initReferencePaths(MavenProject project) throws MojoExecutionException
     {
         List deps = project.getDependencies();
 
         if (deps == null)
         {
+            debug("not processing project dependencies because they're null: "
+                + project.getName());
             return;
         }
 
         if (deps.size() == 0)
         {
+            debug("not processing project dependencies because they're zero length: "
+                + project.getName());
             return;
         }
 
@@ -698,61 +715,34 @@ public class MSBuildMojo extends AbstractExeMojo
     }
 
     /**
-     * Loads this project's dependencies into the msbuild property
-     * ReferencePath.
+     * Initializes the reference paths from this project and any parent or child
+     * projects.
      * 
      * @throws MojoExecutionException When an error occurs.
      */
-    void loadMyDependencies() throws MojoExecutionException
+    void initReferencePaths() throws MojoExecutionException
     {
-        loadProjectDependencies(this.mavenProject);
-    }
+        initReferencePaths(super.mavenProject);
 
-    /**
-     * Loads the collected dependencies into the msbuild property ReferencePath.
-     * 
-     * @throws MojoExecutionException When an error occurs.
-     */
-    @SuppressWarnings("unchecked")
-    void loadCollectedDependencies() throws MojoExecutionException
-    {
-        List projects = this.mavenProject.getCollectedProjects();
-
-        if (projects == null)
+        if (super.mavenProject.hasParent())
         {
-            return;
+            initReferencePaths(super.mavenProject.getParent());
         }
 
-        for (Object omp : projects)
+        for (MavenProject module : getModules())
         {
-            MavenProject mp = (MavenProject) omp;
-            loadProjectDependencies(mp);
+            initReferencePaths(module);
         }
     }
 
     /**
-     * Loads all the dependencies into the msbuild property ReferencePath.
+     * Initializes the ReferencePath property for msbuild.
      * 
      * @throws MojoExecutionException When an error occurs.
      */
-    void loadDependencies() throws MojoExecutionException
+    void initReferencePathProperty() throws MojoExecutionException
     {
-        loadMyDependencies();
-
-        if (this.mavenProject.getCollectedProjects() != null)
-        {
-            loadCollectedDependencies();
-        }
-    }
-
-    /**
-     * Loads the reference paths and build the property string.
-     * 
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void loadReferencePaths() throws MojoExecutionException
-    {
-        loadDependencies();
+        initReferencePaths();
 
         String rp = "";
 
@@ -830,12 +820,19 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isSolution() || isProject();
+        return isSolution() || isCSProject() || isVBProject();
     }
 
     @Override
     File getDefaultCommand()
     {
         return new File("msbuild.exe");
+    }
+
+    @Override
+    void postExecute(MojoExecutionException executionException)
+        throws MojoExecutionException
+    {
+        // Do nothing
     }
 }

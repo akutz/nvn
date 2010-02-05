@@ -38,8 +38,8 @@ public class MSBuildMojoTest
     public void testBuildCmdLineString() throws Exception
     {
         MSBuildMojo mojo = loadMojo();
-        mojo.prepareForExecute();
-        String cls = mojo.buildCmdLineString();
+        mojo.preExecute();
+        String cls = mojo.buildCmdLineString(0);
         Assert
             .assertEquals(
                 ".\\msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug /nodeReuse:false .\\MySolution.sln",
@@ -56,14 +56,14 @@ public class MSBuildMojoTest
         d.setGroupId("com.vmware");
         d.setArtifactId("viplugins");
         d.setVersion("4.0.0.1");
-        d.setType("dotnet:dll");
+        d.setType("dll");
 
         mojo.mavenProject.setDependencies(new ArrayList());
         mojo.mavenProject.getDependencies().add(d);
 
-        mojo.prepareForExecute();
+        mojo.preExecute();
 
-        String cls = mojo.buildCmdLineString();
+        String cls = mojo.buildCmdLineString(0);
         Assert
             .assertEquals(
                 ".\\msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug;ReferencePath=\"c:\\Documents and Settings\\akutz\\.m2\\\\repository\\com\\vmware\\viplugins\\4.0.0.1\" /nodeReuse:false .\\MySolution.sln",
