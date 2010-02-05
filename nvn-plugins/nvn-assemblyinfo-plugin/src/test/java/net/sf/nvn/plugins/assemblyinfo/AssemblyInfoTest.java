@@ -15,23 +15,6 @@ import org.junit.Test;
 public class AssemblyInfoTest
 {
     @Test
-    public void testExecute() throws Exception
-    {
-        String tmpdir = System.getProperty("java.io.tmpdir");
-
-        AssemblyInfoMojo mojo = new AssemblyInfoMojo();
-        mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
-        mojo.outputFile = new File(tmpdir + "/Properties/AssemblyInfo.cs");
-        mojo.mavenProject = new MavenProject();
-        mojo.mavenProject.setBasedir(new File(tmpdir));
-        
-        mojo.execute();
-
-        mojo.outputFile = new File(tmpdir + "/Properties/AssemblyInfo.vB");
-        mojo.execute();
-    }
-
-    @Test
     public void testGetOutputFileType() throws Exception
     {
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
@@ -67,7 +50,7 @@ public class AssemblyInfoTest
         mojo.outputFile = new File("Properties/AssemblyInfo.cs");
         mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
         
-        mojo.prepareForExecute();
+        mojo.preExecute();
         
         String text = mojo.createAssemblyInfoText();
         Assert

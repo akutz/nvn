@@ -84,11 +84,11 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     }
 
     @Override
-    public void prepareForExecute() throws MojoExecutionException
+    public void preExecute() throws MojoExecutionException
     {
         parseOutputFileType();
 
-        loadVersion();
+        initVersion();
 
         parseSafeVersion();
 
@@ -96,9 +96,9 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     }
 
     /**
-     * Loads the version.
+     * Initializes this project's version.
      */
-    void loadVersion()
+    void initVersion()
     {
         if (super.mavenProject.getVersion().equals(
             MavenProject.EMPTY_PROJECT_VERSION))
@@ -291,6 +291,13 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     @Override
     public boolean isProjectTypeValid()
     {
-        return isProject();
+        return isCSProject() || isVBProject();
+    }
+
+    @Override
+    void postExecute(MojoExecutionException executionException)
+        throws MojoExecutionException
+    {
+        // Do nothing
     }
 }
