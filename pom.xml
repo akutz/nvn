@@ -63,4 +63,16 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+    <distributionManagement>
+        <repository>
+            <id>internal</id>
+            <name>Internal Release Repository</name>
+            <url>${build.release.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Internal Snapshot Repository</name>
+            <url>${build.snapshot.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
