@@ -23,7 +23,7 @@ public class MSTestMojo extends AbstractExeMojo
      * @parameter expression="${mstest.testContainer}"
      */
     File testContainer;
-    
+
     /**
      * One or more files with the extension "vsmdi" that contains test metadata.
      * 
@@ -44,7 +44,7 @@ public class MSTestMojo extends AbstractExeMojo
      * @parameter expression="${mstest.tests}"
      */
     String[] tests;
-    
+
     /**
      * Set to true to skip the tests.
      * 
@@ -142,7 +142,7 @@ public class MSTestMojo extends AbstractExeMojo
     String teamProject;
 
     @Override
-    void prepareForExecute() throws MojoExecutionException
+    void preExecute() throws MojoExecutionException
     {
         loadTestMetaData();
     }
@@ -150,12 +150,12 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     boolean shouldExecute()
     {
-        if (skipTests)
+        if (this.skipTests)
         {
             info("tests are skipped");
             return false;
         }
-        
+
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
             return true;
@@ -171,7 +171,7 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    String getArgs()
+    String getArgs(int execution)
     {
         StringBuilder cmdLineBuff = new StringBuilder();
 
@@ -354,12 +354,19 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isSolution() || isProject();
+        return isSolution() || isCSProject() || isVBProject();
     }
 
     @Override
     File getDefaultCommand()
     {
         return new File("mstest.exe");
+    }
+
+    @Override
+    void postExecute(MojoExecutionException executionException)
+        throws MojoExecutionException
+    {
+        // Do nothing
     }
 }
