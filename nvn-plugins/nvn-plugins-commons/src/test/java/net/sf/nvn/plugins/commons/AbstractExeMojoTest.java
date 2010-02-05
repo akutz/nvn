@@ -16,7 +16,7 @@ public class AbstractExeMojoTest
     private static class BaseExeMojoImpl extends AbstractExeMojo
     {
         @Override
-        public String getArgs()
+        public String getArgs(int execution)
         {
             return null;
         }
@@ -28,7 +28,7 @@ public class AbstractExeMojoTest
         }
 
         @Override
-        public void prepareForExecute() throws MojoExecutionException
+        public void preExecute() throws MojoExecutionException
         {
         }
 
@@ -45,11 +45,16 @@ public class AbstractExeMojoTest
         }
 
         @Override
-        File getDefaultCommand()
+        public File getDefaultCommand()
         {
             return new File("echo");
         }
-        
+
+        @Override
+        public void postExecute(MojoExecutionException executionException)
+            throws MojoExecutionException
+        {
+        }
     }
 
     @Test
@@ -57,11 +62,11 @@ public class AbstractExeMojoTest
     {
         AbstractExeMojo mojo = new BaseExeMojoImpl();
         mojo.inheritEnvVars = true;
-        mojo.loadEnvVars();
+        mojo.initProcEnvVars();
         Assert.assertTrue(mojo.procEnvVars.size() > 0);
         
         mojo.inheritEnvVars = false;
-        mojo.loadEnvVars();
+        mojo.initProcEnvVars();
         Assert.assertEquals(0, mojo.procEnvVars.size());
     }
 }

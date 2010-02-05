@@ -11,7 +11,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.CollectionUtils;
 
 /**
- * An abstract Mojo for nvn Mojos that call external programs.
+ * The base class for all nvn MOJOs that invoke external programs.
  * 
  */
 public abstract class AbstractExeMojo extends AbstractNvnMojo
@@ -139,9 +139,11 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     /**
      * Gets a string containing the arguments to pass to this mojo's command.
      * 
+     * @param execution The execution count.
+     * 
      * @return A string containing the arguments to pass to this mojo's command.
      */
-    abstract String getArgs();
+    abstract String getArgs(int execution);
 
     /**
      * Gets a file with the default command to execute.
@@ -151,18 +153,26 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     abstract File getDefaultCommand();
 
     /**
+     * The number of executions to process.
+     */
+    int executionCount = 0;
+
+    /**
      * Builds the string that is executed by Runtime.exec(String, String[]).
+     * 
+     * @param execution The execution count.
      * 
      * @return The string that is executed by Runtime.exec(String, String[]).
      */
-    final String buildCmdLineString()
+    final String buildCmdLineString(int execution)
     {
         if (this.command == null)
         {
             this.command = getDefaultCommand();
         }
 
-        String args = StringUtils.isEmpty(this.args) ? getArgs() : this.args;
+        String args =
+            StringUtils.isEmpty(this.args) ? getArgs(execution) : this.args;
         String cmd = String.format("%s %s", getPath(this.command), args);
         return cmd;
     }
@@ -170,16 +180,20 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     @Override
     final void nvnExecute() throws MojoExecutionException
     {
-        loadEnvVars();
-        String cmd = buildCmdLineString();
-        info(cmd);
-        exec(cmd);
+        initProcEnvVars();
+        
+        for (int x = 0; x <= this.executionCount; ++x)
+        {
+            String cmd = buildCmdLineString(x);
+            info("execution #%s: %s", x, cmd);
+            exec(cmd);
+        }
     }
 
     /**
      * Invoked after exec(String cmd) has completed.
      * 
-     * @param process The process that was executed.
+     * @param process The completed process that was executed.
      */
     void postExec(Process process) throws MojoExecutionException
     {
@@ -226,13 +240,12 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
-     * Loads the environment variables for the process that will be executed by
-     * this mojo.
+     * Initializes the field procEnvVars.
      * 
      * @throws MojoExecutionException When an error occurs.
      */
     @SuppressWarnings("unchecked")
-    void loadEnvVars() throws MojoExecutionException
+    void initProcEnvVars() throws MojoExecutionException
     {
         this.procEnvVars = new HashMap();
 
