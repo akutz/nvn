@@ -13,4 +13,31 @@
     <version>${parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn .NET Plug-in</name>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-assemblyinfo-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-mstest-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-vdproj-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-msbuild-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-xsd-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
