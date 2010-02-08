@@ -36,6 +36,11 @@
         </dependency>
         <dependency>
             <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-wsdl-plugin</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
             <artifactId>nvn-xsd-plugin</artifactId>
             <version>${parent.version}</version>
         </dependency>

@@ -15,6 +15,7 @@
                     </initialize>
                     <generate-sources>
                         net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
                         net.sf.nvn:nvn-xsd-plugin:xsd
                     </generate-sources>
                     <compile>
@@ -44,6 +45,7 @@
                     </initialize>
                     <generate-sources>
                         net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
                         net.sf.nvn:nvn-xsd-plugin:xsd
                     </generate-sources>
                     <compile>
@@ -70,6 +72,7 @@
                     </initialize>
                     <generate-sources>
                         net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
                         net.sf.nvn:nvn-xsd-plugin:xsd
                     </generate-sources>
                     <compile>
@@ -95,6 +98,34 @@
                         net.sf.nvn:nvn-vdproj-plugin:package
                     </package>
                 </phases>
+            </configuration>
+        </component>
+        
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>xsd</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>xsd</type>
+                <extension>xsd</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>wsdl</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>wsdl</type>
+                <extension>wsdl</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
             </configuration>
         </component>
 
