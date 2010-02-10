@@ -67,8 +67,7 @@ public class InitializeMojo extends AbstractNvnMojo
     String activeBuildConfiguration;
 
     /**
-     * The default <strong>Debug</strong> build configuration name. The default
-     * value of this parameter is <strong>Debug</strong>.
+     * The default <strong>Debug</strong> build configuration name.
      * 
      * @parameter expression="${net.sf.nvn.build.config.debug.default}"
      *            default-value="Debug"
@@ -76,8 +75,7 @@ public class InitializeMojo extends AbstractNvnMojo
     String defaultDebugBuildConfiguration;
 
     /**
-     * The default <strong>Release</strong> build configuration name. The
-     * default value of this parameter is <strong>Release</strong>
+     * The default <strong>Release</strong> build configuration name.
      * 
      * @parameter expression="${net.sf.nvn.build.config.release.default}"
      *            default-value="Release"
