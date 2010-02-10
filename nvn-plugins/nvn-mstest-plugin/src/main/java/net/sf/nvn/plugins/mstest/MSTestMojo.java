@@ -197,7 +197,7 @@ public class MSTestMojo extends AbstractExeMojo
 
     void initTestContainer()
     {
-        if (this.testContainers != null)
+        if (this.testContainers != null && this.testContainers.length > 0)
         {
             return;
         }
