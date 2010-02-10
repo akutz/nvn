@@ -43,21 +43,19 @@ public enum ProjectOutputType
             return null;
         }
 
-        value = value.toUpperCase();
-
-        if (value.equals("LIBRARY"))
+        if (value.matches("(?i)library"))
         {
             return ProjectOutputType.Library;
         }
-        else if (value.equals("EXE"))
+        else if (value.matches("(?i)exe"))
         {
             return ProjectOutputType.Exe;
         }
-        else if (value.equals("WINEXE"))
+        else if (value.matches("(?i)winexe"))
         {
             return ProjectOutputType.WinExe;
         }
-        else if (value.equals("MODULE"))
+        else if (value.matches("(?i)module"))
         {
             return ProjectOutputType.Module;
         }

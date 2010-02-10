@@ -13,4 +13,29 @@
     <description>A commons library for nvn.</description>
     <version>${parent.version}</version>
     <url>http://maven.apache.org</url>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>1.3</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-msbuild-objects</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <packageName>net.sf.nvn.commons.dotnet.v35.msbuild.xsd</packageName>
+                            <schemaDirectory>${basedir}/src/main/schemas/dotnet/3.5/msbuild</schemaDirectory>
+                            <schemaFiles>Microsoft.Build.xsd</schemaFiles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

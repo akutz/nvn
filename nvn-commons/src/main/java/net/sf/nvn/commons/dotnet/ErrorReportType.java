@@ -28,13 +28,11 @@ public enum ErrorReportType
             return ErrorReportType.None;
         }
 
-        value = value.toUpperCase();
-
-        if (value.equals("PROMPT"))
+        if (value.matches("(?i)prompt"))
         {
             return ErrorReportType.Prompt;
         }
-        else if (value.equals("SEND"))
+        else if (value.matches("(?i)send"))
         {
             return ErrorReportType.Send;
         }

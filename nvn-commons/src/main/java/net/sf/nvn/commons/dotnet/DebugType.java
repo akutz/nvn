@@ -29,13 +29,11 @@ public enum DebugType
             return DebugType.None;
         }
 
-        value = value.toUpperCase();
-
-        if (value.equals("FULL"))
+        if (value.matches("(?i)full"))
         {
             return DebugType.Full;
         }
-        else if (value.equals("PDBONLY"))
+        else if (value.matches("(?i)pdbonly"))
         {
             return DebugType.PdbOnly;
         }

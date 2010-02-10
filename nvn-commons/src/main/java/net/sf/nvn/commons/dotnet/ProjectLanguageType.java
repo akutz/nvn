@@ -5,30 +5,24 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * The type of AssemblyInfo file to write.
+ * A project's language type.
  * 
  * @author akutz
  * 
  */
-public enum OutputFileType
+public enum ProjectLanguageType
 {
-    /**
-     * A C# (cs) file.
-     */
     CSharp,
 
-    /**
-     * A VisualBasic (vb) file.
-     */
     VisualBasic;
-
+    
     /**
-     * Parses an OutputFileType.
+     * Parses a ProjectLanguageType.
      * 
      * @param file The file to parse.
-     * @return An OutputFileType.
+     * @return A ProjectLanguageType.
      */
-    public static OutputFileType parse(File file)
+    public static ProjectLanguageType parse(File file)
     {
         if (file == null)
         {
@@ -39,12 +33,12 @@ public enum OutputFileType
     }
 
     /**
-     * Parses an OutputFileType.
+     * Parses a ProjectLanguageType.
      * 
      * @param fileName The file name to parse.
-     * @return An OutputFileType.
+     * @return A ProjectLanguageType.
      */
-    public static OutputFileType parse(String fileName)
+    public static ProjectLanguageType parse(String fileName)
     {
         if (StringUtils.isEmpty(fileName))
         {
@@ -53,13 +47,13 @@ public enum OutputFileType
 
         String fileExtension = FilenameUtils.getExtension(fileName);
         
-        if (fileExtension.matches("(?i)cs"))
+        if (fileExtension.matches("(?i)csproj"))
         {
-            return OutputFileType.CSharp;
+            return ProjectLanguageType.CSharp;
         }
-        else if (fileExtension.matches("(?i)vb"))
+        else if (fileExtension.matches("(?i)vbproj"))
         {
-            return OutputFileType.VisualBasic;
+            return ProjectLanguageType.VisualBasic;
         }
 
         return null;

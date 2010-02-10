@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.ProjectOutputType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.Project;
 import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.PropertyGroupType;
@@ -23,6 +24,13 @@ import org.apache.commons.lang.StringUtils;
 public class MSBuildProject
 {
     /**
+     * Do not allow this class to be constructed with a constructor.
+     */
+    private MSBuildProject()
+    {
+    }
+    
+    /**
      * Reads a .NET 3.5 MSBuild project file and returns its object
      * representation.
      * 
@@ -31,7 +39,7 @@ public class MSBuildProject
      * @throws IOException When an error occurs.
      * @throws JAXBException When an error occurs.
      */
-    public static MSBuildProject readProject(File projectFile)
+    public static MSBuildProject instance(File projectFile)
         throws IOException,
         JAXBException
     {
@@ -40,6 +48,9 @@ public class MSBuildProject
         Project p = (Project) um.unmarshal(projectFile);
 
         MSBuildProject msbp = new MSBuildProject();
+        msbp.projectFile = projectFile;
+        msbp.projectLanguage = ProjectLanguageType.parse(projectFile);
+        
         List<BuildConfiguration> bcs = new ArrayList<BuildConfiguration>();
 
         for (Object tag : p.getProjectLevelTagExceptTargetOrImportType())
@@ -73,7 +84,7 @@ public class MSBuildProject
         for (JAXBElement<?> jel : propertyGroup.getProperty())
         {
             String jelName = jel.getName().getLocalPart();
-            String jelValu = ((StringPropertyType)jel.getValue()).getValue();
+            String jelValu = ((StringPropertyType) jel.getValue()).getValue();
 
             if (jelName.equals("OutputType"))
             {
@@ -93,6 +104,16 @@ public class MSBuildProject
             }
         }
     }
+
+    /**
+     * The project's language.
+     */
+    private ProjectLanguageType projectLanguage;
+
+    /**
+     * The file that this project was created from.
+     */
+    private File projectFile;
 
     /**
      * The name of the final output assembly after the project is built.
@@ -178,5 +199,25 @@ public class MSBuildProject
     public BuildConfiguration[] getBuildConfigurations()
     {
         return this.buildConfigurations;
+    }
+
+    /**
+     * Gets the project's language.
+     * 
+     * @return The project's language.
+     */
+    public ProjectLanguageType getProjectLanguage()
+    {
+        return this.projectLanguage;
+    }
+
+    /**
+     * Gets the file that this project was created from.
+     * 
+     * @return The file that this project was created from.
+     */
+    public File getProjectFile()
+    {
+        return this.projectFile;
     }
 }
