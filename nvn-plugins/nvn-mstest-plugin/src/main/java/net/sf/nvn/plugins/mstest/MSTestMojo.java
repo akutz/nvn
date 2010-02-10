@@ -147,8 +147,13 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     void preExecute() throws MojoExecutionException
     {
-        if (!forwardToTestProjects())
+        if (forwardToTestProjects())
         {
+            debug("forwarding tests to projects");
+        }
+        else
+        {
+            debug("initializing the test containers");
             initTestContainer();
         }
     }
@@ -173,20 +178,17 @@ public class MSTestMojo extends AbstractExeMojo
         {
             if (!mp.getPackaging().equalsIgnoreCase("mstest"))
             {
+                debug("ignoring %s because it is not a test project", mp
+                    .getName());
                 continue;
             }
 
-            if (getMSBuildModules().containsKey(mp.getArtifactId()))
-            {
-                MSBuildProject msbp =
-                    getMSBuildModules().get(mp.getArtifactId());
-                File tc =
-                    msbp.getBuildArtifact(getActiveBuildConfigurationName());
-                tc =
-                    new File(msbp.getProjectFile().getParentFile(), tc
-                        .getPath());
-                tcList.add(tc);
-            }
+            MSBuildProject msbp = getMSBuildModule(mp);
+            String acbn = getActiveBuildConfigurationName();
+            File tc = msbp.getBuildArtifact(acbn);
+            File moddir = msbp.getProjectFile().getParentFile();
+            tc = new File(moddir, tc.getPath());
+            tcList.add(tc);
         }
 
         if (tcList.size() > 0)
