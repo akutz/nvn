@@ -1,10 +1,13 @@
 package net.sf.nvn.plugins.wsdl;
 
+import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.UUID;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import static net.sf.nvn.commons.StringUtils.quote;
 
 /**
  * <p>
@@ -20,6 +23,7 @@ import static net.sf.nvn.commons.StringUtils.quote;
  * 
  * @goal wsdl
  * @phase generate-sources
+ * @requiresDependencyResolution compile
  * @description A Maven plug-in for running the Microsoft wsdl.exe utility.
  */
 public class WsdlMojo extends AbstractExeMojo
@@ -58,6 +62,13 @@ public class WsdlMojo extends AbstractExeMojo
      * @parameter
      */
     File inputFile;
+
+    /**
+     * The default URL to use in the generated class file.
+     * 
+     * @parameter
+     */
+    URL defaultUrl;
 
     /**
      * <p>
@@ -315,6 +326,9 @@ public class WsdlMojo extends AbstractExeMojo
      */
     String userName;
 
+    private File tempOutputFile;
+    private File originalOutputLocation;
+
     @Override
     String getArgs(int execution)
     {
@@ -441,6 +455,15 @@ public class WsdlMojo extends AbstractExeMojo
             args.append(" ");
         }
 
+        if (this.inputUrl != null)
+        {
+            args.append(quote(this.inputUrl.toString()));
+        }
+        else if (this.inputFile != null)
+        {
+            args.append(getPath(this.inputFile));
+        }
+
         return args.toString();
     }
 
@@ -466,18 +489,157 @@ public class WsdlMojo extends AbstractExeMojo
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
-        // Do nothing
+        if (this.tempOutputFile != null)
+        {
+            if (this.defaultUrl != null)
+            {
+                String urlPatt =
+                    "(?u)(.*\\s+/// <remarks\\/>.*\\s+public.*\\(\\)\\s\\{.*\\s+this.Url\\s=\\s\").*(\";.*\\s+\\}.*)";
+
+                String tempContents;
+
+                try
+                {
+                    tempContents =
+                        FileUtils.readFileToString(this.tempOutputFile);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException(String.format(
+                        "Error reading the contents of %s",
+                        this.tempOutputFile), e);
+                }
+
+                String tempContentsWithUrl =
+                    tempContents.replaceAll(urlPatt, String.format(
+                        "$1%s$2",
+                        this.defaultUrl));
+
+                try
+                {
+                    FileUtils.writeStringToFile(
+                        this.tempOutputFile,
+                        tempContentsWithUrl);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException(String.format(
+                        "Error writing contents with URL to %s",
+                        this.tempOutputFile), e);
+                }
+            }
+
+            boolean moveTempFile = false;
+
+            if (this.originalOutputLocation.exists())
+            {
+                boolean equal;
+
+                try
+                {
+                    equal =
+                        FileUtils.contentEquals(
+                            this.tempOutputFile,
+                            this.originalOutputLocation);
+                }
+                catch (IOException e)
+                {
+                    String msg =
+                        String.format(
+                            "Error comparing content of %s and %s",
+                            this.tempOutputFile,
+                            this.originalOutputLocation);
+                    throw new MojoExecutionException(msg, e);
+                }
+
+                if (equal)
+                {
+                    info(
+                        "Not replacing %s because new content is same",
+                        this.originalOutputLocation);
+                }
+                else
+                {
+                    moveTempFile = true;
+                }
+            }
+            else
+            {
+                moveTempFile = true;
+            }
+
+            if (moveTempFile)
+            {
+                try
+                {
+                    if (this.originalOutputLocation.exists())
+                    {
+                        this.originalOutputLocation.delete();
+                    }
+
+                    FileUtils.moveFile(
+                        this.tempOutputFile,
+                        this.originalOutputLocation);
+                }
+                catch (IOException e)
+                {
+                    String msg =
+                        String.format(
+                            "Error moving %s to %s",
+                            this.tempOutputFile,
+                            this.originalOutputLocation);
+                    throw new MojoExecutionException(msg, e);
+                }
+            }
+            else
+            {
+                this.tempOutputFile.delete();
+            }
+        }
     }
 
     @Override
     void preExecute() throws MojoExecutionException
     {
-        // Do nothing
+        if (this.outputLocation != null)
+        {
+            if (this.outputLocation.isFile())
+            {
+                if (this.outputLocation.exists())
+                {
+                    try
+                    {
+                        this.tempOutputFile =
+                            File.createTempFile(
+                                UUID.randomUUID().toString(),
+                                null);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new MojoExecutionException(
+                            "Error creating temp file",
+                            e);
+                    }
+
+                    this.originalOutputLocation = this.outputLocation;
+                    this.outputLocation = this.tempOutputFile;
+                }
+            }
+
+            this.outputLocation.getParentFile().mkdirs();
+            debug("making parent directories for %s", this.outputLocation);
+        }
     }
 
     @Override
     boolean shouldExecute() throws MojoExecutionException
     {
         return this.inputFile != null || this.inputUrl != null;
+    }
+
+    @Override
+    boolean showExecOutput()
+    {
+        return false;
     }
 }

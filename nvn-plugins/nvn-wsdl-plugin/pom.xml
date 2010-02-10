@@ -12,4 +12,5 @@
   <version>${parent.version}</version>
   <packaging>maven-plugin</packaging>
   <name>nvn WSDL Plug-in</name>
+  <description>A Maven plug-in for running the Microsoft wsdl.exe utility.</description>
 </project>
