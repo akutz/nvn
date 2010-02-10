@@ -5,7 +5,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import net.sf.nvn.commons.dotnet.PlatformType;
+import net.sf.nvn.commons.dotnet.ProjectLanguageType;
+import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
+import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
@@ -36,6 +43,24 @@ import org.apache.maven.shared.invoker.PrintStreamHandler;
  */
 public abstract class AbstractNvnMojo extends AbstractMojo
 {
+    /**
+     * The property name for the active build configuration property.
+     */
+    static String ACTIVE_BUILD_CONFIGURATION_PROP_NAME =
+        "net.sf.nvn.build.config.active";
+
+    /**
+     * The property name for the active build platform property.
+     */
+    static String ACTIVE_BUILD_PLATFORM_PROP_NAME =
+        "net.sf.nvn.build.platform.active";
+
+    /**
+     * The MSBuild project associated with this project. This field will be null
+     * if not MSBuild project file is found.
+     */
+    MSBuildProject msbuildProject;
+
     /**
      * Maven runtime information.
      * 
@@ -78,7 +103,12 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     /**
      * A list of the module projects.
      */
-    List<MavenProject> moduleProjects;
+    private List<MavenProject> moduleProjects;
+
+    /**
+     * A map of the module MSBuild projects index by the maven project's name.
+     */
+    private Map<String, MSBuildProject> moduleMSBuildProjects;
 
     /**
      * The local maven repository.
@@ -192,16 +222,10 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @return A flag indicating whether or not this project is a Visual Studio
      *         CSharp project.
      */
-    @SuppressWarnings("unchecked")
     boolean isCSProject()
     {
-        Collection files =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "csproj"
-            }, false);
-
-        return files != null && files.size() > 0;
+        return this.msbuildProject != null
+            && this.msbuildProject.getProjectLanguage() == ProjectLanguageType.CSharp;
     }
 
     /**
@@ -211,16 +235,10 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @return A flag indicating whether or not this project is a Visual Studio
      *         VisualBasic.NET project.
      */
-    @SuppressWarnings("unchecked")
     boolean isVBProject()
     {
-        Collection files =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "vbproj"
-            }, false);
-
-        return files != null && files.size() > 0;
+        return this.msbuildProject != null
+            && this.msbuildProject.getProjectLanguage() == ProjectLanguageType.VisualBasic;
     }
 
     /**
@@ -297,42 +315,95 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         try
         {
-            MavenProject project =
-                this.builder.buildWithDependencies(
-                    projectFile,
-                    localRepository,
-                    globalProfileManager);
+            MavenProject project;
+
+            if (resolveDependencies)
+            {
+                project =
+                    this.builder.buildWithDependencies(
+                        projectFile,
+                        localRepository,
+                        globalProfileManager);
+            }
+            else
+            {
+                project =
+                    this.builder.build(
+                        projectFile,
+                        localRepository,
+                        globalProfileManager);
+            }
 
             return project;
         }
         catch (ArtifactResolutionException e)
         {
             throw new MojoExecutionException(
-                "Error resolving artifacts while loading parent",
+                "Error resolving artifacts while reading project file: "
+                    + projectFile.getAbsolutePath(),
                 e);
         }
         catch (ArtifactNotFoundException e)
         {
             throw new MojoExecutionException(
-                "Error finding artifacts while loading parent",
+                "Error finding artifacts while reading project file: "
+                    + projectFile.getAbsolutePath(),
                 e);
         }
         catch (ProjectBuildingException e)
         {
             throw new MojoExecutionException(
-                "Error building project while loading parent",
+                "Error building project while reading project file: "
+                    + projectFile.getAbsolutePath(),
                 e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    void initMSBuildProject() throws MojoExecutionException
+    {
+        Collection files =
+            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
+            {
+                "csproj", "vbproj"
+            }, false);
+
+        if (files == null)
+        {
+            return;
+        }
+
+        if (files.size() == 0)
+        {
+            return;
+        }
+
+        File projectFile = (File) files.iterator().next();
+
+        try
+        {
+            this.msbuildProject = MSBuildProject.instance(projectFile);
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(String.format(
+                "Error reading MSBuild project from %s",
+                projectFile), e);
         }
     }
 
     @Override
     final public void execute() throws MojoExecutionException
     {
+        debug("properties: %s", this.mavenProject.getProperties());
+
         if (this.skip)
         {
             info("skipping execution");
             return;
         }
+
+        initMSBuildProject();
 
         if (!this.ignoreProjectType && !isProjectTypeValid())
         {
@@ -341,6 +412,11 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         try
         {
+            String abc = getActiveBuildConfigurationName();
+            PlatformType abp = getActiveBuildPlatform();
+            debug("active build configuration: %s", abc);
+            debug("active build platform:      %s", abp);
+
             preExecute();
 
             if (this.ignoreExecutionRequirements || shouldExecute())
@@ -503,6 +579,19 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @param goals The goals to execute.
      * @throws MojoExecutionException When an error occurs.
      */
+    void execute(MavenProject project, List<String> goals)
+        throws MojoExecutionException
+    {
+        execute(project, goals.toArray(new String[0]));
+    }
+
+    /**
+     * Execute a given maven project using the specified goals.
+     * 
+     * @param project The maven project to execute.
+     * @param goals The goals to execute.
+     * @throws MojoExecutionException When an error occurs.
+     */
     void execute(MavenProject project, String... goals)
         throws MojoExecutionException
     {
@@ -511,6 +600,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         Invoker invoker = new DefaultInvoker();
         invoker.setErrorHandler(new PrintStreamHandler(System.err, true));
         invoker.setOutputHandler(new PrintStreamHandler(System.out, true));
+
+        Properties reqProps = new Properties();
+        reqProps.putAll(this.mavenProject.getProperties());
 
         InvocationRequest req = new DefaultInvocationRequest();
         req.setBaseDirectory(project.getBasedir());
@@ -586,12 +678,147 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         {
             String moduleName = (String) omoduleName;
             File modulePomFile = getPomFile(moduleName);
-            MavenProject mp = readProjectFile(modulePomFile, true);
+            MavenProject mp = readProjectFile(modulePomFile, false);
             list.add(mp);
         }
 
         this.moduleProjects = list;
 
         return this.moduleProjects;
+    }
+
+    /**
+     * Gets a map of the modules as MSBuild projects indexed by the modules'
+     * artifact IDs. This will only return CSharp and VisualBasic projects.
+     * 
+     * @return A list of the modules as MSBuild projects indexed by the modules'
+     *         artifact IDs.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, MSBuildProject> getMSBuildModules()
+        throws MojoExecutionException
+    {
+        if (this.moduleMSBuildProjects != null)
+        {
+            return this.moduleMSBuildProjects;
+        }
+
+        this.moduleMSBuildProjects = new HashMap<String, MSBuildProject>();
+
+        List<MavenProject> mods = getModules();
+
+        for (MavenProject mp : mods)
+        {
+            File pom = mp.getFile();
+            File moddir = pom.getParentFile();
+
+            Collection files = FileUtils.listFiles(moddir, new String[]
+            {
+                "csproj", "vbproj"
+            }, false);
+
+            if (files == null)
+            {
+                continue;
+            }
+
+            if (files.size() == 0)
+            {
+                continue;
+            }
+
+            File projfile = (File) files.iterator().next();
+
+            MSBuildProject msbp;
+
+            try
+            {
+                msbp = MSBuildProject.instance(projfile);
+            }
+            catch (Exception e)
+            {
+                throw new MojoExecutionException(String.format(
+                    "Error reading MSBuild project file %s",
+                    projfile), e);
+            }
+
+            this.moduleMSBuildProjects.put(mp.getArtifactId(), msbp);
+        }
+
+        return this.moduleMSBuildProjects;
+    }
+
+    /**
+     * Gets the active build configuration.
+     * 
+     * @return The active build configuration.
+     */
+    BuildConfiguration getActiveBuildConfiguration()
+    {
+        if (!(isCSProject() || isVBProject()))
+        {
+            return null;
+        }
+
+        return this.msbuildProject.getBuildConfigurations().get(
+            getActiveBuildConfigurationName());
+    }
+
+    /**
+     * Gets the name of the active build configuration. A null value is returned
+     * if this property is not set.
+     * 
+     * @return The name of the active build configuration.
+     */
+    String getActiveBuildConfigurationName()
+    {
+        if (!this.mavenProject.getProperties().containsKey(
+            ACTIVE_BUILD_CONFIGURATION_PROP_NAME))
+        {
+            debug(
+                "properties does not contain key %s",
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME);
+            return null;
+        }
+
+        String configName =
+            this.mavenProject.getProperties().getProperty(
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME);
+
+        debug(
+            "properties retrieved key %s=%s",
+            ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+            configName);
+
+        return configName;
+    }
+
+    /**
+     * Gets the active build platform.
+     * 
+     * @return The active build platform.
+     */
+    PlatformType getActiveBuildPlatform()
+    {
+        if (!this.mavenProject.getProperties().containsKey(
+            ACTIVE_BUILD_PLATFORM_PROP_NAME))
+        {
+            debug(
+                "properties does not contain key %s",
+                ACTIVE_BUILD_PLATFORM_PROP_NAME);
+            return null;
+        }
+
+        String platform =
+            this.mavenProject.getProperties().getProperty(
+                ACTIVE_BUILD_PLATFORM_PROP_NAME);
+
+        debug(
+            "properties retrieved key %s=%s",
+            ACTIVE_BUILD_PLATFORM_PROP_NAME,
+            platform);
+
+        return PlatformType.parse(platform);
     }
 }
