@@ -260,6 +260,39 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-to-install</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <useDefaultDelimiters>false
+                            </useDefaultDelimiters>
+                            <delimiters>
+                                <delimiter>package *;</delimiter>
+                            </delimiters>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${basedir}/../nvn-install-plugin/src/main/java/net/sf/nvn/plugins/install
+                            </outputDirectory>
+                            <filters>
+                                <filter>${basedir}/src/main/conf/install.properties
+                                </filter>
+                            </filters>
+                            <resources>
+                                <resource>
+                                    <filtering>true</filtering>
+                                    <directory>
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                    </directory>
+                                    <includes>
+                                        <include>AbstractNvnMojo.java
+                                        </include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
