@@ -45,18 +45,23 @@
             <version>${parent.version}</version>
         </dependency>
         <dependency>
-        	<groupId>org.apache.maven.plugins</groupId>
-        	<artifactId>maven-install-plugin</artifactId>
-        	<version>2.3</version>
-        	<type>maven-plugin</type>
-        	<scope>compile</scope>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-install-plugin</artifactId>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
-        	<groupId>org.apache.maven.plugins</groupId>
-        	<artifactId>maven-deploy-plugin</artifactId>
-        	<version>2.5</version>
-        	<type>maven-plugin</type>
-        	<scope>compile</scope>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.3</version>
+            <type>maven-plugin</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>2.5</version>
+            <type>maven-plugin</type>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

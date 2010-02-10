@@ -46,6 +46,9 @@
                             <package>
                                 net.sf.nvn:nvn-vdproj-plugin:package
                             </package>
+                            <install>
+                                net.sf.nvn:nvn-install-plugin:install
+                            </install>
                         </phases>
                     </lifecycle>
                 </lifecycles>
@@ -89,6 +92,9 @@
                             <test>
                                 net.sf.nvn:nvn-mstest-plugin:mstest
                             </test>
+                            <install>
+                                net.sf.nvn:nvn-install-plugin:install
+                            </install>
                         </phases>
                     </lifecycle>
                 </lifecycles>
@@ -132,6 +138,9 @@
                             <test>
                                 net.sf.nvn:nvn-mstest-plugin:mstest
                             </test>
+                            <install>
+                                net.sf.nvn:nvn-install-plugin:install
+                            </install>
                         </phases>
                     </lifecycle>
                 </lifecycles>
