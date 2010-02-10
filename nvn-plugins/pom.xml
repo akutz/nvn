@@ -21,6 +21,7 @@
         <module>nvn-vdproj-plugin</module>
         <module>nvn-xsd-plugin</module>
         <module>nvn-wsdl-plugin</module>
+        <module>nvn-install-plugin</module>
         <module>nvn-dotnet-plugin</module>
     </modules>
     <build>
