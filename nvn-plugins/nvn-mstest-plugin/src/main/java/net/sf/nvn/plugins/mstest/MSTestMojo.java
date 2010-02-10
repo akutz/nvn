@@ -155,13 +155,15 @@ public class MSTestMojo extends AbstractExeMojo
 
     boolean forwardToTestProjects() throws MojoExecutionException
     {
-        if (super.isHierarchicalSolution())
+        if (!super.isHierarchicalSolution())
         {
+            debug("not forwarding to test projects because this is not a hierarchical solution");
             return false;
         }
 
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
+            debug("not forwarding to test projects because testMetaDatas.length > 0");
             return false;
         }
 
@@ -199,16 +201,19 @@ public class MSTestMojo extends AbstractExeMojo
     {
         if (this.testContainers != null && this.testContainers.length > 0)
         {
+            debug("not initializing test containers because testContainers.length > 0");
             return;
         }
 
         if (!this.mavenProject.getPackaging().equals("mstest"))
         {
+            debug("not initializing test containers because packaging != 'mstest'");
             return;
         }
 
         if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
         {
+            debug("not initializing test containers because testMetaDatas > 0");
             return;
         }
 
