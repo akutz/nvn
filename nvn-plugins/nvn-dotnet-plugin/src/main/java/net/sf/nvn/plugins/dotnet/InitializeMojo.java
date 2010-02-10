@@ -27,18 +27,6 @@ import org.apache.maven.project.MavenProject;
  */
 public class InitializeMojo extends AbstractNvnMojo
 {
-    /**
-     * The property name for the default debug build configuration property.
-     */
-    static String DEFAULT_DEBUG_BUILD_CONFIGURATION_PROP_NAME =
-        "net.sf.nvn.build.config.debug.default";
-
-    /**
-     * The property name for the default release build configuration property.
-     */
-    static String DEFAULT_RELEASE_BUILD_CONFIGURATION_PROP_NAME =
-        "net.sf.nvn.build.config.release.default";
-
     private static Pattern FORWARDED_GOALS_PATT =
         Pattern
             .compile("(?:(?:generate|process)-(?:test-)?(?:(?:(?:re)?sources)|classes))|install|deploy");
@@ -81,6 +69,40 @@ public class InitializeMojo extends AbstractNvnMojo
      *            default-value="Release"
      */
     String defaultReleaseBuildConfiguration;
+
+    /**
+     * <p>
+     * The active build platform.
+     * </p>
+     * <p>
+     * The default active build platform is determined by the project's version.
+     * If the version number ends with <strong><em>-SNAPSHOT</em> </strong> then
+     * the default active build platform is set to the value of
+     * {@link #defaultDebugBuildPlatform}. Any other version number (including
+     * those that end with <strong> <em>-RELEASE</em></strong>) will cause the
+     * default active build platform to be set to the value of
+     * {@link #defaultReleaseBuildPlatform}.
+     * </p>
+     * 
+     * @parameter expression="${net.sf.nvn.build.platform.active}"
+     */
+    String activeBuildPlatform;
+
+    /**
+     * The default <strong>Debug</strong> build platform name.
+     * 
+     * @parameter expression="${net.sf.nvn.build.platform.debug.default}"
+     *            default-value="Any CPU"
+     */
+    String defaultDebugBuildPlatform;
+
+    /**
+     * The default <strong>Release</strong> build platform name.
+     * 
+     * @parameter expression="${net.sf.nvn.build.platform.release.default}"
+     *            default-value="Any CPU"
+     */
+    String defaultReleaseBuildPlatform;
 
     /**
      * The location of this Visual Studio Project's parent Solution's pom file.
@@ -183,6 +205,7 @@ public class InitializeMojo extends AbstractNvnMojo
         initModules();
         initVersion();
         initActiveBuildConfiguration();
+        initActiveBuildPlatform();
         initProperties();
     }
 
@@ -321,8 +344,12 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         Properties projctProps = super.mavenProject.getProperties();
 
-        if (projctProps.contains(ACTIVE_BUILD_CONFIGURATION_PROP_NAME))
+        if (projctProps.containsKey(ACTIVE_BUILD_CONFIGURATION_PROP_NAME))
         {
+            debug(
+                "project property %s=%s",
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                projctProps.getProperty(ACTIVE_BUILD_CONFIGURATION_PROP_NAME));
             return;
         }
 
@@ -331,11 +358,20 @@ public class InitializeMojo extends AbstractNvnMojo
             projctProps.put(
                 ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
                 this.activeBuildConfiguration);
+            debug(
+                "set property %s=%s",
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.activeBuildConfiguration);
+            return;
         }
 
         if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
         {
             projctProps.put(
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.defaultDebugBuildConfiguration);
+            debug(
+                "set property %s=%s",
                 ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
                 this.defaultDebugBuildConfiguration);
         }
@@ -344,6 +380,76 @@ public class InitializeMojo extends AbstractNvnMojo
             projctProps.put(
                 ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
                 this.defaultReleaseBuildConfiguration);
+            debug(
+                "set property %s=%s",
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.defaultReleaseBuildConfiguration);
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes the active build platform.
+     * </p>
+     * 
+     * <p>
+     * If the {@link #activeBuildPlatform} parameter is set then its value is
+     * used. Otherwise the project's version is examined to determine the active
+     * build platform.
+     * </p>
+     * 
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build platform is set to the value of
+     * {@link #defaultDebugBuildPlatform}.</li>
+     * <li>Otherwise the active build platform is set to the value of
+     * {@link #defaultReleaseBuildPlatform}.</li>
+     * </ul>
+     */
+    void initActiveBuildPlatform()
+    {
+        Properties projctProps = super.mavenProject.getProperties();
+
+        if (projctProps.containsKey(ACTIVE_BUILD_PLATFORM_PROP_NAME))
+        {
+            debug(
+                "project property %s=%s",
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                projctProps.getProperty(ACTIVE_BUILD_PLATFORM_PROP_NAME));
+            return;
+        }
+
+        if (StringUtils.isNotEmpty(this.activeBuildPlatform))
+        {
+            projctProps.put(
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.activeBuildPlatform);
+            debug(
+                "set property %s=%s",
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.activeBuildPlatform);
+            return;
+        }
+
+        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        {
+            projctProps.put(
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.defaultDebugBuildPlatform);
+            debug(
+                "set property %s=%s",
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.defaultDebugBuildPlatform);
+        }
+        else
+        {
+            projctProps.put(
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.defaultReleaseBuildPlatform);
+            debug(
+                "set property %s=%s",
+                ACTIVE_BUILD_PLATFORM_PROP_NAME,
+                this.defaultReleaseBuildPlatform);
         }
     }
 

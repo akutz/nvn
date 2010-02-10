@@ -18,6 +18,9 @@
                     <lifecycle>
                         <id>clean</id>
                         <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </pre-clean>
                             <clean>
                                 net.sf.nvn:nvn-msbuild-plugin:clean
                             </clean>
@@ -61,6 +64,9 @@
                     <lifecycle>
                         <id>clean</id>
                         <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </pre-clean>
                             <clean>
                                 net.sf.nvn:nvn-msbuild-plugin:clean
                             </clean>
@@ -101,6 +107,9 @@
                     <lifecycle>
                         <id>clean</id>
                         <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </pre-clean>
                             <clean>
                                 net.sf.nvn:nvn-msbuild-plugin:clean
                             </clean>
@@ -141,6 +150,9 @@
                     <lifecycle>
                         <id>clean</id>
                         <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </pre-clean>
                             <clean>
                                 net.sf.nvn:nvn-msbuild-plugin:clean
                             </clean>
@@ -181,6 +193,9 @@
                     <lifecycle>
                         <id>clean</id>
                         <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </pre-clean>
                             <clean>
                                 net.sf.nvn:nvn-msbuild-plugin:clean
                             </clean>
