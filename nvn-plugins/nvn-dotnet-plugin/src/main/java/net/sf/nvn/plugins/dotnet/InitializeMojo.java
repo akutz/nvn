@@ -29,7 +29,7 @@ public class InitializeMojo extends AbstractNvnMojo
 {
     private static Pattern FORWARDED_GOALS_PATT =
         Pattern
-            .compile("(?:(?:generate|process)-(?:test-)?(?:(?:(?:re)?sources)|classes))|install|deploy");
+            .compile("(?:(?:generate|process)-(?:test-)?(?:(?:(?:re)?sources)|classes))|deploy");
     /**
      * The default version for a .NET project.
      */
