@@ -41,6 +41,12 @@ public class MSBuildProjectTest
         Assert.assertEquals("DEBUG", bc0.getDefinedConstants()[0]);
         Assert.assertEquals("TRACE", bc0.getDefinedConstants()[1]);
         Assert.assertEquals(new Integer(4), bc0.getWarningLevel());
+        Assert.assertEquals(new File("bin\\Debug\\/MyProject.Library.dll"), p
+            .getBuildArtifact("Debug"));
+        Assert.assertEquals(new File("bin\\Debug\\/MyProject.Library.pdb"), p
+            .getBuildSymbolsArtifact("Debug"));
+        Assert.assertEquals(new File("bin\\Debug\\MyProject.Library.XML"), p
+            .getBuildDocumentationArtifact("Debug"));
 
         BuildConfiguration bc1 = p.getBuildConfigurations().get("Release");
         Assert.assertEquals("Release", bc1.getName());
@@ -53,5 +59,10 @@ public class MSBuildProjectTest
         Assert.assertEquals(new Integer(4), bc1.getWarningLevel());
         Assert.assertEquals(new File("bin\\Release\\"), bc1.getOutputPath());
         Assert.assertEquals(null, bc1.getDocumentationFile());
+        Assert.assertEquals(new File("bin\\Release\\/MyProject.Library.dll"), p
+            .getBuildArtifact("Release"));
+        Assert.assertEquals(new File("bin\\Release\\/MyProject.Library.pdb"), p
+            .getBuildSymbolsArtifact("Release"));
+        Assert.assertEquals(null, p.getBuildDocumentationArtifact("Release"));
     }
 }

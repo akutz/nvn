@@ -221,4 +221,63 @@ public class MSBuildProject
     {
         return this.projectFile;
     }
+
+    /**
+     * Gets the artifact created by this build.
+     * 
+     * @param buildConfigName The name of a build configuration.
+     * @return
+     */
+    public File getBuildArtifact(String buildConfigName)
+    {
+        BuildConfiguration bc = this.buildConfigurations.get(buildConfigName);
+
+        String extension = "dll";
+
+        if (this.outputType == ProjectOutputType.Exe
+            || this.outputType == ProjectOutputType.WinExe)
+        {
+            extension = "exe";
+        }
+
+        File artifact =
+            new File(bc.getOutputPath(), String.format(
+                "%s.%s",
+                this.assemblyName,
+                extension));
+
+        return artifact;
+    }
+
+    /**
+     * Gets the documentation artifact created by this build. If no
+     * documentation file was created then a null value is returned.
+     * 
+     * @param buildConfigName The name of a build configuration.
+     * @return The documentation artifact created by this build.
+     */
+    public File getBuildDocumentationArtifact(String buildConfigName)
+    {
+        BuildConfiguration bc = this.buildConfigurations.get(buildConfigName);
+        return bc.getDocumentationFile();
+    }
+
+    /**
+     * Gets the build symbols artifact created by this build. If no symbols were
+     * created then a null value is returned.
+     * 
+     * @param buildConfigName The name of a build configuration.
+     * @return The build symbols artifact created by this build.
+     */
+    public File getBuildSymbolsArtifact(String buildConfigName)
+    {
+        BuildConfiguration bc = this.buildConfigurations.get(buildConfigName);
+
+        File artifact =
+            new File(bc.getOutputPath(), String.format(
+                "%s.pdb",
+                this.assemblyName));
+
+        return artifact;
+    }
 }
