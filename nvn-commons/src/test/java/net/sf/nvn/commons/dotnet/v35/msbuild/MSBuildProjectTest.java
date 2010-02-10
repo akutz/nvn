@@ -4,6 +4,7 @@ import java.io.File;
 import junit.framework.Assert;
 import net.sf.nvn.commons.dotnet.DebugType;
 import net.sf.nvn.commons.dotnet.ErrorReportType;
+import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import org.junit.Test;
 
@@ -30,6 +31,7 @@ public class MSBuildProjectTest
 
         BuildConfiguration bc0 = p.getBuildConfigurations().get("Debug");
         Assert.assertEquals("Debug", bc0.getName());
+        Assert.assertEquals(PlatformType.AnyCPU, bc0.getPlatform());
         Assert.assertEquals(DebugType.Full, bc0.getDebugType());
         Assert.assertEquals(false, bc0.isOptimize());
         Assert.assertEquals(true, bc0.isDebugSymbols());
@@ -50,6 +52,7 @@ public class MSBuildProjectTest
 
         BuildConfiguration bc1 = p.getBuildConfigurations().get("Release");
         Assert.assertEquals("Release", bc1.getName());
+        Assert.assertEquals(PlatformType.AnyCPU, bc1.getPlatform());
         Assert.assertEquals(true, bc1.isOptimize());
         Assert.assertEquals(false, bc1.isDebugSymbols());
         Assert.assertEquals(DebugType.PdbOnly, bc1.getDebugType());
