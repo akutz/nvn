@@ -20,6 +20,7 @@ import org.apache.maven.project.MavenProject;
  * @phase compile
  * @description A Maven plug-in for building .NET solutions and/or projects with
  *              MSBuild.
+ * @requiresDependencyResolution
  */
 public class MSBuildMojo extends AbstractExeMojo
 {
@@ -40,7 +41,7 @@ public class MSBuildMojo extends AbstractExeMojo
     /**
      * Hides the startup banner and copyright message.
      * 
-     * @parameter expression="${msbuild.noLogo}" default-value="false"
+     * @parameter default-value="false"
      */
     boolean noLogo;
 
@@ -49,21 +50,21 @@ public class MSBuildMojo extends AbstractExeMojo
      * <a href="http://msdn.microsoft.com/en-us/library/ms404301.aspx">MSBuild
      * Response Files</a>.
      * 
-     * @parameter expression="${msbuild.commandFile}"
+     * @parameter
      */
     File[] commandFiles;
 
     /**
      * Does not auto-include the MSBuild.rsp file.
      * 
-     * @parameter expression="${msbuild.noAutoResponse}" default-value="false"
+     * @parameter default-value="false"
      */
     boolean noAutoResponse;
 
     /**
      * Builds these targets in this project.
      * 
-     * @parameter expression="${msbuild.targets}"
+     * @parameter
      */
     String[] targets;
 
@@ -71,7 +72,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * Sets or overrides these project-level properties, where name is the
      * property name and value is the property value.
      * 
-     * @parameter expression="${msbuild.properties}"
+     * @parameter
      */
     Properties properties;
 
@@ -103,7 +104,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * <em>XMLLogger,C:\Loggers\MyLogger.dll;OutputAsHTML</em>
      * </p>
      * 
-     * @parameter expression="${msbuild.loggers}"
+     * @parameter
      */
     String[] loggers;
 
@@ -134,7 +135,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * </ul>
      * </p>
      * 
-     * @parameter expression="${msbuild.distributedLoggers}"
+     * @parameter
      */
     String[] distributedLoggers;
 
@@ -152,7 +153,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * verbosity.</li>
      * </ul>
      * 
-     * @parameter expression="${msbuild.consoleLoggerParameters}"
+     * @parameter
      */
     String consoleLoggerParameters;
 
@@ -178,28 +179,28 @@ public class MSBuildMojo extends AbstractExeMojo
      * Disables the default console logger and does not log events to the
      * console.
      * 
-     * @parameter expression="${msbuild.noConsoleLogger}" default-value="false"
+     * @parameter default-value="false"
      */
     boolean noConsoleLogger;
 
     /**
      * Validates the project file against the default schema.
      * 
-     * @parameter expression="${msbuild.validate}" default-value="false"
+     * @parameter default-value="false"
      */
     boolean validate;
 
     /**
      * Validates the project file against the specified schema.
      * 
-     * @parameter expression="${msbuild.schema}"
+     * @parameter
      */
     File schema;
 
     /**
      * Specifies the number of worker processes that are involved in the build.
      * 
-     * @parameter expression="${msbuild.maxCpuCount}"
+     * @parameter
      */
     Integer maxCpuCount;
 
@@ -207,7 +208,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * List of extensions to ignore when the project file to build is being
      * determined.
      * 
-     * @parameter expression="${msbuild.ignoreProjectExtensions}"
+     * @parameter
      */
     String[] ignoreProjectExtensions;
 
@@ -217,7 +218,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * fileLogger can be specified through the addition of the
      * <em>fileLoggerParameters</em> parameter.
      * 
-     * @parameter expression="${msbuild.fileLogger}"
+     * @parameter
      */
     boolean fileLogger;
 
@@ -231,7 +232,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * switch the distributed logger will use the fileName as a template and
      * append the node id to this fileName to create a log file for each node.
      * 
-     * @parameter expression="${msbuild.distributedFileLogger}"
+     * @parameter
      */
     boolean distributedFileLogger;
 
@@ -254,7 +255,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * example, <em>UTF-8</em>.</li>
      * </ul>
      * 
-     * @parameter expression="${msbuild.fileLoggerParameters}"
+     * @parameter
      */
     String[] fileLoggerParameters;
 
@@ -279,7 +280,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * Specific .NET Frameworks.</a>
      * </p>
      * 
-     * @parameter expression="${msbuild.toolsVersion}"
+     * @parameter
      */
     String toolsVersion;
 
@@ -288,7 +289,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * remain after the build completes and are reused by subsequent builds,
      * otherwise the nodes do not remain after the build completes.
      * 
-     * @parameter expression="${msbuild.nodeReuse}"
+     * @parameter
      */
     boolean nodeReuse;
 
@@ -560,18 +561,33 @@ public class MSBuildMojo extends AbstractExeMojo
      */
     void initBuildProperties()
     {
-        if (this.properties != null && this.properties.size() > 0)
+        if (this.properties == null)
         {
-            return;
+            this.properties = new Properties();
         }
 
-        this.properties = new Properties();
-        this.properties.put("Configuration", "Debug");
-        this.properties.put("Platform", "Any CPU");
+        if (!this.properties.containsKey("Configuration"))
+        {
+            this.properties.put(
+                "Configuration",
+                getActiveBuildConfigurationName());
+        }
+
+        if (!this.properties.containsKey("Platform"))
+        {
+            String platform = getActiveBuildPlatform().toString();
+            if (platform.equals("AnyCPU"))
+            {
+                platform = "Any CPU";
+            }
+            this.properties.put("Platform", platform);
+        }
 
         if (super.mavenProject.isExecutionRoot() && !isSolution())
         {
-            this.properties.put("OutputPath", "bin\\Debug");
+            this.properties.put(
+                "OutputPath",
+                getPath(getActiveBuildConfiguration().getOutputPath()));
         }
     }
 
@@ -614,6 +630,17 @@ public class MSBuildMojo extends AbstractExeMojo
             String dgid = d.getGroupId();
             String daid = d.getArtifactId();
             String dver = d.getVersion();
+            String dtyp = d.getType();
+
+            if (StringUtils.isEmpty(dtyp))
+            {
+                continue;
+            }
+
+            if (!dtyp.matches("dll|exe"))
+            {
+                continue;
+            }
 
             String dgidSlash = dgid.replaceAll("\\.", "\\\\");
 
