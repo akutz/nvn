@@ -1,3 +1,8 @@
+
+    <!--
+        http://svn.apache.org/repos/asf/maven/maven-2/tags/maven-2.2.1/maven-core/src/main/resources/META-INF/plexus/components.xml
+    -->
+
 <component-set>
     <components>
 
@@ -9,25 +14,38 @@
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
             <configuration>
-                <phases>
-                    <initialize>
-                        net.sf.nvn:nvn-dotnet-plugin:initialize
-                    </initialize>
-                    <generate-sources>
-                        net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
-                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
-                        net.sf.nvn:nvn-xsd-plugin:xsd
-                    </generate-sources>
-                    <compile>
-                        net.sf.nvn:nvn-msbuild-plugin:msbuild
-                    </compile>
-                    <test>
-                        net.sf.nvn:nvn-mstest-plugin:mstest
-                    </test>
-                    <package>
-                        net.sf.nvn:nvn-vdproj-plugin:package
-                    </package>
-                </phases>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <clean>
+                                net.sf.nvn:nvn-msbuild-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </initialize>
+                            <generate-sources>
+                                net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                                net.sf.nvn:nvn-wsdl-plugin:wsdl,
+                                net.sf.nvn:nvn-xsd-plugin:xsd
+                            </generate-sources>
+                            <compile>
+                                net.sf.nvn:nvn-msbuild-plugin:msbuild
+                            </compile>
+                            <test>
+                                net.sf.nvn:nvn-mstest-plugin:mstest
+                            </test>
+                            <package>
+                                net.sf.nvn:nvn-vdproj-plugin:package
+                            </package>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
             </configuration>
         </component>
 
@@ -39,22 +57,75 @@
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
             <configuration>
-                <phases>
-                    <initialize>
-                        net.sf.nvn:nvn-dotnet-plugin:initialize
-                    </initialize>
-                    <generate-sources>
-                        net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
-                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
-                        net.sf.nvn:nvn-xsd-plugin:xsd
-                    </generate-sources>
-                    <compile>
-                        net.sf.nvn:nvn-msbuild-plugin:msbuild
-                    </compile>
-                    <test>
-                        net.sf.nvn:nvn-mstest-plugin:mstest
-                    </test>
-                </phases>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <clean>
+                                net.sf.nvn:nvn-msbuild-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </initialize>
+                            <generate-sources>
+                                net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                                net.sf.nvn:nvn-wsdl-plugin:wsdl,
+                                net.sf.nvn:nvn-xsd-plugin:xsd
+                            </generate-sources>
+                            <compile>
+                                net.sf.nvn:nvn-msbuild-plugin:msbuild
+                            </compile>
+                            <test>
+                                net.sf.nvn:nvn-mstest-plugin:mstest
+                            </test>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
+            </configuration>
+        </component>
+
+        <component>
+            <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
+            </role>
+            <role-hint>mstest</role-hint>
+            <implementation>
+                org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+            </implementation>
+            <configuration>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <clean>
+                                net.sf.nvn:nvn-msbuild-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </initialize>
+                            <generate-sources>
+                                net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                                net.sf.nvn:nvn-wsdl-plugin:wsdl,
+                                net.sf.nvn:nvn-xsd-plugin:xsd
+                            </generate-sources>
+                            <compile>
+                                net.sf.nvn:nvn-msbuild-plugin:msbuild
+                            </compile>
+                            <test>
+                                net.sf.nvn:nvn-mstest-plugin:mstest
+                            </test>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
             </configuration>
         </component>
 
@@ -66,19 +137,35 @@
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
             <configuration>
-                <phases>
-                    <initialize>
-                        net.sf.nvn:nvn-dotnet-plugin:initialize
-                    </initialize>
-                    <generate-sources>
-                        net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
-                        net.sf.nvn:nvn-wsdl-plugin:wsdl,
-                        net.sf.nvn:nvn-xsd-plugin:xsd
-                    </generate-sources>
-                    <compile>
-                        net.sf.nvn:nvn-msbuild-plugin:msbuild
-                    </compile>
-                </phases>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <clean>
+                                net.sf.nvn:nvn-msbuild-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </initialize>
+                            <generate-sources>
+                                net.sf.nvn:nvn-assemblyinfo-plugin:generate-assembly-info,
+                                net.sf.nvn:nvn-wsdl-plugin:wsdl,
+                                net.sf.nvn:nvn-xsd-plugin:xsd
+                            </generate-sources>
+                            <compile>
+                                net.sf.nvn:nvn-msbuild-plugin:msbuild
+                            </compile>
+                            <test>
+                                net.sf.nvn:nvn-mstest-plugin:mstest
+                            </test>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
             </configuration>
         </component>
 
@@ -90,17 +177,30 @@
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
             </implementation>
             <configuration>
-                <phases>
-                    <initialize>
-                        net.sf.nvn:nvn-dotnet-plugin:initialize
-                    </initialize>
-                    <package>
-                        net.sf.nvn:nvn-vdproj-plugin:package
-                    </package>
-                </phases>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <clean>
+                                net.sf.nvn:nvn-msbuild-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-dotnet-plugin:initialize
+                            </initialize>
+                            <package>
+                                net.sf.nvn:nvn-vdproj-plugin:package
+                            </package>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
             </configuration>
         </component>
-        
+
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
@@ -114,7 +214,7 @@
                 <addedToClasspath>false</addedToClasspath>
             </configuration>
         </component>
-        
+
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
@@ -151,6 +251,20 @@
             </implementation>
             <configuration>
                 <type>dll</type>
+                <extension>dll</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>mstest</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>mstest</type>
                 <extension>dll</extension>
                 <language>dotnet</language>
                 <addedToClasspath>false</addedToClasspath>

@@ -1,10 +1,13 @@
 package net.sf.nvn.plugins.dotnet;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.NameFileFilter;
@@ -20,13 +23,66 @@ import org.apache.maven.project.MavenProject;
  * @goal initialize
  * @phase initialize
  * @description A Maven plug-in for initializing the nvn build system.
+ * 
  */
 public class InitializeMojo extends AbstractNvnMojo
 {
     /**
+     * The property name for the default debug build configuration property.
+     */
+    static String DEFAULT_DEBUG_BUILD_CONFIGURATION_PROP_NAME =
+        "net.sf.nvn.build.config.debug.default";
+
+    /**
+     * The property name for the default release build configuration property.
+     */
+    static String DEFAULT_RELEASE_BUILD_CONFIGURATION_PROP_NAME =
+        "net.sf.nvn.build.config.release.default";
+
+    private static Pattern FORWARDED_GOALS_PATT =
+        Pattern
+            .compile("(?:(?:generate|process)-(?:test-)?(?:(?:(?:re)?sources)|classes))|install|deploy");
+    /**
      * The default version for a .NET project.
      */
     private static String DEFAULT_VERSION = "0.0.0.0";
+
+    /**
+     * <p>
+     * The active build configuration.
+     * </p>
+     * 
+     * <p>
+     * The default active build configuration is determined by the project's
+     * version. If the version number ends with <strong><em>-SNAPSHOT</em>
+     * </strong> then the default active build configuration is set to the value
+     * of {@link #defaultDebugBuildConfiguration}. Any other version number
+     * (including those that end with <strong> <em>-RELEASE</em></strong>) will
+     * cause the default active build configuration to be set to the value of
+     * {@link #defaultReleaseBuildConfiguration}.
+     * </p>
+     * 
+     * @parameter expression="${net.sf.nvn.build.config.active}"
+     */
+    String activeBuildConfiguration;
+
+    /**
+     * The default <strong>Debug</strong> build configuration name. The default
+     * value of this parameter is <strong>Debug</strong>.
+     * 
+     * @parameter expression="${net.sf.nvn.build.config.debug.default}"
+     *            default-value="Debug"
+     */
+    String defaultDebugBuildConfiguration;
+
+    /**
+     * The default <strong>Release</strong> build configuration name. The
+     * default value of this parameter is <strong>Release</strong>
+     * 
+     * @parameter expression="${net.sf.nvn.build.config.release.default}"
+     *            default-value="Release"
+     */
+    String defaultReleaseBuildConfiguration;
 
     /**
      * The location of this Visual Studio Project's parent Solution's pom file.
@@ -67,7 +123,52 @@ public class InitializeMojo extends AbstractNvnMojo
     @Override
     void nvnExecute() throws MojoExecutionException
     {
-        // Do nothing
+        forwardGoals();
+    }
+
+    @SuppressWarnings("unchecked")
+    void forwardGoals() throws MojoExecutionException
+    {
+        if (!isSolution())
+        {
+            return;
+        }
+
+        if (isCSProject() || isVBProject() || super.isVdprojProject())
+        {
+            return;
+        }
+
+        List goals = super.session.getGoals();
+
+        if (goals == null)
+        {
+            debug("goals list is null");
+        }
+
+        List<String> goalsToForward = new ArrayList<String>();
+
+        for (Object og : goals)
+        {
+            String g = (String) og;
+
+            Matcher gm = FORWARDED_GOALS_PATT.matcher(g);
+
+            if (gm.matches())
+            {
+                goalsToForward.add(g);
+            }
+        }
+
+        if (goalsToForward.size() == 0)
+        {
+            return;
+        }
+
+        for (MavenProject m : getModules())
+        {
+            execute(m, goalsToForward);
+        }
     }
 
     @Override
@@ -83,6 +184,7 @@ public class InitializeMojo extends AbstractNvnMojo
         initParent();
         initModules();
         initVersion();
+        initActiveBuildConfiguration();
         initProperties();
     }
 
@@ -176,17 +278,74 @@ public class InitializeMojo extends AbstractNvnMojo
      */
     void initVersion()
     {
+        String myVersion = super.mavenProject.getVersion();
+
         if (super.mavenProject.getParent() != null)
         {
-            super.mavenProject.setVersion(super.mavenProject
-                .getParent()
-                .getVersion());
+            if (StringUtils.isNotEmpty(myVersion)
+                && myVersion
+                    .matches("\\$\\{(?:project\\.)?parent\\.version\\}"))
+            {
+                super.mavenProject.setVersion(super.mavenProject
+                    .getParent()
+                    .getVersion());
+            }
         }
 
-        if (super.mavenProject.getVersion().equals(
-            MavenProject.EMPTY_PROJECT_VERSION))
+        myVersion = super.mavenProject.getVersion();
+
+        if (myVersion.equals(MavenProject.EMPTY_PROJECT_VERSION))
         {
             super.mavenProject.setVersion(DEFAULT_VERSION);
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes the active build configuration.
+     * </p>
+     * 
+     * <p>
+     * If the {@link #activeBuildConfiguration} parameter is set then its value
+     * is used. Otherwise the project's version is examined to determine the
+     * active build configuration.
+     * </p>
+     * 
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build configuration is set to the value of
+     * {@link #defaultDebugBuildConfiguration}.</li>
+     * <li>Otherwise the active build configuration is set to the value of
+     * {@link #defaultReleaseBuildConfiguration}.</li>
+     * </ul>
+     */
+    void initActiveBuildConfiguration()
+    {
+        Properties projctProps = super.mavenProject.getProperties();
+
+        if (projctProps.contains(ACTIVE_BUILD_CONFIGURATION_PROP_NAME))
+        {
+            return;
+        }
+
+        if (StringUtils.isNotEmpty(this.activeBuildConfiguration))
+        {
+            projctProps.put(
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.activeBuildConfiguration);
+        }
+
+        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        {
+            projctProps.put(
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.defaultDebugBuildConfiguration);
+        }
+        else
+        {
+            projctProps.put(
+                ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
+                this.defaultReleaseBuildConfiguration);
         }
     }
 
@@ -198,12 +357,12 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         if (super.mavenProject.getParent() == null)
         {
-            debug("not initializing properties because parent project is null");
+            debug("not initializing remaining properties because parent project is null");
             return;
         }
 
-        Properties parentProps = super.mavenProject.getParent().getProperties();
         Properties projctProps = super.mavenProject.getProperties();
+        Properties parentProps = super.mavenProject.getParent().getProperties();
 
         // Copy all of the parent's properties to this project's properties, but
         // don't overwrite any properties with the same key.
@@ -213,7 +372,7 @@ public class InitializeMojo extends AbstractNvnMojo
 
             if (!projctProps.containsKey(k))
             {
-                String v = projctProps.getProperty(k);
+                String v = parentProps.getProperty(k);
                 projctProps.setProperty(k, v);
             }
 
