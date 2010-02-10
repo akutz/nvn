@@ -14,8 +14,6 @@ import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.installer.ArtifactInstaller;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
@@ -29,7 +27,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuilderConfiguration;
 import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.validation.ModelValidator;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -57,27 +54,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     static String ACTIVE_BUILD_PLATFORM_PROP_NAME =
         "net.sf.nvn.build.platform.active";
-
-    /**
-     * The component used to validate the user-supplied artifact coordinates.
-     * 
-     * @component
-     */
-    ModelValidator modelValidator;
-
-    /**
-     * The artifact factory.
-     * 
-     * @component
-     */
-    ArtifactFactory artifactFactory;
-
-    /**
-     * The artifact installer.
-     * 
-     * @component
-     */
-    ArtifactInstaller installer;
 
     /**
      * The MSBuild project associated with this project. This field will be null
