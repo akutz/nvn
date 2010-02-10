@@ -21,6 +21,7 @@ import org.codehaus.plexus.util.StringUtils;
  * @goal xsd
  * @phase generate-sources
  * @description A Maven plug-in for running the Microsoft xsd.exe utility.
+ * @requiresDependencyResolution
  */
 public class XsdMojo extends AbstractExeMojo
 {
