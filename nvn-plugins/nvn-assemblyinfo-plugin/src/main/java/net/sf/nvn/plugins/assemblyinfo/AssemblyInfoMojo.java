@@ -7,9 +7,11 @@ import java.io.Writer;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.sf.nvn.commons.dotnet.OutputFileType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -22,6 +24,13 @@ import org.apache.maven.project.MavenProject;
  */
 public class AssemblyInfoMojo extends AbstractNvnMojo
 {
+    /**
+     * The pattern used to match the assembly GUID in an assembly information
+     * file.
+     */
+    private static Pattern ASSEM_GUID_ATTR_PATT =
+        Pattern.compile("(?i)\\[assembly\\s*:\\s*Guid\\(\"(.*)\"\\)\\]");
+
     /**
      * The location of the .NET AssemblyInfo file to output.
      * 
@@ -136,12 +145,53 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     /**
      * Parses the GUID.
      */
-    void parseGuid()
+    void parseGuid() throws MojoExecutionException
     {
-        if (StringUtils.isEmpty(this.guid))
+        if (StringUtils.isNotEmpty(this.guid))
         {
-            this.guid = UUID.randomUUID().toString();
+            return;
         }
+
+        this.guid = UUID.randomUUID().toString();
+
+        if (this.outputFile == null)
+        {
+            return;
+        }
+
+        if (!this.outputFile.exists())
+        {
+            return;
+        }
+
+        String fileContents;
+
+        try
+        {
+            fileContents = FileUtils.readFileToString(this.outputFile);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(String.format(
+                "Unable to read assembly information file %s",
+                this.outputFile), e);
+        }
+
+        Matcher m = ASSEM_GUID_ATTR_PATT.matcher(fileContents);
+
+        if (!m.find())
+        {
+            error(
+                "Error parsing assembly information file %s for GUID",
+                this.outputFile);
+            return;
+        }
+
+        this.guid = m.group(1);
+        info(
+            "Parsed existing GUID, %s, from assembly information file %s",
+            this.guid,
+            this.outputFile);
     }
 
     /**
@@ -253,13 +303,16 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
                 outAttr(out, "AssemblyTitle(\"" + super.mavenProject.getName()
                     + "\")");
 
-                if (StringUtils.isNotEmpty(super.mavenProject
-                    .getOrganization()
-                    .getName()))
+                Organization org = super.mavenProject.getOrganization();
+
+                if (org != null)
                 {
-                    outAttr(out, "AssemblyProduct(\""
-                        + super.mavenProject.getOrganization().getName() + " "
-                        + super.mavenProject.getName() + "\")");
+                    if (StringUtils.isNotEmpty(org.getName()))
+                    {
+                        outAttr(out, "AssemblyProduct(\""
+                            + super.mavenProject.getOrganization().getName()
+                            + " " + super.mavenProject.getName() + "\")");
+                    }
                 }
             }
 

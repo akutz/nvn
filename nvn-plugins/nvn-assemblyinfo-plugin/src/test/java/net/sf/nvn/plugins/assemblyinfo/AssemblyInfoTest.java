@@ -2,6 +2,7 @@ package net.sf.nvn.plugins.assemblyinfo;
 
 import java.io.File;
 import junit.framework.Assert;
+import net.sf.nvn.commons.dotnet.OutputFileType;
 import org.apache.maven.model.Organization;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
@@ -18,11 +19,11 @@ public class AssemblyInfoTest
     public void testGetOutputFileType() throws Exception
     {
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
-        mojo.outputFile = new File("Properties/AssemblyInfo.cs");
+        mojo.outputFile = new File("target/Properties/AssemblyInfo.cs");
         mojo.parseOutputFileType();
         Assert.assertEquals(OutputFileType.CSharp, mojo.outputFileType);
 
-        mojo.outputFile = new File("Properties/AssemblyInfo.Vb");
+        mojo.outputFile = new File("target/Properties/AssemblyInfo.Vb");
         mojo.parseOutputFileType();
         Assert.assertEquals(OutputFileType.VisualBasic, mojo.outputFileType);
     }
@@ -47,7 +48,7 @@ public class AssemblyInfoTest
         AssemblyInfoMojo mojo = new AssemblyInfoMojo();
         mojo.mavenProject = new MavenProject();
         mojo.mavenProject.setOrganization(new Organization());
-        mojo.outputFile = new File("Properties/AssemblyInfo.cs");
+        mojo.outputFile = new File("target/Properties/AssemblyInfo.cs");
         mojo.guid = "2a585612-ae72-458e-b877-554c0d51a142";
         
         mojo.preExecute();
