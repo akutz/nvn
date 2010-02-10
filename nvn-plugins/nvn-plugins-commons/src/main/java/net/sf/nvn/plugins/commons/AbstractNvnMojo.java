@@ -180,7 +180,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     boolean isHierarchicalSolution()
     {
         return isSolution()
-            && (isCSProject() || isVBProject() || isVdprojProject());
+            && !(isCSProject() || isVBProject() || isVdprojProject());
     }
 
     /**
@@ -193,7 +193,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     boolean isFlatSolution()
     {
         return isSolution()
-            && !(isCSProject() || isVBProject() || isVdprojProject());
+            && (isCSProject() || isVBProject() || isVdprojProject());
     }
 
     /**
@@ -713,6 +713,8 @@ public abstract class AbstractNvnMojo extends AbstractMojo
             File pom = mp.getFile();
             File moddir = pom.getParentFile();
 
+            debug("searching %s for msbuild project files", moddir);
+
             Collection files = FileUtils.listFiles(moddir, new String[]
             {
                 "csproj", "vbproj"
@@ -743,10 +745,40 @@ public abstract class AbstractNvnMojo extends AbstractMojo
                     projfile), e);
             }
 
-            this.moduleMSBuildProjects.put(mp.getArtifactId(), msbp);
+            String key =
+                String.format("%s-%s", mp.getArtifactId(), mp.getPackaging());
+
+            this.moduleMSBuildProjects.put(key, msbp);
+            debug("added %s to msbuild projects list", mp.getArtifactId());
         }
 
         return this.moduleMSBuildProjects;
+    }
+
+    /**
+     * Gets a MSBuildProject from the maven project.
+     * 
+     * @param project The maven project to get the MSBuild project with.
+     * @return A MSBuildProject.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    MSBuildProject getMSBuildModule(MavenProject project)
+        throws MojoExecutionException
+    {
+        String key = getMSBuildModuleKey(project);
+        return getMSBuildModules().get(key);
+    }
+
+    /**
+     * Gets the key to access the moduleMSBuildProjects map.
+     * 
+     * @param project The maven project to get the key with.
+     * @return The key.
+     */
+    String getMSBuildModuleKey(MavenProject project)
+    {
+        return String.format("%s-%s", project.getArtifactId(), project
+            .getPackaging());
     }
 
     /**
