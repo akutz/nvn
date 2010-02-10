@@ -98,34 +98,55 @@ public class InstallMojo extends AbstractNvnMojo
     {
         for (MavenProject mp : getModules())
         {
-            if (mp.getPackaging().equalsIgnoreCase("mstest"))
+            String pkg = mp.getPackaging();
+            String aid = mp.getArtifactId();
+
+            if (pkg.equalsIgnoreCase("mstest"))
             {
-                debug("not installing %s because it is a test project", mp.getArtifactId());
+                debug("not installing %s because it is a test project", aid);
                 continue;
             }
 
-            MSBuildProject msbProject =
-                super.getMSBuildModules().get(mp.getArtifactId());
-            install(mp, msbProject);
-            debug("installed %s", mp.getArtifactId());
+            MSBuildProject msbProject = getMSBuildModule(mp);
+
+            if (msbProject == null)
+            {
+                throw new MojoExecutionException(String.format(
+                    "msbuild module list doesn't contain %s and it should",
+                    getMSBuildModuleKey(mp)));
+            }
+
+            File moddir = msbProject.getProjectFile().getParentFile();
+            install(mp, msbProject, moddir);
+            debug("installed %s", aid);
         }
     }
 
     void handleProject() throws MojoExecutionException
     {
-        install(super.mavenProject, super.msbuildProject);
+        install(super.mavenProject, super.msbuildProject, null);
     }
 
-    void install(MavenProject project, MSBuildProject msbProject)
+    void install(MavenProject project, MSBuildProject msbProject, File parentDir)
         throws MojoExecutionException
     {
         File artifactFile =
             msbProject.getBuildArtifact(getActiveBuildConfigurationName());
+        
+        if (parentDir != null)
+        {
+            artifactFile = new File(parentDir, artifactFile.getPath());
+        }
 
-        String gid = super.mavenProject.getGroupId();
-        String aid = super.mavenProject.getArtifactId();
-        String ver = super.mavenProject.getVersion();
-        String pkg = super.mavenProject.getPackaging();
+        String gid = project.getGroupId();
+        String aid = project.getArtifactId();
+        String pkg = project.getPackaging();
+        
+        String ver = project.getVersion();
+        if (ver.equals("${parent.version}"))
+        {
+            ver = super.mavenProject.getVersion();
+        }
 
         Artifact artifact =
             this.artifactFactory.createArtifactWithClassifier(
@@ -158,6 +179,11 @@ public class InstallMojo extends AbstractNvnMojo
         File docFile =
             msbProject
                 .getBuildDocumentationArtifact(getActiveBuildConfigurationName());
+        
+        if (parentDir != null)
+        {
+            docFile = new File(parentDir, docFile.getPath());
+        }
 
         if (docFile != null && docFile.exists())
         {
@@ -185,6 +211,11 @@ public class InstallMojo extends AbstractNvnMojo
         File pdbFile =
             msbProject
                 .getBuildSymbolsArtifact(getActiveBuildConfigurationName());
+        
+        if (parentDir != null)
+        {
+            pdbFile = new File(parentDir, pdbFile.getPath());
+        }
 
         if (pdbFile != null && pdbFile.exists())
         {
