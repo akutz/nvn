@@ -26,9 +26,9 @@ public class MSBuildProjectTest
         Assert.assertEquals("v3.5", p.getTargetFrameworkVersion());
         Assert.assertEquals("MyProject", p.getRootNamespace());
         Assert.assertEquals("MyProject.Library", p.getAssemblyName());
-        Assert.assertEquals(2, p.getBuildConfigurations().length);
+        Assert.assertEquals(2, p.getBuildConfigurations().size());
 
-        BuildConfiguration bc0 = p.getBuildConfigurations()[0];
+        BuildConfiguration bc0 = p.getBuildConfigurations().get("Debug");
         Assert.assertEquals("Debug", bc0.getName());
         Assert.assertEquals(DebugType.Full, bc0.getDebugType());
         Assert.assertEquals(false, bc0.isOptimize());
@@ -42,7 +42,7 @@ public class MSBuildProjectTest
         Assert.assertEquals("TRACE", bc0.getDefinedConstants()[1]);
         Assert.assertEquals(new Integer(4), bc0.getWarningLevel());
 
-        BuildConfiguration bc1 = p.getBuildConfigurations()[1];
+        BuildConfiguration bc1 = p.getBuildConfigurations().get("Release");
         Assert.assertEquals("Release", bc1.getName());
         Assert.assertEquals(true, bc1.isOptimize());
         Assert.assertEquals(false, bc1.isDebugSymbols());

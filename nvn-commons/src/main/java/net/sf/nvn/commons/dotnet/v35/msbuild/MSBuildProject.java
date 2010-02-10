@@ -2,8 +2,8 @@ package net.sf.nvn.commons.dotnet.v35.msbuild;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -29,7 +29,7 @@ public class MSBuildProject
     private MSBuildProject()
     {
     }
-    
+
     /**
      * Reads a .NET 3.5 MSBuild project file and returns its object
      * representation.
@@ -50,8 +50,9 @@ public class MSBuildProject
         MSBuildProject msbp = new MSBuildProject();
         msbp.projectFile = projectFile;
         msbp.projectLanguage = ProjectLanguageType.parse(projectFile);
-        
-        List<BuildConfiguration> bcs = new ArrayList<BuildConfiguration>();
+
+        Map<String, BuildConfiguration> bcs =
+            new HashMap<String, BuildConfiguration>();
 
         for (Object tag : p.getProjectLevelTagExceptTargetOrImportType())
         {
@@ -69,11 +70,11 @@ public class MSBuildProject
             else
             {
                 BuildConfiguration bc = BuildConfiguration.instance(pg);
-                bcs.add(bc);
+                bcs.put(bc.getName(), bc);
             }
         }
 
-        msbp.buildConfigurations = bcs.toArray(new BuildConfiguration[0]);
+        msbp.buildConfigurations = bcs;
         return msbp;
     }
 
@@ -141,7 +142,7 @@ public class MSBuildProject
     /**
      * The project's build configurations.
      */
-    private BuildConfiguration[] buildConfigurations;
+    private Map<String, BuildConfiguration> buildConfigurations;
 
     /**
      * Gets the name of the final output assembly after the project is built.
@@ -192,11 +193,11 @@ public class MSBuildProject
     }
 
     /**
-     * Gets the project's build configurations.
+     * Gets the project's build configurations indexed by name.
      * 
-     * @return The project's build configurations.
+     * @return The project's build configurations indexed by name.
      */
-    public BuildConfiguration[] getBuildConfigurations()
+    public Map<String, BuildConfiguration> getBuildConfigurations()
     {
         return this.buildConfigurations;
     }
