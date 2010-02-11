@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.installer.ArtifactInstallationException;
 import org.apache.maven.artifact.installer.ArtifactInstaller;
 import org.apache.maven.artifact.metadata.ArtifactMetadata;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -123,10 +123,10 @@ public class InstallMojo extends AbstractNvnMojo
                 artifactFile,
                 artifact,
                 super.localRepository);
-
             installChecksums(artifact);
+            copyLessVer(artifact);
         }
-        catch (ArtifactInstallationException e)
+        catch (Exception e)
         {
             throw new MojoExecutionException(String.format(
                 "Error installing primary build artifact: %s",
@@ -153,8 +153,9 @@ public class InstallMojo extends AbstractNvnMojo
             {
                 installer.install(docFile, artifact, localRepository);
                 installChecksums(artifact);
+                copyLessVer(artifact);
             }
-            catch (ArtifactInstallationException e)
+            catch (Exception e)
             {
                 throw new MojoExecutionException(String.format(
                     "Error installing documentation artifact: %s",
@@ -180,14 +181,34 @@ public class InstallMojo extends AbstractNvnMojo
             {
                 installer.install(pdbFile, artifact, localRepository);
                 installChecksums(artifact);
+                copyLessVer(artifact);
             }
-            catch (ArtifactInstallationException e)
+            catch (Exception e)
             {
                 throw new MojoExecutionException(String.format(
                     "Error installing symbols artifact: %s",
                     docFile), e);
             }
         }
+    }
+
+    void copyLessVer(Artifact artifact) throws IOException
+    {
+        String path = localRepository.pathOf(artifact);
+        File afile = new File(localRepository.getBasedir(), path);
+        String name = afile.getName();
+        name = name.replace("-" + artifact.getVersion(), "");
+        File lessver = new File(afile.getParentFile(), name);
+        FileUtils.copyFile(afile, lessver);
+
+        String ext = FilenameUtils.getExtension(name);
+
+        File dotnetfile =
+            new File(afile.getParentFile(), String.format(
+                "%s.%s",
+                super.msbuildProject.getAssemblyName(),
+                ext));
+        FileUtils.copyFile(afile, dotnetfile);
     }
 
     @Override
