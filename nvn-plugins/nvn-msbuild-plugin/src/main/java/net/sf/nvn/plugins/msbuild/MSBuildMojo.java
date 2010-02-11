@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Dependency;
@@ -296,14 +297,7 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     boolean shouldExecute()
     {
-        if (super.mavenProject.isExecutionRoot())
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return true;
     }
 
     @Override
@@ -316,22 +310,6 @@ public class MSBuildMojo extends AbstractExeMojo
         initReferencePathProperty();
 
         initTargets();
-
-        processModuleResources();
-    }
-
-    /**
-     * Invokes the "process-resources" phase on any modules available to this
-     * Solution (if this <strong>is</strong> a solution).
-     * 
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void processModuleResources() throws MojoExecutionException
-    {
-        for (MavenProject module : getModules())
-        {
-            execute(module, "process-resources");
-        }
     }
 
     @Override
@@ -566,11 +544,11 @@ public class MSBuildMojo extends AbstractExeMojo
             this.properties = new Properties();
         }
 
+        BuildConfiguration abc = getActiveBuildConfiguration();
+
         if (!this.properties.containsKey("Configuration"))
         {
-            this.properties.put(
-                "Configuration",
-                getActiveBuildConfigurationName());
+            this.properties.put("Configuration", abc.getName());
         }
 
         if (!this.properties.containsKey("Platform"))
@@ -583,12 +561,7 @@ public class MSBuildMojo extends AbstractExeMojo
             this.properties.put("Platform", platform);
         }
 
-        if (super.mavenProject.isExecutionRoot() && !isSolution())
-        {
-            this.properties.put(
-                "OutputPath",
-                getPath(getActiveBuildConfiguration().getOutputPath()));
-        }
+        this.properties.put("OutputPath", getPath(abc.getOutputPath()));
     }
 
     /**
@@ -755,11 +728,6 @@ public class MSBuildMojo extends AbstractExeMojo
         {
             initReferencePaths(super.mavenProject.getParent());
         }
-
-        for (MavenProject module : getModules())
-        {
-            initReferencePaths(module);
-        }
     }
 
     /**
@@ -847,7 +815,7 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isSolution() || isCSProject() || isVBProject();
+        return isCSProject() || isVBProject();
     }
 
     @Override
