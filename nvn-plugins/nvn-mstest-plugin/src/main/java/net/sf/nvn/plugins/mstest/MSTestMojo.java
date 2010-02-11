@@ -2,12 +2,8 @@ package net.sf.nvn.plugins.mstest;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 
 /**
  * A Maven plug-in for testing .NET solutions and/or projects with MSTest.
@@ -147,56 +143,7 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     void preExecute() throws MojoExecutionException
     {
-        if (forwardToTestProjects())
-        {
-            debug("forwarding tests to projects");
-        }
-        else
-        {
-            debug("initializing the test containers");
-            initTestContainer();
-        }
-    }
-
-    boolean forwardToTestProjects() throws MojoExecutionException
-    {
-        if (!super.isHierarchicalSolution())
-        {
-            debug("not forwarding to test projects because this is not a hierarchical solution");
-            return false;
-        }
-
-        if (this.testMetaDatas != null && this.testMetaDatas.length > 0)
-        {
-            debug("not forwarding to test projects because testMetaDatas.length > 0");
-            return false;
-        }
-
-        List<File> tcList = new ArrayList<File>();
-
-        for (MavenProject mp : getModules())
-        {
-            if (!mp.getPackaging().equalsIgnoreCase("mstest"))
-            {
-                debug("ignoring %s because it is not a test project", mp
-                    .getName());
-                continue;
-            }
-
-            MSBuildProject msbp = getMSBuildModule(mp);
-            String acbn = getActiveBuildConfigurationName();
-            File tc = msbp.getBuildArtifact(acbn);
-            File moddir = msbp.getProjectFile().getParentFile();
-            tc = new File(moddir, tc.getPath());
-            tcList.add(tc);
-        }
-
-        if (tcList.size() > 0)
-        {
-            this.testContainers = tcList.toArray(new File[0]);
-        }
-
-        return true;
+        initTestContainer();
     }
 
     void initTestContainer()
@@ -393,7 +340,7 @@ public class MSTestMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isSolution() || isCSProject() || isVBProject();
+        return isCSProject() || isVBProject();
     }
 
     @Override
