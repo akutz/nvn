@@ -2,12 +2,9 @@ package net.sf.nvn.plugins.commons;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
@@ -34,6 +31,7 @@ import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.PrintStreamHandler;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * The base class for all nvn MOJOs.
@@ -44,16 +42,158 @@ import org.apache.maven.shared.invoker.PrintStreamHandler;
 public abstract class AbstractNvnMojo extends AbstractMojo
 {
     /**
-     * The property name for the active build configuration property.
+     * The default version for a .NET project.
      */
-    static String ACTIVE_BUILD_CONFIGURATION_PROP_NAME =
-        "net.sf.nvn.build.config.active";
+    private static String DEFAULT_VERSION = "0.0.0.0";
+
+    private static String ACTIVE_BUILD_CONFIG = "nvn.build.config";
+    private static String DEFAULT_DEBUG_BUILD_CONFIG =
+        "nvn.build.config.default.debug";
+    private static String DEFAULT_RELEASE_BUILD_CONFIG =
+        "nvn.build.config.default.release";
+    private static String ACTIVE_BUILD_PLATFORM = "nvn.build.platform";
+    private static String DEFAULT_DEBUG_BUILD_PLATFORM =
+        "nvn.build.platform.default.debug";
+    private static String DEFAULT_RELEASE_BUILD_PLATFORM =
+        "nvn.build.platform.default.release";
 
     /**
-     * The property name for the active build platform property.
+     * <p>
+     * The active build configuration.
+     * </p>
+     * 
+     * <p>
+     * The active build configuration is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.config</strong> is set then its
+     * value is used.</li>
+     * <li>Otherwise the project's version is examined to determine the active
+     * build configuration.
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build configuration is set to the value of
+     * {@link #defaultDebugBuildConfiguration}.</li>
+     * <li>Otherwise the active build configuration is set to the value of
+     * {@link #defaultReleaseBuildConfiguration}.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.config}"
      */
-    static String ACTIVE_BUILD_PLATFORM_PROP_NAME =
-        "net.sf.nvn.build.platform.active";
+    private String activeBuildConfiguration;
+
+    /**
+     * The default <strong>Debug</strong> build configuration name.
+     * 
+     * <p>
+     * The default Debug build configuration is determined by the following
+     * steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.config.default.debug</strong> is
+     * set then its value is used.</li>
+     * <li>Otherwise this parameter defaults to <strong>Debug</strong></li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.config.default.debug}"
+     */
+    private String defaultDebugBuildConfiguration;
+
+    /**
+     * The default <strong>Release</strong> build configuration name.
+     * 
+     * <p>
+     * The default Release build configuration is determined by the following
+     * steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.config.default.release</strong> is
+     * set then its value is used.</li>
+     * <li>Otherwise this parameter defaults to <strong>Release</strong></li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.config.default.release}"
+     */
+    private String defaultReleaseBuildConfiguration;
+
+    /**
+     * <p>
+     * The active build platform.
+     * </p>
+     * 
+     * <p>
+     * The active build platform is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.platform</strong> is set then its
+     * value is used.</li>
+     * <li>Otherwise the project's version is examined to determine the active
+     * build platform.
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build platform is set to the value of
+     * {@link #defaultDebugBuildPlatform}.</li>
+     * <li>Otherwise the active build platform is set to the value of
+     * {@link #defaultReleaseBuildPlatform}.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.platform}"
+     */
+    private String activeBuildPlatform;
+
+    /**
+     * The default <strong>Debug</strong> build platform name.
+     * 
+     * <p>
+     * The default Debug build platform is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.platform.default.debug</strong> is
+     * set then its value is used.</li>
+     * <li>Otherwise this parameter defaults to <strong>Any CPU</strong></li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.platform.default.debug}"
+     */
+    private String defaultDebugBuildPlatform;
+
+    /**
+     * The default <strong>Release</strong> build platform name.
+     * 
+     * <p>
+     * The default Release build platform is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If this parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.platform.default.release</strong>
+     * is set then its value is used.</li>
+     * <li>Otherwise this parameter defaults to <strong>Any CPU</strong></li>
+     * </ul>
+     * 
+     * @parameter expression="${nvn.build.platform.default.release}"
+     */
+    private String defaultReleaseBuildPlatform;
 
     /**
      * The MSBuild project associated with this project. This field will be null
@@ -101,16 +241,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     MavenProject mavenProject;
 
     /**
-     * A list of the module projects.
-     */
-    private List<MavenProject> moduleProjects;
-
-    /**
-     * A map of the module MSBuild projects index by the maven project's name.
-     */
-    private Map<String, MSBuildProject> moduleMSBuildProjects;
-
-    /**
      * The local maven repository.
      * 
      * @parameter expression="${localRepository}"
@@ -150,70 +280,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @parameter default-value="false"
      */
     boolean ignoreExecutionRequirements;
-
-    /**
-     * Gets a flag indicating whether or not this project is a Visual Studio
-     * Solution.
-     * 
-     * @return A flag indicating whether or not this project is a Visual Studio
-     *         Solution.
-     */
-    @SuppressWarnings("unchecked")
-    boolean isSolution()
-    {
-        Collection files =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "sln"
-            }, false);
-
-        return files != null && files.size() > 0;
-    }
-
-    /**
-     * Gets a flag indicating whether or not this project is a Visual Studio
-     * Solution in a hierarchical structure.
-     * 
-     * @return A flag indicating whether or not this project is a Visual Studio
-     *         Solution in a hierarchical structure.
-     */
-    boolean isHierarchicalSolution()
-    {
-        return isSolution()
-            && !(isCSProject() || isVBProject() || isVdprojProject());
-    }
-
-    /**
-     * Gets a flag indicating whether or not this project is a Visual Studio
-     * Solution in a flat structure.
-     * 
-     * @return A flag indicating whether or not this project is a Visual Studio
-     *         Solution in a flat structure.
-     */
-    boolean isFlatSolution()
-    {
-        return isSolution()
-            && (isCSProject() || isVBProject() || isVdprojProject());
-    }
-
-    /**
-     * Gets a flag indicating whether or not this project is a Visual Studio
-     * Setup project.
-     * 
-     * @return A flag indicating whether or not this project is a Visual Studio
-     *         Setup project.
-     */
-    @SuppressWarnings("unchecked")
-    boolean isVdprojProject()
-    {
-        Collection files =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "vdproj"
-            }, false);
-
-        return files != null && files.size() > 0;
-    }
 
     /**
      * Gets a flag indicating whether or not this project is a Visual Studio
@@ -404,6 +470,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         }
 
         initMSBuildProject();
+        initVersion();
+        initActiveBuildConfiguration();
+        initActiveBuildPlatform();
 
         if (!this.ignoreProjectType && !isProjectTypeValid())
         {
@@ -636,152 +705,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     }
 
     /**
-     * Gets the pom file for a given module name. If the name contains any
-     * directory separator characters then it is considered to be a path and
-     * used as is.
-     * 
-     * @param moduleName The module name.
-     * @return The pom file.
-     */
-    File getPomFile(String moduleName)
-    {
-        if (moduleName.contains("pom.xml"))
-        {
-            return new File(moduleName);
-        }
-
-        return new File(moduleName, "pom.xml");
-    }
-
-    /**
-     * Gets a list of the modules as maven projects from the maven project's
-     * modules list
-     * 
-     * @return A list of maven projects.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    List<MavenProject> getModules() throws MojoExecutionException
-    {
-        if (moduleProjects != null)
-        {
-            return this.moduleProjects;
-        }
-
-        List<MavenProject> list = new ArrayList<MavenProject>();
-
-        if (this.mavenProject.getModules().size() == 0)
-        {
-            debug("this project has no modules");
-        }
-
-        for (Object omoduleName : this.mavenProject.getModules())
-        {
-            String moduleName = (String) omoduleName;
-            File modulePomFile = getPomFile(moduleName);
-            MavenProject mp = readProjectFile(modulePomFile, false);
-            list.add(mp);
-        }
-
-        this.moduleProjects = list;
-
-        return this.moduleProjects;
-    }
-
-    /**
-     * Gets a map of the modules as MSBuild projects indexed by the modules'
-     * artifact IDs. This will only return CSharp and VisualBasic projects.
-     * 
-     * @return A list of the modules as MSBuild projects indexed by the modules'
-     *         artifact IDs.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    @SuppressWarnings("unchecked")
-    Map<String, MSBuildProject> getMSBuildModules()
-        throws MojoExecutionException
-    {
-        if (this.moduleMSBuildProjects != null)
-        {
-            return this.moduleMSBuildProjects;
-        }
-
-        this.moduleMSBuildProjects = new HashMap<String, MSBuildProject>();
-
-        List<MavenProject> mods = getModules();
-
-        for (MavenProject mp : mods)
-        {
-            File pom = mp.getFile();
-            File moddir = pom.getParentFile();
-
-            debug("searching %s for msbuild project files", moddir);
-
-            Collection files = FileUtils.listFiles(moddir, new String[]
-            {
-                "csproj", "vbproj"
-            }, false);
-
-            if (files == null)
-            {
-                continue;
-            }
-
-            if (files.size() == 0)
-            {
-                continue;
-            }
-
-            File projfile = (File) files.iterator().next();
-
-            MSBuildProject msbp;
-
-            try
-            {
-                msbp = MSBuildProject.instance(projfile);
-            }
-            catch (Exception e)
-            {
-                throw new MojoExecutionException(String.format(
-                    "Error reading MSBuild project file %s",
-                    projfile), e);
-            }
-
-            String key =
-                String.format("%s-%s", mp.getArtifactId(), mp.getPackaging());
-
-            this.moduleMSBuildProjects.put(key, msbp);
-            debug("added %s to msbuild projects list", mp.getArtifactId());
-        }
-
-        return this.moduleMSBuildProjects;
-    }
-
-    /**
-     * Gets a MSBuildProject from the maven project.
-     * 
-     * @param project The maven project to get the MSBuild project with.
-     * @return A MSBuildProject.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    MSBuildProject getMSBuildModule(MavenProject project)
-        throws MojoExecutionException
-    {
-        String key = getMSBuildModuleKey(project);
-        return getMSBuildModules().get(key);
-    }
-
-    /**
-     * Gets the key to access the moduleMSBuildProjects map.
-     * 
-     * @param project The maven project to get the key with.
-     * @return The key.
-     */
-    String getMSBuildModuleKey(MavenProject project)
-    {
-        return String.format("%s-%s", project.getArtifactId(), project
-            .getPackaging());
-    }
-
-    /**
      * Gets the active build configuration.
      * 
      * @return The active build configuration.
@@ -805,25 +728,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     String getActiveBuildConfigurationName()
     {
-        if (!this.mavenProject.getProperties().containsKey(
-            ACTIVE_BUILD_CONFIGURATION_PROP_NAME))
-        {
-            debug(
-                "properties does not contain key %s",
-                ACTIVE_BUILD_CONFIGURATION_PROP_NAME);
-            return null;
-        }
-
-        String configName =
-            this.mavenProject.getProperties().getProperty(
-                ACTIVE_BUILD_CONFIGURATION_PROP_NAME);
-
-        debug(
-            "properties retrieved key %s=%s",
-            ACTIVE_BUILD_CONFIGURATION_PROP_NAME,
-            configName);
-
-        return configName;
+        return this.activeBuildConfiguration;
     }
 
     /**
@@ -833,24 +738,177 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     PlatformType getActiveBuildPlatform()
     {
-        if (!this.mavenProject.getProperties().containsKey(
-            ACTIVE_BUILD_PLATFORM_PROP_NAME))
+        return PlatformType.parse(this.activeBuildPlatform);
+    }
+
+    /**
+     * Initializes this project's version.
+     */
+    void initVersion()
+    {
+        String myVersion = this.mavenProject.getVersion();
+
+        if (myVersion.equals(MavenProject.EMPTY_PROJECT_VERSION))
         {
-            debug(
-                "properties does not contain key %s",
-                ACTIVE_BUILD_PLATFORM_PROP_NAME);
-            return null;
+            this.mavenProject.setVersion(DEFAULT_VERSION);
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes the active build configuration.
+     * </p>
+     * 
+     * <p>
+     * The active build configuration is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If the {@link #activeBuildConfiguration} parameter is set then its value
+     * is used.</li>
+     * <li>If the property <strong>nvn.build.config</strong> is set then its
+     * value is used.</li>
+     * <li>Otherwise the project's version is examined to determine the active
+     * build configuration.
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build configuration is set to the value of
+     * {@link #defaultDebugBuildConfiguration}.</li>
+     * <li>Otherwise the active build configuration is set to the value of
+     * {@link #defaultReleaseBuildConfiguration}.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     */
+    void initActiveBuildConfiguration()
+    {
+        if (StringUtils.isNotEmpty(this.activeBuildConfiguration))
+        {
+            return;
         }
 
-        String platform =
-            this.mavenProject.getProperties().getProperty(
-                ACTIVE_BUILD_PLATFORM_PROP_NAME);
+        Properties props = this.mavenProject.getProperties();
 
-        debug(
-            "properties retrieved key %s=%s",
-            ACTIVE_BUILD_PLATFORM_PROP_NAME,
-            platform);
+        if (props.containsKey(ACTIVE_BUILD_CONFIG))
+        {
+            this.activeBuildConfiguration =
+                props.getProperty(ACTIVE_BUILD_CONFIG);
+            return;
+        }
 
-        return PlatformType.parse(platform);
+        if (StringUtils.isEmpty(this.defaultDebugBuildConfiguration))
+        {
+            if (props.containsKey(DEFAULT_DEBUG_BUILD_CONFIG))
+            {
+                this.defaultDebugBuildConfiguration =
+                    props.getProperty(DEFAULT_DEBUG_BUILD_CONFIG);
+            }
+            else
+            {
+                this.defaultDebugBuildConfiguration = "Debug";
+            }
+        }
+
+        if (StringUtils.isEmpty(this.defaultReleaseBuildConfiguration))
+        {
+            if (props.containsKey(DEFAULT_RELEASE_BUILD_CONFIG))
+            {
+                this.defaultReleaseBuildConfiguration =
+                    props.getProperty(DEFAULT_RELEASE_BUILD_CONFIG);
+            }
+            else
+            {
+                this.defaultReleaseBuildConfiguration = "Release";
+            }
+        }
+
+        if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
+        {
+            this.activeBuildConfiguration = this.defaultDebugBuildConfiguration;
+        }
+        else
+        {
+            this.activeBuildConfiguration =
+                this.defaultReleaseBuildConfiguration;
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes the active build platform.
+     * </p>
+     * 
+     * <p>
+     * The active build platform is determined by the following steps:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * If {@link #activeBuildPlatform} parameter is set then its value is used.</li>
+     * <li>If the property <strong>nvn.build.platform</strong> is set then its
+     * value is used.</li>
+     * <li>Otherwise the project's version is examined to determine the active
+     * build platform.
+     * <ul>
+     * <li>If the version contains <strong><em>-SNAPSHOT</em></strong> then the
+     * active build platform is set to the value of
+     * {@link #defaultDebugBuildPlatform}.</li>
+     * <li>Otherwise the active build platform is set to the value of
+     * {@link #defaultReleaseBuildPlatform}.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * 
+     */
+    void initActiveBuildPlatform()
+    {
+        if (StringUtils.isNotEmpty(this.activeBuildPlatform))
+        {
+            return;
+        }
+
+        Properties props = this.mavenProject.getProperties();
+
+        if (props.containsKey(ACTIVE_BUILD_PLATFORM))
+        {
+            this.activeBuildPlatform = props.getProperty(ACTIVE_BUILD_PLATFORM);
+            return;
+        }
+
+        if (StringUtils.isEmpty(this.defaultDebugBuildPlatform))
+        {
+            if (props.containsKey(DEFAULT_DEBUG_BUILD_PLATFORM))
+            {
+                this.defaultDebugBuildPlatform =
+                    props.getProperty(DEFAULT_DEBUG_BUILD_PLATFORM);
+            }
+            else
+            {
+                this.defaultDebugBuildPlatform = "Any CPU";
+            }
+        }
+
+        if (StringUtils.isEmpty(this.defaultReleaseBuildPlatform))
+        {
+            if (props.containsKey(DEFAULT_RELEASE_BUILD_PLATFORM))
+            {
+                this.defaultReleaseBuildPlatform =
+                    props.getProperty(DEFAULT_RELEASE_BUILD_PLATFORM);
+            }
+            else
+            {
+                this.defaultReleaseBuildPlatform = "Any CPU";
+            }
+        }
+
+        if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
+        {
+            this.activeBuildPlatform = this.defaultDebugBuildPlatform;
+        }
+        else
+        {
+            this.activeBuildPlatform = this.defaultReleaseBuildPlatform;
+        }
     }
 }
