@@ -137,7 +137,7 @@ public class VdprojMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isSolution() || isVdprojProject();
+        return true;
     }
 
     @Override
