@@ -58,6 +58,14 @@ public class VdprojMojo extends AbstractExeMojo
     boolean injection;
 
     /**
+     * Setting this parameter to true causes the names of the organization and
+     * product to be concatenated for the product name.
+     * 
+     * @parameter default-value="true"
+     */
+    boolean combineOrgAndProductNames;
+
+    /**
      * The vdproj file(s) to build.
      * 
      */
@@ -205,7 +213,7 @@ public class VdprojMojo extends AbstractExeMojo
 
         String projVer = super.mavenProject.getVersion();
         String safeVer = super.mavenProject.getVersion();
-        
+
         if (StringUtils.isNotEmpty(projVer))
         {
             Matcher m = VER_PATT.matcher(safeVer);
@@ -214,14 +222,25 @@ public class VdprojMojo extends AbstractExeMojo
                 safeVer = m.group();
             }
         }
-        
+
         debug("injecting project version: %s", projVer);
         debug("injecting safe version: %s", safeVer);
+
+        String orgName =
+            super.mavenProject.getOrganization() == null ? null
+                : super.mavenProject.getOrganization().getName();
+        debug("injecting organization name: %s", orgName);
 
         String projName =
             super.mavenProject.hasParent() ? super.mavenProject
                 .getParent()
                 .getName() : super.mavenProject.getName();
+        
+        if (this.combineOrgAndProductNames)
+        {
+            projName = String.format("%s %s", orgName, projName);
+        }
+                
         debug("injecting project name: %s", projName);
 
         String url =
@@ -229,11 +248,6 @@ public class VdprojMojo extends AbstractExeMojo
                 .getParent()
                 .getUrl() : super.mavenProject.getUrl();
         debug("injecting project url: %s", url);
-
-        String orgName =
-            super.mavenProject.getOrganization() == null ? null
-                : super.mavenProject.getOrganization().getName();
-        debug("injecting organization name: %s", orgName);
 
         String devName = null;
         if (super.mavenProject.getDevelopers() != null)
