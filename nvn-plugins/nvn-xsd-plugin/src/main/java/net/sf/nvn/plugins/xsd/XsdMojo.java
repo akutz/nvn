@@ -538,6 +538,7 @@ public class XsdMojo extends AbstractExeMojo
                 String ws = propMatcher.group(1);
                 String rtype = propMatcher.group(2);
                 String pname = propMatcher.group(3);
+                pname = removeAtSymbol(pname);
 
                 if (rtype.endsWith("Enum"))
                 {
@@ -577,6 +578,7 @@ public class XsdMojo extends AbstractExeMojo
 
                 String ws = enumMatcher.group(1);
                 String ename = enumMatcher.group(2);
+                ename = removeAtSymbol(ename);
 
                 // Build the new enum signature.
                 String newEnumSig =
@@ -685,9 +687,13 @@ public class XsdMojo extends AbstractExeMojo
 
     private static String upCaseFC(String input)
     {
-        input = input.replaceAll("@", "");
         input = StringUtils.capitalizeFirstLetter(input);
         return input;
+    }
+    
+    private static String removeAtSymbol(String input)
+    {
+        return input.replaceAll("@", "");
     }
 
     private static void println(Writer out) throws IOException
