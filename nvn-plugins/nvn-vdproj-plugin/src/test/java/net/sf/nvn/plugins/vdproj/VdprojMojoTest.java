@@ -17,8 +17,8 @@ public class VdprojMojoTest
     {
         VdprojMojo mojo = new VdprojMojo();
         mojo.mavenProject = new MavenProject();
+        mojo.initActiveBuildConfiguration();
         mojo.mavenProject.setBasedir(new File("."));
-        mojo.buildConfiguration = "Debug";
         mojo.command = new File("devenv.exe");
         mojo.vdProjFiles = new File[] { new File("MySetupProject.vdproj")};
         mojo.inheritEnvVars = true;
@@ -31,7 +31,7 @@ public class VdprojMojoTest
         VdprojMojo mojo = loadMojo();
         mojo.preExecute();
         Assert.assertEquals(
-            ".\\devenv.exe /Build Debug /Project MySetupProject .\\MySetupProject.vdproj",
+            ".\\devenv.exe /Build Release /Project MySetupProject .\\MySetupProject.vdproj",
             mojo.buildCmdLineString(0));
     }
 }
