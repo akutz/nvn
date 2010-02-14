@@ -11,6 +11,8 @@ import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
@@ -22,6 +24,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.profiles.ProfileManager;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
+import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.project.ProjectBuilderConfiguration;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -194,6 +197,20 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @parameter expression="${nvn.build.platform.default.release}"
      */
     private String defaultReleaseBuildPlatform;
+
+    /**
+     * A MavenProjectHelper.
+     * 
+     * @component
+     */
+    MavenProjectHelper projectHelper;
+
+    /**
+     * The artifact factory.
+     * 
+     * @component
+     */
+    ArtifactFactory factory;
 
     /**
      * The MSBuild project associated with this project. This field will be null
@@ -473,6 +490,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         initVersion();
         initActiveBuildConfiguration();
         initActiveBuildPlatform();
+        initArtifacts();
 
         if (!this.ignoreProjectType && !isProjectTypeValid())
         {
@@ -503,6 +521,54 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         {
             postExecute(e);
             throw e;
+        }
+    }
+
+    void initArtifacts() throws MojoExecutionException
+    {
+        // We don't need to initialize this twice.
+        if (this.mavenProject.getArtifact().getFile() != null)
+        {
+            debug("not setting an artifact since once is already present");
+            return;
+        }
+
+        File basedir = this.mavenProject.getBasedir();
+
+        String bcn = getActiveBuildConfigurationName();
+
+        String filePath = this.msbuildProject.getBuildArtifact(bcn).getPath();
+        File file = new File(basedir, filePath);
+
+        Artifact artifact =
+            this.factory.createArtifactWithClassifier(
+                this.mavenProject.getGroupId(),
+                this.mavenProject.getArtifactId(),
+                this.mavenProject.getVersion(),
+                this.mavenProject.getPackaging(),
+                null);
+        
+        artifact.setFile(file);
+        debug("set artifact file %s", file);
+
+        this.mavenProject.setArtifact(artifact);
+
+        File pdbFile = this.msbuildProject.getBuildSymbolsArtifact(bcn);
+        if (pdbFile != null)
+        {
+            this.projectHelper.attachArtifact(
+                this.mavenProject,
+                "pdb",
+                pdbFile);
+        }
+
+        File docFile = this.msbuildProject.getBuildDocumentationArtifact(bcn);
+        if (docFile != null)
+        {
+            this.projectHelper.attachArtifact(
+                this.mavenProject,
+                "xml",
+                docFile);
         }
     }
 
