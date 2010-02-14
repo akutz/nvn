@@ -1,4 +1,4 @@
-package net.sf.nvn.plugins.commons;
+package net.sf.nvn.plugins.commons.mojos;
 
 import java.io.File;
 import java.util.HashMap;

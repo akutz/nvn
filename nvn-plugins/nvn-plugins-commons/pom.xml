@@ -42,7 +42,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -77,7 +77,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -112,7 +112,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -145,7 +145,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -178,7 +178,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -213,7 +213,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java
@@ -248,7 +248,7 @@
                                 <resource>
                                     <filtering>true</filtering>
                                     <directory>
-                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons
+                                        ${basedir}/src/main/java/net/sf/nvn/plugins/commons/mojos
                                     </directory>
                                     <includes>
                                         <include>AbstractNvnMojo.java

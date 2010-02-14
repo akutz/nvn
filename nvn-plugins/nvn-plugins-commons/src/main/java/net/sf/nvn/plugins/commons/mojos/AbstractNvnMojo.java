@@ -1,4 +1,4 @@
-package net.sf.nvn.plugins.commons;
+package net.sf.nvn.plugins.commons.mojos;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
@@ -526,10 +526,16 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
     void initArtifacts() throws MojoExecutionException
     {
+        if (this.msbuildProject == null)
+        {
+            debug("not initializing artifacts because msbuildProject is null");
+            return;
+        }
+        
         // We don't need to initialize this twice.
         if (this.mavenProject.getArtifact().getFile() != null)
         {
-            debug("not setting an artifact since once is already present");
+            debug("not initializing artifacts because they're already initialized");
             return;
         }
 

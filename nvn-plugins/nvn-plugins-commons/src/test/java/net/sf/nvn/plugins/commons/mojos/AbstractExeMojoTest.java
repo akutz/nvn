@@ -1,7 +1,8 @@
-package net.sf.nvn.plugins.commons;
+package net.sf.nvn.plugins.commons.mojos;
 
 import java.io.File;
 import junit.framework.Assert;
+import net.sf.nvn.plugins.commons.mojos.AbstractExeMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
