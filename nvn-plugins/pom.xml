@@ -4,14 +4,14 @@
     <parent>
         <artifactId>nvn</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-plugins</artifactId>
     <packaging>pom</packaging>
     <name>nvn Plug-ins</name>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.5</version>
     <description>The parent project for nvn plug-ins.</description>
     <modules>
         <module>nvn-plugins-commons</module>

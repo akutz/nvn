@@ -6,7 +6,7 @@
     <parent>
         <artifactId>nvn-plugins</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.5</version>
     </parent>
     <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-gendeps-plugin</artifactId>
