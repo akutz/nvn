@@ -1,16 +1,24 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <artifactId>nvn-plugins</artifactId>
+<project
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>nvn-plugins</artifactId>
+        <groupId>net.sf.nvn</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
     <groupId>net.sf.nvn</groupId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
-  <groupId>net.sf.nvn</groupId>
-  <artifactId>nvn-wsdl-plugin</artifactId>
-  <version>${parent.version}</version>
-  <packaging>maven-plugin</packaging>
-  <name>nvn WSDL Plug-in</name>
-  <description>A Maven plug-in for running the Microsoft wsdl.exe utility.</description>
+    <artifactId>nvn-wsdl-plugin</artifactId>
+    <version>${parent.version}</version>
+    <packaging>maven-plugin</packaging>
+    <name>nvn WSDL Plug-in</name>
+    <description>A Maven plug-in for running the Microsoft wsdl.exe utility.</description>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-plugins-commons</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
