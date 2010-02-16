@@ -54,7 +54,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * @requiresProject false
  * @description A Maven plug-in for installing artifacts.
  */
-public class NvnInstallFileMojo extends AbstractMojo
+public class InstallFileMojo extends AbstractMojo
 {
 
     /**
