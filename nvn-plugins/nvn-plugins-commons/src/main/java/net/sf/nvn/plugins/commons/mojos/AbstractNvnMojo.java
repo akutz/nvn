@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import net.sf.nvn.commons.ProjectUtils;
 import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
@@ -15,20 +16,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.execution.RuntimeInformation;
 import org.apache.maven.lifecycle.LifecycleExecutor;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.profiles.ProfileManager;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.project.ProjectBuilderConfiguration;
-import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -393,55 +389,14 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     MavenProject readProjectFile(File projectFile, boolean resolveDependencies)
         throws MojoExecutionException
     {
-        ProjectBuilderConfiguration config =
-            this.mavenProject.getProjectBuilderConfiguration();
-
-        ProfileManager globalProfileManager = config.getGlobalProfileManager();
-
-        try
-        {
-            MavenProject project;
-
-            if (resolveDependencies)
-            {
-                project =
-                    this.builder.buildWithDependencies(
-                        projectFile,
-                        localRepository,
-                        globalProfileManager);
-            }
-            else
-            {
-                project =
-                    this.builder.build(
-                        projectFile,
-                        localRepository,
-                        globalProfileManager);
-            }
-
-            return project;
-        }
-        catch (ArtifactResolutionException e)
-        {
-            throw new MojoExecutionException(
-                "Error resolving artifacts while reading project file: "
-                    + projectFile.getAbsolutePath(),
-                e);
-        }
-        catch (ArtifactNotFoundException e)
-        {
-            throw new MojoExecutionException(
-                "Error finding artifacts while reading project file: "
-                    + projectFile.getAbsolutePath(),
-                e);
-        }
-        catch (ProjectBuildingException e)
-        {
-            throw new MojoExecutionException(
-                "Error building project while reading project file: "
-                    + projectFile.getAbsolutePath(),
-                e);
-        }
+        return ProjectUtils.readProjectFile(
+            this.builder,
+            this.localRepository,
+            this.mavenProject
+                .getProjectBuilderConfiguration()
+                .getGlobalProfileManager(),
+            projectFile,
+            resolveDependencies);
     }
 
     @SuppressWarnings("unchecked")

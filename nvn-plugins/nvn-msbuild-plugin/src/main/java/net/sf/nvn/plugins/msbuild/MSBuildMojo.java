@@ -2,19 +2,14 @@ package net.sf.nvn.plugins.msbuild;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import net.sf.nvn.commons.DependencyUtils;
+import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -613,97 +608,27 @@ public class MSBuildMojo extends AbstractExeMojo
                 continue;
             }
 
-            File file = getArtifactFile(d);
+            File file =
+                DependencyUtils.getArtifactFile(
+                    super.factory,
+                    super.localRepository,
+                    d);
 
             if (!this.referencePaths.contains(file.getParentFile()))
             {
                 this.referencePaths.add(file.getParentFile());
-                DependencyUtils.copyToAssemblyNamedFiles(file, getAssemblyName(d));
+
+                String assemblyName =
+                    DependencyUtils.getAssemblyName(
+                        super.factory,
+                        super.localRepository,
+                        super.mavenProject.getRemoteArtifactRepositories(),
+                        super.resolver,
+                        d);
+
+                DependencyUtils.copyToAssemblyNamedFiles(file, assemblyName);
             }
         }
-    }
-
-    /**
-     * Gets the dependency's artifact file.
-     * 
-     * @param dependency The dependency.
-     * @return The dependency's artifact file.
-     */
-    File getArtifactFile(Dependency dependency)
-    {
-        Artifact artifact =
-            factory.createDependencyArtifact(
-                dependency.getGroupId(),
-                dependency.getArtifactId(),
-                VersionRange.createFromVersion(dependency.getVersion()),
-                dependency.getType(),
-                dependency.getClassifier(),
-                dependency.getScope());
-
-        String path = super.localRepository.pathOf(artifact);
-
-        File f = new File(super.localRepository.getBasedir(), path);
-
-        debug("got dependency artifact file %s", f);
-
-        return f;
-    }
-
-    /**
-     * Gets the AssemblyName from the dependency. This method should only be
-     * called for dependencies of type "dll" or "exe".
-     * 
-     * @param dependency The dependency.
-     * @return The AssemblyName.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    String getAssemblyName(Dependency dependency) throws MojoExecutionException
-    {
-        Artifact nvnMetadataArtifact =
-            factory.createArtifact(
-                dependency.getGroupId(),
-                dependency.getArtifactId(),
-                dependency.getVersion(),
-                Artifact.SCOPE_COMPILE,
-                "nvn");
-
-        try
-        {
-            super.resolver.resolve(nvnMetadataArtifact, super.mavenProject
-                .getRemoteArtifactRepositories(), super.localRepository);
-        }
-        catch (ArtifactResolutionException e)
-        {
-            throw new MojoExecutionException(
-                "Error resolving nvn metadata artifact",
-                e);
-        }
-        catch (ArtifactNotFoundException e)
-        {
-            throw new MojoExecutionException(
-                "Error finding nvn metadata artifact",
-                e);
-        }
-
-        String assemblyName;
-        String nvnFilePath = super.localRepository.pathOf(nvnMetadataArtifact);
-        File nvnFile =
-            new File(super.localRepository.getBasedir(), nvnFilePath);
-
-        try
-        {
-            assemblyName = FileUtils.readFileToString(nvnFile);
-        }
-        catch (IOException e)
-        {
-            throw new MojoExecutionException(String.format(
-                "Error loading nvn metadata artifact %s",
-                nvnFile), e);
-        }
-
-        debug("got dependency assembly name %s", assemblyName);
-
-        return assemblyName;
     }
 
     /**
