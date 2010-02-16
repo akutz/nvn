@@ -2,6 +2,7 @@ package net.sf.nvn.plugins.commons.mojos;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -10,12 +11,14 @@ import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
+import net.sf.nvn.plugins.commons.NvnArtifactMetadata;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.execution.RuntimeInformation;
 import org.apache.maven.lifecycle.LifecycleExecutor;
@@ -197,6 +200,13 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @parameter expression="${nvn.build.platform.default.release}"
      */
     private String defaultReleaseBuildPlatform;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     * 
+     * @component
+     */
+    ArtifactResolver resolver;
 
     /**
      * A MavenProjectHelper.
@@ -531,7 +541,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
             debug("not initializing artifacts because msbuildProject is null");
             return;
         }
-        
+
         // We don't need to initialize this twice.
         if (this.mavenProject.getArtifact().getFile() != null)
         {
@@ -543,17 +553,31 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         String bcn = getActiveBuildConfigurationName();
 
-        String filePath = this.msbuildProject.getBuildArtifact(bcn).getPath();
-        File file = new File(basedir, filePath);
+        String filepath = this.msbuildProject.getBuildArtifact(bcn).getPath();
+        File file = new File(basedir, filepath);
 
         Artifact artifact =
-            this.factory.createArtifactWithClassifier(
+            this.factory.createBuildArtifact(
                 this.mavenProject.getGroupId(),
                 this.mavenProject.getArtifactId(),
                 this.mavenProject.getVersion(),
-                this.mavenProject.getPackaging(),
-                null);
-        
+                this.mavenProject.getPackaging());
+
+        NvnArtifactMetadata nmd;
+
+        try
+        {
+            String assemblyName = this.msbuildProject.getAssemblyName();
+            nmd = NvnArtifactMetadata.instance(artifact, assemblyName);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(
+                "Error creating NvnArtifactMetadata",
+                e);
+        }
+
+        artifact.addMetadata(nmd);
         artifact.setFile(file);
         debug("set artifact file %s", file);
 
@@ -562,19 +586,33 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         File pdbFile = this.msbuildProject.getBuildSymbolsArtifact(bcn);
         if (pdbFile != null)
         {
-            this.projectHelper.attachArtifact(
-                this.mavenProject,
-                "pdb",
-                pdbFile);
+            filepath = pdbFile.getPath();
+            pdbFile = new File(basedir, filepath);
+
+            if (pdbFile.exists())
+            {
+                this.projectHelper.attachArtifact(
+                    this.mavenProject,
+                    "pdb",
+                    "sources",
+                    pdbFile);
+            }
         }
 
         File docFile = this.msbuildProject.getBuildDocumentationArtifact(bcn);
         if (docFile != null)
         {
-            this.projectHelper.attachArtifact(
-                this.mavenProject,
-                "xml",
-                docFile);
+            filepath = docFile.getPath();
+            docFile = new File(basedir, filepath);
+
+            if (docFile.exists())
+            {
+                this.projectHelper.attachArtifact(
+                    this.mavenProject,
+                    "xml",
+                    "dotnetdoc",
+                    docFile);
+            }
         }
     }
 
