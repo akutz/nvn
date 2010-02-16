@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Map;
 import net.sf.nvn.plugins.commons.NvnArtifactMetadata;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.deployer.ArtifactDeployer;
 import org.apache.maven.artifact.deployer.ArtifactDeploymentException;
@@ -53,7 +54,6 @@ public class DeployFileMojo extends AbstractMojo
 {
     /**
      * @parameter expression="${assemblyName}"
-     * @required
      */
     String assemblyName;
 
@@ -313,13 +313,17 @@ public class DeployFileMojo extends AbstractMojo
                 version,
                 packaging,
                 classifier);
-        
+
+        if (StringUtils.isEmpty(this.assemblyName))
+        {
+            this.assemblyName = FilenameUtils.getBaseName(this.file.getName());
+        }
+
         NvnArtifactMetadata nmd;
 
         try
         {
-            String assemblyName = this.assemblyName;
-            nmd = NvnArtifactMetadata.instance(artifact, assemblyName);
+            nmd = NvnArtifactMetadata.instance(artifact, this.assemblyName);
         }
         catch (IOException e)
         {

@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import net.sf.nvn.plugins.commons.NvnArtifactMetadata;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
@@ -33,6 +34,7 @@ import org.codehaus.plexus.digest.DigesterException;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.ReaderFactory;
+import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.WriterFactory;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -171,7 +173,6 @@ public class InstallFileMojo extends AbstractMojo
      * The artifact's .NET AssemblyName.
      * 
      * @parameter expression="${assemblyName}"
-     * @required
      */
     String assemblyName;
 
@@ -276,11 +277,15 @@ public class InstallFileMojo extends AbstractMojo
                 classifier);
         
         NvnArtifactMetadata nmd;
+        
+        if (StringUtils.isEmpty(this.assemblyName))
+        {
+            this.assemblyName = FilenameUtils.getBaseName(this.file.getName());
+        }
 
         try
         {
-            String assemblyName = this.assemblyName;
-            nmd = NvnArtifactMetadata.instance(artifact, assemblyName);
+           nmd = NvnArtifactMetadata.instance(artifact, this.assemblyName);
         }
         catch (IOException e)
         {
