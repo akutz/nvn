@@ -8,12 +8,12 @@
         <groupId>net.sf.nvn</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>net.sf.nvn</groupId>
+    <groupId>${parent.groupId}</groupId>
     <artifactId>nvn-install-plugin</artifactId>
     <version>${parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn Install Plug-in</name>
-    <description>A Maven plug-in for installing nvn artifacts.</description>
+    <description>A Maven plug-in for installing .NET artifacts.</description>
     <dependencies>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
