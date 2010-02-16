@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import net.sf.nvn.commons.DependencyUtils;
+import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -545,23 +546,39 @@ public class MSBuildMojo extends AbstractExeMojo
         }
 
         BuildConfiguration abc = getActiveBuildConfiguration();
+        PlatformType abp = getActiveBuildPlatform();
 
-        if (!this.properties.containsKey("Configuration"))
+        String config = "Debug";
+        String platform = "Any CPU";
+        File outputPath = new File("bin\\Debug");
+
+        if (abc != null)
         {
-            this.properties.put("Configuration", abc.getName());
+            config = abc.getName();
+            outputPath = abc.getOutputPath();
         }
 
-        if (!this.properties.containsKey("Platform"))
+        if (abp != null)
         {
-            String platform = getActiveBuildPlatform().toString();
+            platform = getActiveBuildPlatform().toString();
             if (platform.equals("AnyCPU"))
             {
                 platform = "Any CPU";
             }
+        }
+
+        if (!this.properties.containsKey("Configuration"))
+        {
+            this.properties.put("Configuration", config);
+        }
+
+        if (!this.properties.containsKey("Platform"))
+        {
+
             this.properties.put("Platform", platform);
         }
 
-        this.properties.put("OutputPath", getPath(abc.getOutputPath()));
+        this.properties.put("OutputPath", getPath(outputPath));
     }
 
     /**
@@ -613,6 +630,11 @@ public class MSBuildMojo extends AbstractExeMojo
                     super.factory,
                     super.localRepository,
                     d);
+            
+            if (file == null)
+            {
+                continue;
+            }
 
             if (!this.referencePaths.contains(file.getParentFile()))
             {

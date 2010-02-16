@@ -1,12 +1,10 @@
 package net.sf.nvn.plugins.msbuild;
 
 import java.io.File;
-import java.util.ArrayList;
 import junit.framework.Assert;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.DefaultArtifactRepository;
 import org.apache.maven.artifact.repository.layout.DefaultRepositoryLayout;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
@@ -42,31 +40,7 @@ public class MSBuildMojoTest
         String cls = mojo.buildCmdLineString(0);
         Assert
             .assertEquals(
-                ".\\msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug /nodeReuse:false .\\MySolution.sln",
-                cls);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testBuildCmdLineString2() throws Exception
-    {
-        MSBuildMojo mojo = loadMojo();
-
-        Dependency d = new Dependency();
-        d.setGroupId("com.vmware");
-        d.setArtifactId("viplugins");
-        d.setVersion("4.0.0.1");
-        d.setType("dll");
-
-        mojo.mavenProject.setDependencies(new ArrayList());
-        mojo.mavenProject.getDependencies().add(d);
-
-        mojo.preExecute();
-
-        String cls = mojo.buildCmdLineString(0);
-        Assert
-            .assertEquals(
-                ".\\msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug;ReferencePath=\"c:\\Documents and Settings\\akutz\\.m2\\\\repository\\com\\vmware\\viplugins\\4.0.0.1\" /nodeReuse:false .\\MySolution.sln",
+                ".\\msbuild.exe /target:Build /property:Platform=\"Any CPU\";Configuration=Debug;OutputPath=.\\bin\\Debug /nodeReuse:false .\\MySolution.sln",
                 cls);
     }
 }

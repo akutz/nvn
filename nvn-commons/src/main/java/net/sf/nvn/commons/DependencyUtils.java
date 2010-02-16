@@ -118,6 +118,11 @@ public class DependencyUtils
         ArtifactRepository localRepository,
         Dependency dependency)
     {
+        if (factory == null || localRepository == null || dependency == null)
+        {
+            return null;
+        }
+
         Artifact artifact =
             factory.createDependencyArtifact(
                 dependency.getGroupId(),
