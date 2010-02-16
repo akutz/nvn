@@ -14,4 +14,11 @@
     <packaging>maven-plugin</packaging>
     <name>nvn XSD Plug-in</name>
     <description>A Maven plug-in for running the Microsoft xsd.exe utility.</description>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-plugins-commons</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
