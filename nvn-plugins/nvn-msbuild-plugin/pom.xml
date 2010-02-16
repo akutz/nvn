@@ -7,18 +7,18 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>net.sf.nvn</groupId>
+    <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-msbuild-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>nvn MSBuild Plug-in</name>
     <description>A Maven plug-in for building .NET solutions and/or
         projects with MSBuild.</description>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${project.parent.version}</version>
     <dependencies>
         <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>nvn-plugins-commons</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

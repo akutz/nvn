@@ -8,17 +8,17 @@
         <groupId>net.sf.nvn</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>net.sf.nvn</groupId>
+    <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-wsdl-plugin</artifactId>
-    <version>${parent.version}</version>
+    <version>${project.parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn WSDL Plug-in</name>
     <description>A Maven plug-in for running the Microsoft wsdl.exe utility.</description>
     <dependencies>
         <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>nvn-plugins-commons</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

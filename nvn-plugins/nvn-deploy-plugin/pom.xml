@@ -8,16 +8,16 @@
         <groupId>net.sf.nvn</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>${parent.groupId}</groupId>
+    <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-deploy-plugin</artifactId>
-    <version>${parent.version}</version>
+    <version>${project.parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn Deploy Plug-in</name>
     <dependencies>
         <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>nvn-plugins-commons</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

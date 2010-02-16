@@ -8,8 +8,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
+import net.sf.nvn.commons.DependencyUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
@@ -618,7 +618,7 @@ public class MSBuildMojo extends AbstractExeMojo
             if (!this.referencePaths.contains(file.getParentFile()))
             {
                 this.referencePaths.add(file.getParentFile());
-                copyToAssemblyNamedFiles(file, getAssemblyName(d));
+                DependencyUtils.copyToAssemblyNamedFiles(file, getAssemblyName(d));
             }
         }
     }
@@ -704,153 +704,6 @@ public class MSBuildMojo extends AbstractExeMojo
         debug("got dependency assembly name %s", assemblyName);
 
         return assemblyName;
-    }
-
-    /**
-     * Copies the dependency file (and its associated pdb or XML documentation
-     * files) to the original file name using the AssemblyName.
-     * 
-     * @param depFile The dependency file.
-     * @param assemblyName The AssemblyName.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void copyToAssemblyNamedFiles(File depFile, String assemblyName)
-        throws MojoExecutionException
-    {
-        String filename = FilenameUtils.getBaseName(depFile.getName());
-        String ext = FilenameUtils.getExtension(depFile.getName());
-        File parent = depFile.getParentFile();
-
-        File depFile2 =
-            new File(parent, String.format("%s.%s", assemblyName, ext));
-
-        if (!depFile2.exists())
-        {
-            try
-            {
-                FileUtils.copyFile(depFile, depFile2);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException(String.format(
-                    "Error copying %s to %s",
-                    depFile,
-                    depFile2), e);
-            }
-        }
-
-        File pdbFile = new File(parent, filename + "-sources.pdb");
-        File pdbFile2 = new File(parent, assemblyName + ".pdb");
-
-        if (pdbFile.exists() && !pdbFile2.exists())
-        {
-            try
-            {
-                FileUtils.copyFile(pdbFile, pdbFile2);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException(String.format(
-                    "Error copying %s to %s",
-                    pdbFile,
-                    pdbFile2), e);
-            }
-        }
-
-        File docFile = new File(parent, filename + "-dotnetdoc.xml");
-        File docFile2 = new File(parent, assemblyName + ".xml");
-
-        if (docFile.exists() && !docFile2.exists())
-        {
-            try
-            {
-                FileUtils.copyFile(docFile, docFile2);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException(String.format(
-                    "Error copying %s to %s",
-                    docFile,
-                    docFile2), e);
-            }
-        }
-    }
-
-    /**
-     * Creates a copy of the artifact dependency without the version number so
-     * that msbuild can find the file that the developer may have originally
-     * referenced.
-     * 
-     * @param dir The artifact directory.
-     * @param artifactId The artifact ID.
-     * @param version The artifact version.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void copyDepSansVer(File dir, String artifactId, String version)
-        throws MojoExecutionException
-    {
-        if (!dir.exists())
-        {
-            return;
-        }
-
-        copyDepSansVer(dir, artifactId, version, "dll");
-        copyDepSansVer(dir, artifactId, version, "exe");
-        copyDepSansVer(dir, artifactId, version, "pdb");
-    }
-
-    /**
-     * Creates a copy of the artifact dependency without the version number so
-     * that msbuild can find the file that the developer may have originally
-     * referenced.
-     * 
-     * @param dir The artifact directory.
-     * @param artifactId The artifact ID.
-     * @param version The artifact version.
-     * @param extension The artifact's file extension.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void copyDepSansVer(
-        File dir,
-        String artifactId,
-        String version,
-        String extension) throws MojoExecutionException
-    {
-        String artVer = artifactId + "-" + version;
-        File orig = new File(dir, artVer + "." + extension);
-        File copy = new File(dir, artifactId + "." + extension);
-        copyDepSansVer(orig, copy);
-    }
-
-    /**
-     * Creates a copy of the artifact dependency without the version number so
-     * that msbuild can find the file that the developer may have originally
-     * referenced.
-     * 
-     * @param ver The versioned file.
-     * @param nonVer The non-versioned file.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void copyDepSansVer(File ver, File nonVer) throws MojoExecutionException
-    {
-        try
-        {
-            if (ver.exists() && !nonVer.exists())
-            {
-                FileUtils.copyFile(ver, nonVer);
-            }
-        }
-        catch (IOException e)
-        {
-            String msg =
-                String
-                    .format(
-                        "Error copying versioned file, %s, to non-versioned file, %s",
-                        ver.getPath(),
-                        nonVer.getPath());
-
-            throw new MojoExecutionException(msg, e);
-        }
     }
 
     /**
