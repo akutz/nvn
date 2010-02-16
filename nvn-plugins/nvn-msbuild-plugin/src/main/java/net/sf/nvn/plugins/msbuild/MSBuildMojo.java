@@ -9,7 +9,12 @@ import java.util.List;
 import java.util.Properties;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -594,45 +599,179 @@ public class MSBuildMojo extends AbstractExeMojo
             this.referencePaths = new ArrayList();
         }
 
-        String localRepoBaseDirPath = super.localRepository.getBasedir();
-
         for (Object od : deps)
         {
             Dependency d = (Dependency) od;
 
-            String dgid = d.getGroupId();
-            String daid = d.getArtifactId();
-            String dver = d.getVersion();
-            String dtyp = d.getType();
-
-            if (StringUtils.isEmpty(dtyp))
+            if (StringUtils.isEmpty(d.getType()))
             {
                 continue;
             }
 
-            if (!dtyp.matches("dll|exe"))
+            if (!d.getType().matches("dll|exe"))
             {
                 continue;
             }
 
-            String dgidSlash = dgid.replaceAll("\\.", "\\\\");
+            File file = getArtifactFile(d);
 
-            String dp =
-                String.format(
-                    "%s\\%s\\%s\\%s",
-                    localRepoBaseDirPath,
-                    dgidSlash,
-                    daid,
-                    dver);
-
-            File dpf = new File(dp);
-
-            debug("loaded dependency path " + dpf.getPath());
-
-            if (!this.referencePaths.contains(dpf))
+            if (!this.referencePaths.contains(file.getParentFile()))
             {
-                this.referencePaths.add(dpf);
-                copyDepSansVer(dpf, daid, dver);
+                this.referencePaths.add(file.getParentFile());
+                copyToAssemblyNamedFiles(file, getAssemblyName(d));
+            }
+        }
+    }
+
+    /**
+     * Gets the dependency's artifact file.
+     * 
+     * @param dependency The dependency.
+     * @return The dependency's artifact file.
+     */
+    File getArtifactFile(Dependency dependency)
+    {
+        Artifact artifact =
+            factory.createDependencyArtifact(
+                dependency.getGroupId(),
+                dependency.getArtifactId(),
+                VersionRange.createFromVersion(dependency.getVersion()),
+                dependency.getType(),
+                dependency.getClassifier(),
+                dependency.getScope());
+
+        String path = super.localRepository.pathOf(artifact);
+
+        File f = new File(super.localRepository.getBasedir(), path);
+
+        debug("got dependency artifact file %s", f);
+
+        return f;
+    }
+
+    /**
+     * Gets the AssemblyName from the dependency. This method should only be
+     * called for dependencies of type "dll" or "exe".
+     * 
+     * @param dependency The dependency.
+     * @return The AssemblyName.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getAssemblyName(Dependency dependency) throws MojoExecutionException
+    {
+        Artifact nvnMetadataArtifact =
+            factory.createArtifact(
+                dependency.getGroupId(),
+                dependency.getArtifactId(),
+                dependency.getVersion(),
+                Artifact.SCOPE_COMPILE,
+                "nvn");
+
+        try
+        {
+            super.resolver.resolve(nvnMetadataArtifact, super.mavenProject
+                .getRemoteArtifactRepositories(), super.localRepository);
+        }
+        catch (ArtifactResolutionException e)
+        {
+            throw new MojoExecutionException(
+                "Error resolving nvn metadata artifact",
+                e);
+        }
+        catch (ArtifactNotFoundException e)
+        {
+            throw new MojoExecutionException(
+                "Error finding nvn metadata artifact",
+                e);
+        }
+
+        String assemblyName;
+        String nvnFilePath = super.localRepository.pathOf(nvnMetadataArtifact);
+        File nvnFile =
+            new File(super.localRepository.getBasedir(), nvnFilePath);
+
+        try
+        {
+            assemblyName = FileUtils.readFileToString(nvnFile);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(String.format(
+                "Error loading nvn metadata artifact %s",
+                nvnFile), e);
+        }
+
+        debug("got dependency assembly name %s", assemblyName);
+
+        return assemblyName;
+    }
+
+    /**
+     * Copies the dependency file (and its associated pdb or XML documentation
+     * files) to the original file name using the AssemblyName.
+     * 
+     * @param depFile The dependency file.
+     * @param assemblyName The AssemblyName.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    void copyToAssemblyNamedFiles(File depFile, String assemblyName)
+        throws MojoExecutionException
+    {
+        String filename = FilenameUtils.getBaseName(depFile.getName());
+        String ext = FilenameUtils.getExtension(depFile.getName());
+        File parent = depFile.getParentFile();
+
+        File depFile2 =
+            new File(parent, String.format("%s.%s", assemblyName, ext));
+
+        if (!depFile2.exists())
+        {
+            try
+            {
+                FileUtils.copyFile(depFile, depFile2);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException(String.format(
+                    "Error copying %s to %s",
+                    depFile,
+                    depFile2), e);
+            }
+        }
+
+        File pdbFile = new File(parent, filename + "-sources.pdb");
+        File pdbFile2 = new File(parent, assemblyName + ".pdb");
+
+        if (pdbFile.exists() && !pdbFile2.exists())
+        {
+            try
+            {
+                FileUtils.copyFile(pdbFile, pdbFile2);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException(String.format(
+                    "Error copying %s to %s",
+                    pdbFile,
+                    pdbFile2), e);
+            }
+        }
+
+        File docFile = new File(parent, filename + "-dotnetdoc.xml");
+        File docFile2 = new File(parent, assemblyName + ".xml");
+
+        if (docFile.exists() && !docFile2.exists())
+        {
+            try
+            {
+                FileUtils.copyFile(docFile, docFile2);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException(String.format(
+                    "Error copying %s to %s",
+                    docFile,
+                    docFile2), e);
             }
         }
     }
@@ -724,10 +863,10 @@ public class MSBuildMojo extends AbstractExeMojo
     {
         initReferencePaths(super.mavenProject);
 
-        if (super.mavenProject.hasParent())
-        {
-            initReferencePaths(super.mavenProject.getParent());
-        }
+        // if (super.mavenProject.hasParent())
+        // {
+        // initReferencePaths(super.mavenProject.getParent());
+        // }
     }
 
     /**
