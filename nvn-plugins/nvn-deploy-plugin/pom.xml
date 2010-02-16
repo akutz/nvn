@@ -13,4 +13,11 @@
     <version>${parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn Deploy Plug-in</name>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-plugins-commons</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
