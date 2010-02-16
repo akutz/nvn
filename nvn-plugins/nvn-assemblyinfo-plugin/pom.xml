@@ -14,4 +14,11 @@
     <description>A Maven plug-in for creating .NET assembly information
         files.</description>
     <version>${parent.version}</version>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-plugins-commons</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
