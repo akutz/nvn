@@ -8,24 +8,17 @@
         <groupId>net.sf.nvn</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>${parent.groupId}</groupId>
+    <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-install-plugin</artifactId>
-    <version>${parent.version}</version>
+    <version>${project.parent.version}</version>
     <packaging>maven-plugin</packaging>
     <name>nvn Install Plug-in</name>
     <description>A Maven plug-in for installing .NET artifacts.</description>
     <dependencies>
         <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-digest</artifactId>
-            <version>1.1</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>nvn-plugins-commons</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>
