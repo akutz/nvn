@@ -32,8 +32,11 @@
                                 net.sf.nvn:nvn-msbuild-plugin:msbuild
                             </compile>
                             <install>
-                                net.sf.nvn:nvn-install-plugin:install
+                                org.apache.maven.plugins:maven-install-plugin:install
                             </install>
+                            <deploy>
+                                org.apache.maven.plugins:maven-deploy-plugin:deploy
+                            </deploy>
                         </phases>
                     </lifecycle>
                 </lifecycles>
@@ -103,6 +106,9 @@
                             <compile>
                                 net.sf.nvn:nvn-msbuild-plugin:msbuild
                             </compile>
+                            <deploy>
+                                org.apache.maven.plugins:maven-deploy-plugin:deploy
+                            </deploy>
                         </phases>
                     </lifecycle>
                 </lifecycles>
