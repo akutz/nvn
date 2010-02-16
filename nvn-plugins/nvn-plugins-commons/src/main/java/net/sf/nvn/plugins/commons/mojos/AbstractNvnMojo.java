@@ -3,7 +3,6 @@ package net.sf.nvn.plugins.commons.mojos;
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -30,13 +29,6 @@ import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.project.ProjectBuilderConfiguration;
 import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.apache.maven.shared.invoker.PrintStreamHandler;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -749,69 +741,6 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     void error(String messageFormat, Object... args)
     {
         debug(String.format(messageFormat, args));
-    }
-
-    /**
-     * Execute a given maven project using the specified goals.
-     * 
-     * @param project The maven project to execute.
-     * @param goals The goals to execute.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void execute(MavenProject project, List<String> goals)
-        throws MojoExecutionException
-    {
-        execute(project, goals.toArray(new String[0]));
-    }
-
-    /**
-     * Execute a given maven project using the specified goals.
-     * 
-     * @param project The maven project to execute.
-     * @param goals The goals to execute.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void execute(MavenProject project, String... goals)
-        throws MojoExecutionException
-    {
-        File projectPomFile = new File(project.getBasedir(), "pom.xml");
-
-        Invoker invoker = new DefaultInvoker();
-        invoker.setErrorHandler(new PrintStreamHandler(System.err, true));
-        invoker.setOutputHandler(new PrintStreamHandler(System.out, true));
-
-        Properties reqProps = new Properties();
-        reqProps.putAll(this.mavenProject.getProperties());
-
-        InvocationRequest req = new DefaultInvocationRequest();
-        req.setBaseDirectory(project.getBasedir());
-        req.setOutputHandler(new PrintStreamHandler(System.out, true));
-        req.setProperties(this.mavenProject.getProperties());
-        req.setGoals(Arrays.asList(goals));
-        req.setPomFile(projectPomFile);
-
-        if (getLog().isDebugEnabled())
-        {
-            req.setDebug(true);
-        }
-
-        InvocationResult result;
-
-        try
-        {
-            result = invoker.execute(req);
-        }
-        catch (MavenInvocationException e)
-        {
-            throw new MojoExecutionException("Error invoking "
-                + project.getName(), e);
-        }
-
-        if (result.getExitCode() != 0)
-        {
-            throw new MojoExecutionException("Error invoking "
-                + project.getName(), result.getExecutionException());
-        }
     }
 
     /**

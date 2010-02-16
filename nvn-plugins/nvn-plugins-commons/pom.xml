@@ -11,7 +11,7 @@
     <artifactId>nvn-plugins-commons</artifactId>
     <name>nvn Plug-ins Commons</name>
     <description>A commons library for nvn plug-ins.</description>
-    <version>${parent.version}</version>
+    <version>${project.parent.version}</version>
     <build>
         <plugins>
             <plugin>
