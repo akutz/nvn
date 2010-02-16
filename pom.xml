@@ -6,7 +6,7 @@
     <artifactId>nvn</artifactId>
     <packaging>pom</packaging>
     <name>nvn</name>
-    <version>0.5</version>
+    <version>0.1.0</version>
     <description>nvn is a new approach to integrating .NET on Windows with the Maven build platform by driving builds with MSBuild and MSTest.</description>
     <url>http://sourceforge.net/projects/nvn</url>
     <inceptionYear>2009</inceptionYear>

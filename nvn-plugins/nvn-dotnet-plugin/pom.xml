@@ -6,7 +6,7 @@
     <parent>
         <artifactId>nvn-plugins</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.5</version>
+        <version>0.1.0</version>
     </parent>
     <groupId>${project.parent.groupId}</groupId>
     <artifactId>nvn-dotnet-plugin</artifactId>
