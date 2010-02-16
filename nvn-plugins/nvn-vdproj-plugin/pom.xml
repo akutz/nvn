@@ -12,4 +12,11 @@
     <name>nvn Vdproj Plug-in</name>
     <version>${parent.version}</version>
     <url>http://maven.apache.org</url>
+    <dependencies>
+        <dependency>
+            <groupId>${parent.groupId}</groupId>
+            <artifactId>nvn-plugins-commons</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>
