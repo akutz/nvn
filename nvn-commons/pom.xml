@@ -4,14 +4,15 @@
     <parent>
         <artifactId>nvn</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.1.0</version>
+        <version>0.0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>${project.parent.groupId}</groupId>
+    <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-commons</artifactId>
-    <name>nvn Commons</name>
+    <version>0.0.2-SNAPSHOT</version>
+    <name>nvn-commons</name>
     <description>A commons library for nvn.</description>
-    <version>${project.parent.version}</version>
     <build>
         <plugins>
             <plugin>
@@ -36,4 +37,24 @@
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <classifier>jdk15</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+    </dependencies>
 </project>
