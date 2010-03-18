@@ -182,13 +182,14 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
     /**
      * This method is invoked after the {@link #preExecute()},
-     * {@link #shoulExecute()}, and {@link #nvnExecute()} methods regardless
+     * {@link #shouldExecute()}, and {@link #nvnExecute()} methods regardless
      * whether any of them threw an exception.
      * 
      * @param executionException If the {@link #preExecute()},
-     *        {@link #shoulExecute()}, or {@link #nvnExecute()} methods threw an
-     *        exception it will be passed to the {@link #postExecute()} method
-     *        via this parameter. If the methods did not throw an exception this
+     *        {@link #shouldExecute()}, or {@link #nvnExecute()} methods threw
+     *        an exception it will be passed to the
+     *        {@link #postExecute(MojoExecutionException)} method via this
+     *        parameter. If the methods did not throw an exception this
      *        parameter will be null.
      * 
      * @throws MojoExecutionException
@@ -206,7 +207,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     /**
      * Gets a flag indicating whether or not this MOJO should execute. This
      * method is invoked after {@link #isProjectTypeValid()} and
-     * {@link #prepareForExecute()}.
+     * {@link #preExecute()}.
      * 
      * @return A flag indicating whether or not this MOJO should execute.
      * @throws MojoExecutionException When an error occurs.
@@ -215,8 +216,8 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
     /**
      * Returns a flag indicating whether or not this MOJO is valid for this
-     * project type. This method is invoked before {@link #prepareForExecute()}
-     * and {@link #shoulExecute()}.
+     * project type. This method is invoked before {@link #preExecute()} and
+     * {@link #shouldExecute()}.
      * 
      * @return A flag indicating whether or not this MOJO is valid for this
      *         project type.

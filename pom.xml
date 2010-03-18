@@ -50,6 +50,65 @@
                     <artifactId>jaxb2-maven-plugin</artifactId>
                     <version>1.3</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.6.1</version>
+                    <configuration>
+                        <linksource>true</linksource>
+                        <detectLinks>true   </detectLinks>
+                        <show>private</show>
+                        <quiet>true</quiet>
+                        <excludePackageNames>net.sf.nvn.commons.dotnet.v35.msbuild.xsd</excludePackageNames>
+                        <tags>
+                            <tag>
+                                <name>parameter</name>
+                                <placement>f</placement>
+                                <head>parameter</head>
+                            </tag>
+                            <tag>
+                                <name>component</name>
+                                <placement>f</placement>
+                                <head>component</head>
+                            </tag>
+                            <tag>
+                                <name>required</name>
+                                <placement>f</placement>
+                                <head>required</head>
+                            </tag>
+                            <tag>
+                                <name>readonly</name>
+                                <placement>f</placement>
+                                <head>readonly</head>
+                            </tag>
+                            <tag>
+                                <name>description</name>
+                                <placement>t</placement>
+                                <head>description</head>
+                            </tag>
+                            <tag>
+                                <name>goal</name>
+                                <placement>t</placement>
+                                <head>goal</head>
+                            </tag>
+                            <tag>
+                                <name>phase</name>
+                                <placement>t</placement>
+                                <head>phase</head>
+                            </tag>
+                            <tag>
+                                <name>requiresProject</name>
+                                <placement>t</placement>
+                                <head>requiresProject</head>
+                            </tag>
+                            <tag>
+                                <name>requiresDependencyResolution</name>
+                                <placement>t</placement>
+                                <head>requiresDependencyResolution</head>
+                            </tag>
+                        </tags>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>

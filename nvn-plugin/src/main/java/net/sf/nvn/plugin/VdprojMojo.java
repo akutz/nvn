@@ -411,7 +411,7 @@ public class VdprojMojo extends AbstractExeMojo
     /**
      * Finds the vdproj file(s).
      * 
-     * @return
+     * @return A list of vdproj files.
      */
     @SuppressWarnings("unchecked")
     File[] findVdprojFiles()
