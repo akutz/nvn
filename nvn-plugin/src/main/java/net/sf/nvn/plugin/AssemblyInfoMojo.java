@@ -47,11 +47,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
- * A Maven plug-in for creating .NET assembly information files.
+ * A MOJO for creating .NET assembly information files.
  * 
- * @goal generate-assembly-info
+ * @goal assembly-info
  * @phase generate-sources
- * @description A Maven plug-in for creating .NET assembly information files.
+ * @description A MOJO for creating .NET assembly information files.
  */
 public class AssemblyInfoMojo extends AbstractNvnMojo
 {
@@ -65,8 +65,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     /**
      * The location of the .NET AssemblyInfo file to output.
      * 
-     * @parameter expression="${assemblyinfo.outputFile}"
-     *            default-value="${basedir}/Properties/AssemblyInfo.cs"
+     * @parameter default-value="${basedir}/Properties/AssemblyInfo.cs"
      */
     File outputFile;
 
@@ -74,7 +73,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
      * The .NET assembly's GUID. If left blank then a random GUID will be
      * generated.
      * 
-     * @parameter expression="${assemblyinfo.guid}"
+     * @parameter
      */
     String guid;
 

@@ -1,31 +1,30 @@
 /*******************************************************************************
- * Copyright (c) 2010, Schley Andrew Kutz
- * All rights reserved.
+ * Copyright (c) 2010, Schley Andrew Kutz All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- * - Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer. 
+ * - Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
  * 
- * - Redistributions in binary form must reproduce the above copyright notice, 
- *   this list of conditions and the following disclaimer in the documentation 
- *   and/or other materials provided with the distribution.
- *   
- * - Neither the name of the Schley Andrew Kutz nor the names of its 
- *   contributors may be used to endorse or promote products derived 
- *   from this software without specific prior written permission. 
- *   
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ * 
+ * - Neither the name of the Schley Andrew Kutz nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
@@ -47,12 +46,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
- * A Maven plug-in for building .NET solutions and/or projects with MSBuild.
+ * A MOJO for building .NET solutions and/or projects with MSBuild.
  * 
  * @goal msbuild
  * @phase compile
- * @description A Maven plug-in for building .NET solutions and/or projects with
- *              MSBuild.
+ * @description A MOJO for building .NET solutions and/or projects with MSBuild.
  * @requiresDependencyResolution
  */
 public class MSBuildMojo extends AbstractExeMojo
@@ -60,7 +58,7 @@ public class MSBuildMojo extends AbstractExeMojo
     /**
      * The path to the solution or project to build.
      * 
-     * @parameter expression="${msbuild.buildFile}"
+     * @parameter
      */
     File buildFile;
 
@@ -204,7 +202,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * <li><strong>diag[nostic]</strong></li>
      * </ul>
      * 
-     * @parameter expression="${msbuild.verbosity}"
+     * @parameter
      */
     String verbosity;
 
@@ -576,8 +574,8 @@ public class MSBuildMojo extends AbstractExeMojo
             this.properties = new Properties();
         }
 
-        BuildConfiguration abc = getActiveBuildConfiguration();
-        PlatformType abp = getActiveBuildPlatform();
+        BuildConfiguration abc = getBuildConfig();
+        PlatformType abp = getBuildPlatform();
 
         String config = "Debug";
         String platform = "Any CPU";
@@ -591,7 +589,7 @@ public class MSBuildMojo extends AbstractExeMojo
 
         if (abp != null)
         {
-            platform = getActiveBuildPlatform().toString();
+            platform = getBuildPlatform().toString();
             if (platform.equals("AnyCPU"))
             {
                 platform = "Any CPU";
@@ -661,7 +659,7 @@ public class MSBuildMojo extends AbstractExeMojo
                     super.factory,
                     super.localRepository,
                     d);
-            
+
             if (file == null)
             {
                 continue;
