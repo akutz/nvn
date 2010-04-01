@@ -729,7 +729,7 @@ public class MSBuildMojo extends AbstractExeMojo
 
                 if (s != rps[rps.length - 1])
                 {
-                    rpsb.append(";");
+                    rpsb.append(":");
                 }
             }
         }
@@ -749,7 +749,7 @@ public class MSBuildMojo extends AbstractExeMojo
                 if (of != this.referencePaths
                     .get(this.referencePaths.size() - 1))
                 {
-                    rpsb.append(";");
+                    rpsb.append(":");
                 }
             }
         }

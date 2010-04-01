@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="Maven">
+  <skin>
+     <groupId>net.sf.mavenwear</groupId>
+     <artifactId>lite-skin</artifactId>
+     <version>0.0.1</version>
+  </skin>
   <body>
     <links>
-      <item name="nvn" href="http://www.apache.org/" />
+      <item name="nvn" href="http://nvn.sourceforge.net/" />
     </links>
     <menu name="nvn">
       <item name="home" href="index.html"/>
-      <item name="faq" href="download.html"/>
-      <item name="usage" href="release-notes.html" />
-      <item name="download" href="about.html"/>
+      <item name="usage" href="usage.html" />
     </menu>
     <menu ref="reports"/>
   </body>
