@@ -75,8 +75,8 @@ public class WsdlMojo extends AbstractExeMojo
 
     /**
      * <p>
-     * The path to a local WSDL contract file (.wsdl), XSD schema file (.xsd),
-     * or discovery document (.disco or .discomap).
+     * The path to one or more local WSDL contract files (.wsdl), XSD schema
+     * files (.xsd), or discovery documents (.disco or .discomap).
      * </p>
      * <p>
      * Wsdl.exe does not retrieve includes and imports from the network when it
@@ -86,12 +86,12 @@ public class WsdlMojo extends AbstractExeMojo
      * <em>File:///E:/Customers/WSDLS/Accounts.wsdl</em>
      * </p>
      * <p>
-     * If you specify inputUrl then inputFile will be ignored.
+     * If you specify inputUrl then inputFiles will be ignored.
      * </p>
      * 
      * @parameter
      */
-    File inputFile;
+    File[] inputFiles;
 
     /**
      * The default URL to use in the generated class file.
@@ -489,9 +489,17 @@ public class WsdlMojo extends AbstractExeMojo
         {
             args.append(quote(this.inputUrl.toString()));
         }
-        else if (this.inputFile != null)
+        else if (this.inputFiles != null)
         {
-            args.append(getPath(this.inputFile));
+            for (File f : this.inputFiles)
+            {
+                args.append(getPath(f));
+
+                if (f != this.inputFiles[this.inputFiles.length - 1])
+                {
+                    args.append(" ");
+                }
+            }
         }
 
         return args.toString();
@@ -664,7 +672,7 @@ public class WsdlMojo extends AbstractExeMojo
     @Override
     boolean shouldExecute() throws MojoExecutionException
     {
-        return this.inputFile != null || this.inputUrl != null;
+        return this.inputFiles != null || this.inputUrl != null;
     }
 
     @Override
