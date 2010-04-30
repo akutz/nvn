@@ -756,7 +756,14 @@ public class MSBuildMojo extends AbstractExeMojo
         if (rpsb.length() > 0)
         {
             String newRps = rpsb.toString();
-            this.properties.put("ReferencePath", quote(newRps));
+            String prop = quote(newRps);
+
+            if (!(prop.startsWith("\"") && prop.endsWith("\"")))
+            {
+                newRps = "\"" + newRps + "\"";
+            }
+
+            this.properties.put("ReferencePath", newRps);
         }
     }
 
