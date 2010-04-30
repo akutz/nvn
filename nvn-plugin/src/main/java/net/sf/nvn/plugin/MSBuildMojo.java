@@ -379,15 +379,14 @@ public class MSBuildMojo extends AbstractExeMojo
         cmdLineBuff.deleteCharAt(cmdLineBuff.length() - 1);
         cmdLineBuff.append(" ");
 
-        cmdLineBuff.append("/property:");
-
         for (Object k : this.properties.keySet())
         {
+            cmdLineBuff.append("/property:");
             cmdLineBuff.append(quote(String.valueOf(k)));
             cmdLineBuff.append("=");
             String s = String.valueOf(this.properties.get(k));
             cmdLineBuff.append(quote(s));
-            cmdLineBuff.append(";");
+            cmdLineBuff.append(" ");
         }
 
         cmdLineBuff.deleteCharAt(cmdLineBuff.length() - 1);
@@ -729,7 +728,7 @@ public class MSBuildMojo extends AbstractExeMojo
 
                 if (s != rps[rps.length - 1])
                 {
-                    rpsb.append(":");
+                    rpsb.append(";");
                 }
             }
         }
@@ -749,7 +748,7 @@ public class MSBuildMojo extends AbstractExeMojo
                 if (of != this.referencePaths
                     .get(this.referencePaths.size() - 1))
                 {
-                    rpsb.append(":");
+                    rpsb.append(";");
                 }
             }
         }
