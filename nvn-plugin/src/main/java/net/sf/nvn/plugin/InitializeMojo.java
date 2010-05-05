@@ -44,6 +44,7 @@ import org.codehaus.plexus.util.StringUtils;
  * A MOJO for initializing the nvn build system.
  * 
  * @author akutz
+ * 
  * @goal initialize
  * @phase initialize
  * @description A MOJO for initializing the nvn build system.
@@ -174,12 +175,16 @@ public class InitializeMojo extends AbstractNvnMojo
      */
     void initVersion()
     {
+        debug("initializing version");
+
         String myVersion = super.mavenProject.getVersion();
 
         if (myVersion.equals(MavenProject.EMPTY_PROJECT_VERSION))
         {
             super.mavenProject.setVersion(this.defaultVersion);
         }
+
+        debug("initialized version: " + myVersion);
     }
 
     /**
@@ -203,6 +208,7 @@ public class InitializeMojo extends AbstractNvnMojo
         File basedir = this.mavenProject.getBasedir();
 
         String bcn = getBuildConfigName();
+        debug("got build config name: " + bcn);
 
         String filepath = getMSBuildProject().getBuildArtifact(bcn).getPath();
         File file = new File(basedir, filepath);
@@ -349,11 +355,13 @@ public class InitializeMojo extends AbstractNvnMojo
 
         if (files == null)
         {
+            debug("project file list is null");
             return;
         }
 
         if (files.size() == 0)
         {
+            debug("project file list is empty");
             return;
         }
 
@@ -361,7 +369,16 @@ public class InitializeMojo extends AbstractNvnMojo
 
         try
         {
-            setMSBuildProject(MSBuildProject.instance(projectFile));
+            MSBuildProject msb = MSBuildProject.instance(projectFile);
+
+            if (msb == null)
+            {
+                info("project file could not be unmarshalled: " + projectFile);
+            }
+            else
+            {
+                setMSBuildProject(msb);
+            }
         }
         catch (Exception e)
         {

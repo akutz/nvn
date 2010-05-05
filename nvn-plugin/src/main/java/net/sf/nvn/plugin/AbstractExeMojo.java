@@ -1,31 +1,30 @@
 /*******************************************************************************
- * Copyright (c) 2010, Schley Andrew Kutz
- * All rights reserved.
+ * Copyright (c) 2010, Schley Andrew Kutz All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- * - Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer. 
+ * - Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
  * 
- * - Redistributions in binary form must reproduce the above copyright notice, 
- *   this list of conditions and the following disclaimer in the documentation 
- *   and/or other materials provided with the distribution.
- *   
- * - Neither the name of the Schley Andrew Kutz nor the names of its 
- *   contributors may be used to endorse or promote products derived 
- *   from this software without specific prior written permission. 
- *   
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ * 
+ * - Neither the name of the Schley Andrew Kutz nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
@@ -306,21 +305,42 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         String systemRoot = System.getenv("SystemRoot");
         String dotnetDir = systemRoot + "\\Microsoft.NET\\Framework";
         String dotnetDirs =
-            String.format("%1$s\\v3.5;%1$s\\v2.0.5727", dotnetDir);
+            String.format(
+                "%1$s\\v4.0.30319;%1$s\\v3.5;%1$s\\v2.0.5727",
+                dotnetDir);
         String path =
             this.procEnvVars.containsKey("Path") ? String
                 .valueOf(this.procEnvVars.get("Path")) : "";
 
-        if (existsDotNet35())
+        if (existsDotNet4() || existsDotNet35())
         {
             putEnvVar("Framework35Version", "v3.5");
             putEnvVar("FrameworkDir", dotnetDir);
-            putEnvVar("FrameworkVersion", "v2.0.50727");
             putEnvVar("LIBPATH", dotnetDirs);
             path = dotnetDirs + ";" + path;
         }
 
-        if (existsVSNet2008())
+        if (existsDotNet4())
+        {
+            putEnvVar("FrameworkVersion", "v4.0.30319");
+            putEnvVar("FrameworkVersion32", "v4.0.30319");
+        }
+        else if (existsDotNet35())
+        {
+            putEnvVar("FrameworkVersion", "v2.0.50727");
+        }
+
+        if (existsVSNet2010())
+        {
+            String installDir = getVSNet2010Dir();
+            String rootDir = installDir.replace("\\Common7\\IDE", "");
+            String toolsDir = installDir.replace("\\IDE", "\\Tools");
+            putEnvVar("DevEnvDir", installDir);
+            putEnvVar("VS90COMNTOOLS", toolsDir);
+            putEnvVar("VSINSTALLDIR", rootDir);
+            path = String.format("%s;%s;%s", installDir, toolsDir, path);
+        }
+        else if (existsVSNet2008())
         {
             String installDir = getVSNet2008Dir();
             String rootDir = installDir.replace("\\Common7\\IDE", "");
@@ -331,7 +351,15 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             path = String.format("%s;%s;%s", installDir, toolsDir, path);
         }
 
-        if (existsWinSdk61())
+        if (existsWinSdk70A())
+        {
+            String installDir = getWinSdk70ADir();
+            putEnvVar("FxTools", dotnetDirs);
+            putEnvVar("MSSdk", installDir);
+            putEnvVar("SdkTools", installDir + "\\Bin");
+            path = String.format("%1$s\\Bin;%2$s", installDir, path);
+        }
+        else if (existsWinSdk61())
         {
             String installDir = getWinSdk61Dir();
             putEnvVar("FxTools", dotnetDirs);
@@ -381,6 +409,23 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * Gets a flag indicating whether or not the .NET 4 Framework has been
+     * detected on this system.
+     * 
+     * @return A flag indicating whether or not the .NET 4 Framework has been
+     *         detected on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsDotNet4() throws MojoExecutionException
+    {
+        String path =
+            String.format("%s\\Microsoft.NET\\Framework\\v4.0.30319", System
+                .getenv("SystemRoot"));
+        File f = new File(path);
+        return f.exists();
+    }
+
+    /**
      * Gets a flag indicating whether or not Visual Studio .NET 2008 has been
      * detected on this system.
      * 
@@ -400,6 +445,30 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         {
             throw new MojoExecutionException(
                 "Error checking for Visual Studio .NET 2008",
+                e);
+        }
+    }
+
+    /**
+     * Gets a flag indicating whether or not Visual Studio .NET 2010 has been
+     * detected on this system.
+     * 
+     * @return A flag indicating whether or not Visual Studio .NET 2010 has been
+     *         detected on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsVSNet2010() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils.exists(
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\10.0",
+                "InstallDir");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Visual Studio .NET 2010",
                 e);
         }
     }
@@ -427,12 +496,80 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * Gets the Visual Studio .NET 2010 installation directory.
+     * 
+     * @return The Visual Studio .NET 2010 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getVSNet2010Dir() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils.read(
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\10.0",
+                "InstallDir");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Visual Studio .NET 2010 installation directory.",
+                e);
+        }
+    }
+
+    /**
      * Gets the Windows SDK 6.1 installation directory.
      * 
      * @return The Windows SDK 6.1 installation directory.
      * @throws MojoExecutionException When an error occurs.
      */
     String getWinSdk61Dir() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .read(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v6.1",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 6.1 installation directory.",
+                e);
+        }
+    }
+
+    /**
+     * Gets the Windows SDK 7.0A installation directory.
+     * 
+     * @return The Windows SDK 7.0A installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getWinSdk70ADir() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .read(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0A",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 7.0A installation directory.",
+                e);
+        }
+    }
+
+    /**
+     * Gets the Windows SDK 7.0A installation directory.
+     * 
+     * @return The Windows SDK 6.1 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getWinSdk70aDir() throws MojoExecutionException
     {
         try
         {
@@ -470,6 +607,31 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         {
             throw new MojoExecutionException(
                 "Error checking for Windows SDK 6.1",
+                e);
+        }
+    }
+
+    /**
+     * Gets a flag indicating whether or not the Windows SDK 7.0A has been
+     * detected on this system.
+     * 
+     * @return A flag indicating whether or not the Windows SDK 7.0A has been
+     *         detected on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsWinSdk70A() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .exists(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0A",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 7.0A",
                 e);
         }
     }

@@ -4,13 +4,13 @@
     <parent>
         <artifactId>nvn</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-commons</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
     <name>nvn-commons</name>
     <description>A commons library for nvn.</description>
     <build>
@@ -23,7 +23,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>generate-msbuild-objects</id>
+                        <id>generate-msbuild35-objects</id>
                         <goals>
                             <goal>xjc</goal>
                         </goals>
@@ -31,8 +31,23 @@
                             <packageName>net.sf.nvn.commons.dotnet.v35.msbuild.xsd</packageName>
                             <schemaDirectory>${basedir}/src/main/schemas/dotnet/3.5/msbuild</schemaDirectory>
                             <schemaFiles>Microsoft.Build.xsd</schemaFiles>
+                            <staleFile>${project.build.directory}/generated-sources/jaxb/.v35.staleFlag</staleFile>
                         </configuration>
                     </execution>
+                    <!-- 
+                    <execution>
+                        <id>generate-msbuild40-objects</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <packageName>net.sf.nvn.commons.dotnet.v40.msbuild.xsd</packageName>
+                            <schemaDirectory>${basedir}/src/main/schemas/dotnet/4.0/msbuild</schemaDirectory>
+                            <schemaFiles>Microsoft.Build.xsd</schemaFiles>
+                            <staleFile>${project.build.directory}/generated-sources/jaxb/.v40.staleFlag</staleFile>
+                        </configuration>
+                    </execution>
+                     -->
                 </executions>
             </plugin>
         </plugins>

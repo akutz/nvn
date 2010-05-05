@@ -256,6 +256,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
         if (!this.ignoreProjectType && !isProjectTypeValid())
         {
+            info("project type not valid");
             return;
         }
 
@@ -487,6 +488,11 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     boolean isMSBuildProject()
     {
+        if (getMSBuildProject() == null)
+        {
+            debug("msbuild project is null");
+        }
+        
         return getMSBuildProject() != null;
     }
 
@@ -510,6 +516,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     void setMSBuildProject(MSBuildProject toSet)
     {
         setProperty("msbuild.project", toSet);
+        debug("set msbuild project");
     }
 
     /**
