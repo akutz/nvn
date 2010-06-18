@@ -84,6 +84,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * 
  * @goal install-file
  * @requiresProject false
+ * @requiresDependencyResolution
  * @description A Maven plug-in for installing .NET artifacts.
  */
 public class InstallFileMojo extends AbstractMojo

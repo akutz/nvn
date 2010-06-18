@@ -424,7 +424,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     BuildConfiguration getBuildConfig()
     {
-        if (!(isCSProject() || isVBProject()))
+        if (!(isCSProject() || isVBProject() || isCppProject()))
         {
             return null;
         }
@@ -492,7 +492,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         {
             debug("msbuild project is null");
         }
-        
+
         return getMSBuildProject() != null;
     }
 
@@ -530,6 +530,19 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     {
         return isMSBuildProject()
             && getMSBuildProject().getProjectLanguage() == ProjectLanguageType.CSharp;
+    }
+
+    /**
+     * Gets a flag indicating whether or not this project is a Visual Studio C++
+     * project.
+     * 
+     * @return A flag indicating whether or not this project is a Visual Studio
+     *         C++ project.
+     */
+    boolean isCppProject()
+    {
+        return isMSBuildProject()
+            && getMSBuildProject().getProjectLanguage() == ProjectLanguageType.CPP;
     }
 
     /**

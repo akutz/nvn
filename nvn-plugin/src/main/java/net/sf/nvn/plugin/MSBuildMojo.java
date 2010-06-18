@@ -789,7 +789,7 @@ public class MSBuildMojo extends AbstractExeMojo
     @Override
     boolean isProjectTypeValid()
     {
-        return isCSProject() || isVBProject();
+        return isCSProject() || isVBProject() || isCppProject();
     }
 
     @Override

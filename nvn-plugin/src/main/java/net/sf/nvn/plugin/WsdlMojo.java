@@ -35,6 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -58,6 +60,11 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class WsdlMojo extends AbstractExeMojo
 {
+    private final static String URL_PATT_STR =
+        "(?u)(.*\\s+/// <remarks\\/>.*\\s+public.*\\(\\)\\s\\{.*\\s+this.Url\\s=\\s\").*(\";.*\\s+\\}.*)";
+
+    private final static Pattern URL_PATT = Pattern.compile(URL_PATT_STR);
+
     /**
      * <p>
      * The URL to a WSDL contract file (.wsdl), XSD schema file (.xsd), or
@@ -531,9 +538,6 @@ public class WsdlMojo extends AbstractExeMojo
         {
             if (this.defaultUrl != null)
             {
-                String urlPatt =
-                    "(?u)(.*\\s+/// <remarks\\/>.*\\s+public.*\\(\\)\\s\\{.*\\s+this.Url\\s=\\s\").*(\";.*\\s+\\}.*)";
-
                 String tempContents;
 
                 try
@@ -548,16 +552,24 @@ public class WsdlMojo extends AbstractExeMojo
                         this.tempOutputFile), e);
                 }
 
-                String tempContentsWithUrl =
-                    tempContents.replaceAll(urlPatt, String.format(
-                        "$1%s$2",
-                        this.defaultUrl));
+                Matcher m = URL_PATT.matcher(tempContents);
 
+                if (!m.find())
+                {
+                    info("unable to replace default url");
+                }
+                else
+                {
+                    tempContents =
+                        tempContents.replaceAll(URL_PATT_STR, String.format(
+                            "$1%s$2",
+                            this.defaultUrl));
+                }
                 try
                 {
                     FileUtils.writeStringToFile(
                         this.tempOutputFile,
-                        tempContentsWithUrl);
+                        tempContents);
                 }
                 catch (IOException e)
                 {

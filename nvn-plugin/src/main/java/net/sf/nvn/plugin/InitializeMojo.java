@@ -350,7 +350,7 @@ public class InitializeMojo extends AbstractNvnMojo
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
             {
-                "csproj", "vbproj"
+                "csproj", "vbproj", "vcproj"
             }, false);
 
         if (files == null)
