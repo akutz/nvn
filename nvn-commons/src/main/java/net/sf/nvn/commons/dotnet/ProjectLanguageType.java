@@ -43,8 +43,19 @@ import org.apache.commons.lang.StringUtils;
  */
 public enum ProjectLanguageType
 {
+    /**
+     * C++
+     */
+    CPP,
+    
+    /**
+     * C#
+     */
     CSharp,
 
+    /**
+     * VisualBasic.NET
+     */
     VisualBasic;
     
     /**
@@ -85,6 +96,10 @@ public enum ProjectLanguageType
         else if (fileExtension.matches("(?i)vbproj"))
         {
             return ProjectLanguageType.VisualBasic;
+        }
+        else if (fileExtension.matches("(?i)vcproj"))
+        {
+            return ProjectLanguageType.CPP;
         }
 
         return null;

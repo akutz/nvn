@@ -178,11 +178,10 @@ public class DependencyUtils
      * @return The AssemblyName.
      * @throws MojoExecutionException When an error occurs.
      */
-    @SuppressWarnings("unchecked")
     public static String getAssemblyName(
         ArtifactFactory factory,
         ArtifactRepository localRepository,
-        List remoteRepositories,
+        @SuppressWarnings("rawtypes") List remoteRepositories,
         ArtifactResolver resolver,
         Dependency dependency) throws MojoExecutionException
     {
