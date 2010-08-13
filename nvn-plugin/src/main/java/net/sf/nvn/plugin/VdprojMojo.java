@@ -196,7 +196,7 @@ public class VdprojMojo extends AbstractExeMojo
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     void injectValues() throws MojoExecutionException
     {
         if (!this.injection || this.vdProjFiles.length == 0)
@@ -413,7 +413,7 @@ public class VdprojMojo extends AbstractExeMojo
      * 
      * @return A list of vdproj files.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     File[] findVdprojFiles()
     {
         debug("listing vdproj files in %s", super.mavenProject.getBasedir());

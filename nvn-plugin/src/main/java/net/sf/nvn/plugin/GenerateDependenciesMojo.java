@@ -103,7 +103,7 @@ public class GenerateDependenciesMojo extends AbstractMojo
      */
     File pomFile;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException
     {
@@ -163,7 +163,7 @@ public class GenerateDependenciesMojo extends AbstractMojo
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     void enumLocalRepo() throws MojoExecutionException
     {
         File localRepoDir = new File(this.localRepository.getBasedir());
@@ -193,7 +193,7 @@ public class GenerateDependenciesMojo extends AbstractMojo
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     File getArtifactFile(File dir)
     {
         Collection files = FileUtils.listFiles(dir, new String[]

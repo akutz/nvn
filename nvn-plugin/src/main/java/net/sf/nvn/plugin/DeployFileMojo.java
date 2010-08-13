@@ -111,7 +111,7 @@ public class DeployFileMojo extends AbstractMojo
      * @component role=
      *            "org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private Map repositoryLayouts;
 
     /**

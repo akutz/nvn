@@ -41,9 +41,7 @@ import net.sf.nvn.commons.dotnet.OutputFileType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 
 /**
  * A MOJO for creating .NET assembly information files.
@@ -58,8 +56,43 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
      * The pattern used to match the assembly GUID in an assembly information
      * file.
      */
-    private static Pattern ASSEM_GUID_ATTR_PATT =
-        Pattern.compile("(?i)\\[assembly\\s*:\\s*Guid\\(\"(.*)\"\\)\\]");
+    private static Pattern ASSEM_GUID_ATTR_PATT = Pattern
+        .compile("(?i)\\[assembly\\s*:\\s*Guid\\(\"(.*)\"\\)\\]");
+
+    /**
+     * The value of the AssemblyTitle attribute.
+     * 
+     * @parameter default-value="${project.name}"
+     */
+    String assemblyTitle;
+
+    /**
+     * The value of the AssemblyProduct attribute.
+     * 
+     * @parameter default-value="${project.organization.name} ${project.name}"
+     */
+    String assemblyProduct;
+
+    /**
+     * The value of the AssemblyCompany attribute.
+     * 
+     * @parameter default-value="${project.organization.name}"
+     */
+    String assemblyCompany;
+
+    /**
+     * The value of the AssemblyDescription attribute.
+     * 
+     * @parameter default-value="${project.description}"
+     */
+    String assemblyDescription;
+
+    /**
+     * The value of the AssemblyInformationalVersion attribute.
+     * 
+     * @parameter default-value="${project.version}"
+     */
+    String assemblyInformationalVersion;
 
     /**
      * The location of the .NET AssemblyInfo file to output.
@@ -80,11 +113,6 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
      * The type of the output file that will be created.
      */
     OutputFileType outputFileType;
-
-    /**
-     * The safe version.
-     */
-    String safeVersion;
 
     @Override
     public String getMojoName()
@@ -125,24 +153,7 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     public void preExecute() throws MojoExecutionException
     {
         parseOutputFileType();
-
-        initVersion();
-
-        parseSafeVersion();
-
         parseGuid();
-    }
-
-    /**
-     * Initializes this project's version.
-     */
-    void initVersion()
-    {
-        if (super.mavenProject.getVersion().equals(
-            MavenProject.EMPTY_PROJECT_VERSION))
-        {
-            super.mavenProject.setVersion("0.0.0.0");
-        }
     }
 
     @Override
@@ -224,27 +235,6 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     }
 
     /**
-     * Parses the numeric version from the project's version.
-     * 
-     * @throws MojoExecutionException When an error occurs.
-     */
-    void parseSafeVersion() throws MojoExecutionException
-    {
-        Pattern p = Pattern.compile("(?:\\d|\\.)+");
-        Matcher m = p.matcher(super.mavenProject.getVersion());
-
-        if (m.find())
-        {
-            this.safeVersion = m.group();
-        }
-        else
-        {
-            throw new MojoExecutionException("Error parsing safe version from "
-                + super.mavenProject.getVersion());
-        }
-    }
-
-    /**
      * Parses the output file type from the output file's extension.
      * 
      * @throws MojoExecutionException When an error occurs.
@@ -310,6 +300,18 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         }
     }
 
+    private void outAttr(Writer out, String assemblyAttr, String value)
+        throws IOException
+    {
+        String s =
+            StringUtils.isEmpty(value) ? assemblyAttr : String.format(
+                "%s(\"%s\")",
+                assemblyAttr,
+                value);
+
+        outAttr(out, s);
+    }
+
     /**
      * Creates the assembly information text.
      * 
@@ -327,39 +329,29 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
 
             out.write("\r\n");
 
-            if (!super.mavenProject.getName().startsWith("Unnamed - unknown"))
+            if (!this.assemblyTitle.startsWith("Unnamed - unknown"))
             {
-                outAttr(out, "AssemblyTitle(\"" + super.mavenProject.getName()
-                    + "\")");
+                outAttr(out, "AssemblyTitle", this.assemblyTitle);
 
-                Organization org = super.mavenProject.getOrganization();
-
-                if (org != null)
+                if (StringUtils.isNotEmpty(this.assemblyCompany))
                 {
-                    if (StringUtils.isNotEmpty(org.getName()))
-                    {
-                        String orgName =
-                            super.mavenProject.getOrganization().getName();
-
-                        outAttr(out, "AssemblyCompany(\"" + orgName + "\")");
-                        outAttr(out, "AssemblyProduct(\"" + orgName + " "
-                            + super.mavenProject.getName() + "\")");
-                    }
+                    outAttr(out, "AssemblyCompany", this.assemblyCompany);
+                    outAttr(out, "AssemblyProduct", this.assemblyProduct);
                 }
             }
 
-            if (StringUtils.isNotEmpty(super.mavenProject.getDescription()))
+            if (StringUtils.isNotEmpty(this.assemblyDescription))
             {
-                String description = super.mavenProject.getDescription();
-                outAttr(out, "AssemblyDescription(\"" + description + "\")");
+                outAttr(out, "AssemblyDescription", this.assemblyDescription);
             }
 
-            outAttr(out, "Guid(\"" + this.guid + "\")");
-
-            outAttr(out, "AssemblyVersion(\"" + this.safeVersion + "\")");
-            outAttr(out, "AssemblyFileVersion(\"" + this.safeVersion + "\")");
-            outAttr(out, "AssemblyInformationalVersionAttribute(\""
-                + super.mavenProject.getVersion() + "\")");
+            outAttr(out, "Guid", this.guid);
+            outAttr(out, "AssemblyVersion", getStandardVersion());
+            outAttr(out, "AssemblyFileVersion", getStandardVersion());
+            outAttr(
+                out,
+                "AssemblyInformationalVersion",
+                this.assemblyInformationalVersion);
 
             out.close();
 

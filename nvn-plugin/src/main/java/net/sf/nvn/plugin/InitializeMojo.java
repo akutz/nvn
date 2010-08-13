@@ -33,6 +33,8 @@ package net.sf.nvn.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
@@ -145,10 +147,12 @@ public class InitializeMojo extends AbstractNvnMojo
     void nvnExecute() throws MojoExecutionException
     {
         initVersion();
+        initStandardVersion();
         initMSBuildProject();
         initBuildConfig();
         initBuildPlatform();
         initArtifacts();
+        initBuildDirectory();
     }
 
     @Override
@@ -169,6 +173,15 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         return true;
     }
+    
+    void initBuildDirectory()
+    {
+        File buildOutputDir = super.getBuildConfig().getOutputPath();
+        File baseDir = super.mavenProject.getBasedir();
+        File buildDir = new File(baseDir, buildOutputDir.toString());
+        super.mavenProject.getBuild().setDirectory(buildDir.toString());
+        debug("Initialized build directory: " + buildDir);
+    }
 
     /**
      * Initializes this project's version.
@@ -185,6 +198,34 @@ public class InitializeMojo extends AbstractNvnMojo
         }
 
         debug("initialized version: " + myVersion);
+    }
+
+    /**
+     * Initializes the numeric version from the project's version.
+     * 
+     * @throws MojoExecutionException When an error occurs.
+     */
+    void initStandardVersion() throws MojoExecutionException
+    {
+        Pattern p = Pattern.compile("(?:\\d|\\.)+");
+        Matcher m = p.matcher(super.mavenProject.getVersion());
+
+        String stdVersion;
+
+        if (m.find())
+        {
+            stdVersion = m.group();
+        }
+        else
+        {
+            throw new MojoExecutionException(
+                "Error parsing standard version from "
+                    + super.mavenProject.getVersion());
+        }
+
+        setStandardVersion(stdVersion);
+
+        debug("initialized standard version: " + stdVersion);
     }
 
     /**
@@ -344,7 +385,7 @@ public class InitializeMojo extends AbstractNvnMojo
         debug("build platform:      %s", getBuildPlatform());
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     void initMSBuildProject() throws MojoExecutionException
     {
         Collection files =

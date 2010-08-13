@@ -242,7 +242,7 @@ public class InstallFileMojo extends AbstractMojo
      * @component role=
      *            "org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private Map repositoryLayouts;
 
     /**
@@ -642,7 +642,7 @@ public class InstallFileMojo extends AbstractMojo
      *        <code>null</code>.
      * @throws MojoExecutionException If the checksums could not be installed.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     protected void installChecksums(Artifact artifact)
         throws MojoExecutionException
     {

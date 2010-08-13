@@ -526,7 +526,7 @@ public class XsdMojo extends AbstractExeMojo
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     void doCorrectCase(File fileToCorrect, Writer out) throws IOException
     {
         // Read all of the source code from the file, line by line into this

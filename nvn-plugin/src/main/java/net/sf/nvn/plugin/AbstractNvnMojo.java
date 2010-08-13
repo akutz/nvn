@@ -137,7 +137,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @required
      * @readonly
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     List reactorProjects;
 
     /**
@@ -625,6 +625,19 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         Properties props = nvnStorage.get().get(key);
 
         return props;
+    }
+
+    protected String getStandardVersion()
+    {
+        return this.mavenProject.getProperties().getProperty(
+            "project.version.standard");
+    }
+
+    protected void setStandardVersion(String toSet)
+    {
+        this.mavenProject.getProperties().setProperty(
+            "project.version.standard",
+            toSet);
     }
 
     /**

@@ -38,6 +38,11 @@
                             <install>
                                 org.apache.maven.plugins:maven-install-plugin:install
                             </install>
+                            <package>
+                                net.sf.nvn:nvn-plugin:candle,
+                                net.sf.nvn:nvn-plugin:light,
+                                net.sf.nvn:nvn-plugin:signtool
+                            </package>
                             <deploy>
                                 org.apache.maven.plugins:maven-deploy-plugin:deploy
                             </deploy>
@@ -122,6 +127,11 @@
                             <compile>
                                 net.sf.nvn:nvn-plugin:msbuild
                             </compile>
+                            <package>
+                                net.sf.nvn:nvn-plugin:candle,
+                                net.sf.nvn:nvn-plugin:light,
+                                net.sf.nvn:nvn-plugin:signtool
+                            </package>
                             <deploy>
                                 org.apache.maven.plugins:maven-deploy-plugin:deploy
                             </deploy>

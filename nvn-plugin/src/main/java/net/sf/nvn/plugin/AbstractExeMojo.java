@@ -80,9 +80,24 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     /**
      * <p>
      * Setting this parameter to true causes this Mojo to attempt to detect the
-     * .NET 3.5 Framework, Visual Studio 2008, the Windows SDK, and various
+     * .NET Framework (3.5, 4.0), Visual Studio (2008, 2010), the Windows SDK
+     * (6.1, 7.0A, 7.1), the Windows Installer XML Toolset (WiX), and various
      * other software packages commonly used by Windows developers.
      * </p>
+     * <p>
+     * If the .NET 4.0 Framework is detected then the following variables are
+     * appended to the external process's environment automatically:
+     * </p>
+     * <ul>
+     * <li><strong>Framework35Version</strong>=v3.5</li>
+     * <li><strong>FrameworkDir</strong>=%SystemRoot%\Microsoft.NET\Framework</li>
+     * <li>
+     * <strong>LIBPATH</strong>=%SystemRoot%\Microsoft.NET\Framework\v4.0.30319
+     * ;% SystemRoot%\Microsoft.NET\Framework\v3.5;%
+     * SystemRoot%\Microsoft.NET\Framework\v2.0.50727</li>
+     * <li><strong>FrameworkVersion</strong>=v4.0.30319</li>
+     * <li><strong>FrameworkVersion32</strong>=v4.0.30319</li>
+     * </ul>
      * <p>
      * If the .NET 3.5 Framework is detected then the following variables are
      * appended to the external process's environment automatically:
@@ -113,6 +128,23 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * 9.0\Common7\Tools\</li>
      * <li><strong>VSINSTALLDIR</strong>=%ProgramFiles%\Microsoft Visual Studio
      * 9.0</li>
+     * </ul>
+     * 
+     * <p>
+     * If the Windows SDK 7.0A is detected then the following variables are
+     * appended to the external process's environment automatically:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * <strong>FxTools</strong>=%SystemRoot%\Microsoft.NET\Framework\v4.0.30319
+     * ;% SystemRoot%\Microsoft.NET\Framework\v3.5;%
+     * SystemRoot%\Microsoft.NET\Framework\v2.0.50727</li>
+     * <li><strong>MSSdk</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0A</li>
+     * <li><strong>Path</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0A\Bin
+     * </li>
+     * <li><strong>SdkTools</strong>=%ProgramFiles%\Microsoft
+     * SDKs\Windows\v7.0A\Bin</li>
      * </ul>
      * 
      * <p>
@@ -149,11 +181,11 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * 
      * <p>
      * The astute reader may notice that several common environment variables
-     * have been omitted, such as INCLUDE, LIB, and LIBPATH. Their omission is
-     * not accidental. Because these environment variables are used primarily
-     * for C/C++ development and NVN targets C# and VisualBasic.NET development
-     * (for now), the aforementioned variables are not being considered for
-     * automatic inclusion at this time.
+     * have been omitted, such as INCLUDE and LIB. Their omission is not
+     * accidental. Because these environment variables are used primarily for
+     * C/C++ development and NVN targets C# and VisualBasic.NET development (for
+     * now), the aforementioned variables are not being considered for automatic
+     * inclusion at this time.
      * </p>
      * 
      * @parameter default-value="true"
@@ -163,7 +195,10 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     /**
      * The environment variables to use for the executable process.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(
+    {
+        "rawtypes"
+    })
     Map procEnvVars;
 
     /**
@@ -274,7 +309,10 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * 
      * @throws MojoExecutionException When an error occurs.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(
+    {
+        "rawtypes", "unchecked"
+    })
     void initProcEnvVars() throws MojoExecutionException
     {
         this.procEnvVars = new HashMap();
@@ -351,9 +389,25 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             path = String.format("%s;%s;%s", installDir, toolsDir, path);
         }
 
-        if (existsWinSdk70A())
+        if (existsWinSdk71())
+        {
+            String installDir = getWinSdk71Dir();
+            putEnvVar("FxTools", dotnetDirs);
+            putEnvVar("MSSdk", installDir);
+            putEnvVar("SdkTools", installDir + "\\Bin");
+            path = String.format("%1$s\\Bin;%2$s", installDir, path);
+        }
+        else if (existsWinSdk70A())
         {
             String installDir = getWinSdk70ADir();
+            putEnvVar("FxTools", dotnetDirs);
+            putEnvVar("MSSdk", installDir);
+            putEnvVar("SdkTools", installDir + "\\Bin");
+            path = String.format("%1$s\\Bin;%2$s", installDir, path);
+        }
+        else if (existsWinSdk70())
+        {
+            String installDir = getWinSdk70Dir();
             putEnvVar("FxTools", dotnetDirs);
             putEnvVar("MSSdk", installDir);
             putEnvVar("SdkTools", installDir + "\\Bin");
@@ -366,6 +420,15 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             putEnvVar("MSSdk", installDir);
             putEnvVar("SdkTools", installDir + "\\Bin");
             path = String.format("%1$s\\Bin;%2$s", installDir, path);
+        }
+
+        if (existsWix35())
+        {
+            String installDir =
+                String.format(
+                    "%1$s\\Windows Installer XML v3.5\\bin",
+                    System.getenv("ProgramFiles"));
+            path = String.format("%1$s;%2$s", installDir, path);
         }
 
         this.procEnvVars.put("Path", path);
@@ -391,6 +454,16 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         this.procEnvVars.put(key, val);
     }
 
+    boolean existsWix35() throws MojoExecutionException
+    {
+        String path =
+            String.format(
+                "%s\\Windows Installer XML v3.5",
+                System.getenv("ProgramFiles"));
+        File f = new File(path);
+        return f.exists();
+    }
+
     /**
      * Gets a flag indicating whether or not the .NET 3.5 Framework has been
      * detected on this system.
@@ -402,8 +475,9 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     boolean existsDotNet35() throws MojoExecutionException
     {
         String path =
-            String.format("%s\\Microsoft.NET\\Framework\\v3.5", System
-                .getenv("SystemRoot"));
+            String.format(
+                "%s\\Microsoft.NET\\Framework\\v3.5",
+                System.getenv("SystemRoot"));
         File f = new File(path);
         return f.exists();
     }
@@ -419,8 +493,9 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     boolean existsDotNet4() throws MojoExecutionException
     {
         String path =
-            String.format("%s\\Microsoft.NET\\Framework\\v4.0.30319", System
-                .getenv("SystemRoot"));
+            String.format(
+                "%s\\Microsoft.NET\\Framework\\v4.0.30319",
+                System.getenv("SystemRoot"));
         File f = new File(path);
         return f.exists();
     }
@@ -541,6 +616,29 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * Gets the Windows SDK 7.0 installation directory.
+     * 
+     * @return The Windows SDK 7.0 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getWinSdk70Dir() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .read(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 7.0 installation directory.",
+                e);
+        }
+    }
+
+    /**
      * Gets the Windows SDK 7.0A installation directory.
      * 
      * @return The Windows SDK 7.0A installation directory.
@@ -564,24 +662,24 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
-     * Gets the Windows SDK 7.0A installation directory.
+     * Gets the Windows SDK 7.1 installation directory.
      * 
-     * @return The Windows SDK 6.1 installation directory.
+     * @return The Windows SDK 7.1 installation directory.
      * @throws MojoExecutionException When an error occurs.
      */
-    String getWinSdk70aDir() throws MojoExecutionException
+    String getWinSdk71Dir() throws MojoExecutionException
     {
         try
         {
             return RegistryUtils
                 .read(
-                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v6.1",
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.1",
                     "InstallationFolder");
         }
         catch (Exception e)
         {
             throw new MojoExecutionException(
-                "Error checking for Windows SDK 6.1 installation directory.",
+                "Error checking for Windows SDK 7.1 installation directory.",
                 e);
         }
     }
@@ -612,6 +710,31 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * Gets a flag indicating whether or not the Windows SDK 7.0 has been
+     * detected on this system.
+     * 
+     * @return A flag indicating whether or not the Windows SDK 7.0 has been
+     *         detected on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsWinSdk70() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .exists(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 7.0",
+                e);
+        }
+    }
+
+    /**
      * Gets a flag indicating whether or not the Windows SDK 7.0A has been
      * detected on this system.
      * 
@@ -632,6 +755,31 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
         {
             throw new MojoExecutionException(
                 "Error checking for Windows SDK 7.0A",
+                e);
+        }
+    }
+
+    /**
+     * Gets a flag indicating whether or not the Windows SDK 7.1 has been
+     * detected on this system.
+     * 
+     * @return A flag indicating whether or not the Windows SDK 7.1 has been
+     *         detected on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsWinSdk71() throws MojoExecutionException
+    {
+        try
+        {
+            return RegistryUtils
+                .exists(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.1",
+                    "InstallationFolder");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for Windows SDK 7.1",
                 e);
         }
     }

@@ -66,7 +66,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * A list of additional directories to resolve your project's references
      * against.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     List referencePaths;
 
     /**
@@ -518,7 +518,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * @return The build file.
      * @throws MojoExecutionException When an error occurs.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     File findBuildFile() throws MojoExecutionException
     {
         Collection slnFiles =
@@ -615,7 +615,9 @@ public class MSBuildMojo extends AbstractExeMojo
      * @param project The maven project.
      * @throws MojoExecutionException
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({
+        "rawtypes", "unchecked"
+    })
     void initReferencePaths(MavenProject project) throws MojoExecutionException
     {
         List deps = project.getDependencies();
