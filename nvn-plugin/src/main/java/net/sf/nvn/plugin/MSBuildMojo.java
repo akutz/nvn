@@ -577,7 +577,7 @@ public class MSBuildMojo extends AbstractExeMojo
         PlatformType abp = getBuildPlatform();
 
         String config = "Debug";
-        String platform = "Any CPU";
+        String platform = "AnyCPU";
         File outputPath = new File("bin\\Debug");
 
         if (abc != null)
@@ -589,10 +589,10 @@ public class MSBuildMojo extends AbstractExeMojo
         if (abp != null)
         {
             platform = getBuildPlatform().toString();
-            if (platform.equals("AnyCPU"))
-            {
-                platform = "Any CPU";
-            }
+            //if (platform.equals("AnyCPU"))
+            //{
+            //    platform = "Any CPU";
+            //}
         }
 
         if (!this.properties.containsKey("Configuration"))
