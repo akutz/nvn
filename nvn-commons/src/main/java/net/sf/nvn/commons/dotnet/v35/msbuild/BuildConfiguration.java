@@ -54,7 +54,7 @@ public class BuildConfiguration
      */
     private static Pattern CONDITION_PATT =
         Pattern
-            .compile("^ '\\$\\(Configuration\\)\\|\\$\\(Platform\\)' == '(.*)\\|(.*)' $");
+            .compile("^\\s?'\\$\\(Configuration\\)\\|\\$\\(Platform\\)'\\s?==\\s?'(.*)\\|(.*)'\\s?$");
 
     /**
      * Do not allow this class to be instantiated with a constructor.
@@ -284,6 +284,11 @@ public class BuildConfiguration
             {
                 buildConfig.warningLevel = Integer.parseInt(jelValu);
             }
+        }
+        
+        if (buildConfig.outputPath == null)
+        {
+            buildConfig.outputPath = new File(name + "\\");
         }
 
         return buildConfig;

@@ -113,14 +113,14 @@ public class InitializeMojo extends AbstractNvnMojo
     /**
      * The default build platform for <strong>Debug</strong> builds.
      * 
-     * @parameter default-value="Any CPU"
+     * @parameter default-value="AnyCPU"
      */
     String buildPlatformDebug;
 
     /**
      * The default build platform for <strong>Release</strong> builds.
      * 
-     * @parameter default-value="Any CPU"
+     * @parameter default-value="AnyCPU"
      */
     String buildPlatformRelease;
 
@@ -173,7 +173,7 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         return true;
     }
-    
+
     void initBuildDirectory()
     {
         File buildOutputDir = super.getBuildConfig().getOutputPath();
@@ -254,6 +254,10 @@ public class InitializeMojo extends AbstractNvnMojo
         String filepath = getMSBuildProject().getBuildArtifact(bcn).getPath();
         File file = new File(basedir, filepath);
 
+        this.mavenProject.getProperties().put(
+            "project.msbuild.artifactPrefix",
+            getMSBuildProject().getMSBuildArtifactPrefix());
+
         Artifact artifact =
             this.factory.createBuildArtifact(
                 this.mavenProject.getGroupId(),
@@ -265,8 +269,9 @@ public class InitializeMojo extends AbstractNvnMojo
 
         try
         {
-            String assemblyName = getMSBuildProject().getAssemblyName();
-            nmd = NvnArtifactMetadata.instance(artifact, assemblyName);
+            String nvnName = getMSBuildProject().getMSBuildArtifactPrefix();
+
+            nmd = NvnArtifactMetadata.instance(artifact, nvnName);
         }
         catch (IOException e)
         {
@@ -367,20 +372,28 @@ public class InitializeMojo extends AbstractNvnMojo
      * </ul>
      * 
      */
-    void initBuildPlatform()
+    void initBuildPlatform() throws MojoExecutionException
     {
         if (StringUtils.isNotEmpty(this.buildPlatform))
         {
             setBuildPlatform(this.buildPlatform);
-        }
-        else if (super.mavenProject.getVersion().contains("-SNAPSHOT"))
-        {
-            setBuildPlatform(this.buildPlatformDebug);
+            debug("buildPlatform set to explicit version");
         }
         else
         {
-            setBuildPlatform(this.buildPlatformRelease);
+            setBuildPlatform(getBuildConfig().getPlatform().toString());
+            debug("buildPlatform set to build config setting");
         }
+        /*
+         * else if (!getBuildFile().toString().matches("(?i)^.*sln$")) {
+         * setBuildPlatform(getBuildConfig().getPlatform().toString());
+         * debug("buildPlatform set to build config setting"); } else if
+         * (super.mavenProject.getVersion().contains("-SNAPSHOT")) {
+         * setBuildPlatform(this.buildPlatformDebug);
+         * debug("buildPlatform set to debug platform default"); } else {
+         * setBuildPlatform(this.buildPlatformRelease);
+         * debug("buildPlatform set to release platform default"); }
+         */
 
         debug("build platform:      %s", getBuildPlatform());
     }
@@ -391,7 +404,7 @@ public class InitializeMojo extends AbstractNvnMojo
         Collection files =
             FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
             {
-                "csproj", "vbproj", "vcproj"
+                "csproj", "vbproj", "vcproj", "vcxproj"
             }, false);
 
         if (files == null)

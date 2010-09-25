@@ -40,10 +40,14 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.ProjectOutputType;
+import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.ItemGroupType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.Project;
+import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.ProjectReference;
 import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.PropertyGroupType;
+import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.SimpleItemType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.xsd.StringPropertyType;
 import org.apache.commons.lang.StringUtils;
+import org.w3c.dom.Element;
 
 /**
  * An MSBuild project.
@@ -80,32 +84,64 @@ public class MSBuildProject
         MSBuildProject msbp = new MSBuildProject();
         msbp.projectFile = projectFile;
         msbp.projectLanguage = ProjectLanguageType.parse(projectFile);
+        msbp.projectReferences = new HashMap<String, String>();
 
         Map<String, BuildConfiguration> bcs =
             new HashMap<String, BuildConfiguration>();
 
         for (Object tag : p.getProjectLevelTagExceptTargetOrImportType())
         {
-            if (!(tag instanceof PropertyGroupType))
+            if (tag instanceof PropertyGroupType)
             {
-                continue;
-            }
+                PropertyGroupType pg = (PropertyGroupType) tag;
 
-            PropertyGroupType pg = (PropertyGroupType) tag;
-
-            if (StringUtils.isEmpty(pg.getCondition()))
-            {
-                loadGlobalConfig(pg, msbp);
+                if (StringUtils.isEmpty(pg.getCondition()))
+                {
+                    loadGlobalConfig(pg, msbp);
+                }
+                else
+                {
+                    BuildConfiguration bc = BuildConfiguration.instance(pg);
+                    bcs.put(bc.getName(), bc);
+                }
             }
-            else
+            else if (tag instanceof ItemGroupType)
             {
-                BuildConfiguration bc = BuildConfiguration.instance(pg);
-                bcs.put(bc.getName(), bc);
+                ItemGroupType ig = (ItemGroupType) tag;
+                loadProjectReferences(ig, msbp);
             }
         }
 
         msbp.buildConfigurations = bcs;
         return msbp;
+    }
+
+    private static void loadProjectReferences(
+        ItemGroupType itemGroup,
+        MSBuildProject msbuildProject)
+    {
+        for (JAXBElement<? extends SimpleItemType> tag : itemGroup.getItem())
+        {
+            if (!(tag.getDeclaredType() ==  ProjectReference.class))
+            {
+                continue;
+            }
+
+            ProjectReference pr = (ProjectReference) tag.getValue();
+            
+            String name = "";
+            
+            for (JAXBElement<Object> child : pr.getNameOrProjectOrPackage())
+            {
+                if (child.getName().getLocalPart().equals("Name"))
+                {
+                    Element el = (Element) child.getValue();
+                    name = el.getTextContent();
+                }
+            }
+
+            msbuildProject.projectReferences.put(pr.getInclude(), name);
+        }
     }
 
     private static void loadGlobalConfig(
@@ -173,6 +209,21 @@ public class MSBuildProject
      * The project's build configurations.
      */
     private Map<String, BuildConfiguration> buildConfigurations;
+
+    /**
+     * The project's project references.
+     */
+    private Map<String, String> projectReferences;
+
+    /**
+     * Gets the project's project references.
+     * 
+     * @return The project's project references.
+     */
+    public Map<String, String> getProjectReferences()
+    {
+        return this.projectReferences;
+    }
 
     /**
      * Gets the name of the final output assembly after the project is built.
@@ -273,10 +324,16 @@ public class MSBuildProject
         File artifact =
             new File(bc.getOutputPath(), String.format(
                 "%s.%s",
-                this.assemblyName,
+                getMSBuildArtifactPrefix(),
                 extension));
 
         return artifact;
+    }
+
+    public String getMSBuildArtifactPrefix()
+    {
+        return StringUtils.isEmpty(this.assemblyName) ? this.rootNamespace
+            : this.assemblyName;
     }
 
     /**
@@ -304,9 +361,9 @@ public class MSBuildProject
         BuildConfiguration bc = this.buildConfigurations.get(buildConfigName);
 
         File artifact =
-            new File(bc.getOutputPath(), String.format(
-                "%s.pdb",
-                this.assemblyName));
+            new File(bc.getOutputPath(), String.format("%s.pdb", StringUtils
+                .isNotEmpty(this.assemblyName) ? this.assemblyName
+                : this.rootNamespace));
 
         return artifact;
     }

@@ -32,6 +32,7 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.ProjectLanguageType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -557,6 +559,35 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return isMSBuildProject()
             && getMSBuildProject().getProjectLanguage() == ProjectLanguageType.VisualBasic;
     }
+    
+    @SuppressWarnings("rawtypes")
+    File getBuildFile() throws MojoExecutionException
+    {
+        /*Collection slnFiles =
+            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
+            {
+                "sln"
+            }, false);
+
+        if (slnFiles != null && slnFiles.size() > 0)
+        {
+            return (File) slnFiles.iterator().next();
+        }*/
+
+        Collection projFiles =
+            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
+            {
+                "csproj", "vbproj", "vcxproj"
+            }, false);
+
+        if (projFiles != null && projFiles.size() > 0)
+        {
+            return (File) projFiles.iterator().next();
+        }
+
+        throw new MojoExecutionException(
+            "Error finding solution or project file");
+    }
 
     /**
      * Sets a property on the current Maven project's properties collection.
@@ -639,7 +670,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
             "project.version.standard",
             toSet);
     }
-
+    
     /**
      * The read/write lock for {@link #getNvnProperties()} and
      * {@link #nvnStorage}.

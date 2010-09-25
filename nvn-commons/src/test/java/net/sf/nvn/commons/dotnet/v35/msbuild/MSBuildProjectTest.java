@@ -59,7 +59,13 @@ public class MSBuildProjectTest
         Assert.assertEquals("MyProject", p.getRootNamespace());
         Assert.assertEquals("MyProject.Library", p.getAssemblyName());
         Assert.assertEquals(2, p.getBuildConfigurations().size());
-
+        
+        Assert.assertEquals(2, p.getProjectReferences().size());
+        Assert.assertTrue(p.getProjectReferences().containsKey("..\\Common\\Foo.csproj"));
+        Assert.assertTrue(p.getProjectReferences().containsKey("..\\."));
+        Assert.assertEquals("Foo", p.getProjectReferences().get("..\\Common\\Foo.csproj"));
+        Assert.assertEquals("AlwaysTrue", p.getProjectReferences().get("..\\."));
+        
         BuildConfiguration bc0 = p.getBuildConfigurations().get("Debug");
         Assert.assertEquals("Debug", bc0.getName());
         Assert.assertEquals(PlatformType.AnyCPU, bc0.getPlatform());
@@ -98,5 +104,23 @@ public class MSBuildProjectTest
         Assert.assertEquals(new File("bin\\Release\\/MyProject.Library.pdb"), p
             .getBuildSymbolsArtifact("Release"));
         Assert.assertEquals(null, p.getBuildDocumentationArtifact("Release"));
+    }
+    
+    @Test
+    public void testInstance2() throws Exception
+    {
+        File f = new File("src/test/resources/MyProject.vcxproj");
+
+        MSBuildProject p = MSBuildProject.instance(f);
+        Assert.assertEquals(f, p.getProjectFile());
+        Assert.assertEquals(ProjectLanguageType.CPP, p.getProjectLanguage());
+        Assert.assertEquals("PowerPathWrapper", p.getRootNamespace());
+        
+        BuildConfiguration bc0 = p.getBuildConfigurations().get("Debug");
+        Assert.assertEquals("Debug", bc0.getName());
+        Assert.assertEquals(PlatformType.Win32, bc0.getPlatform());
+        Assert.assertEquals(new File("Debug\\"), bc0.getOutputPath());
+        Assert.assertEquals(new File("Debug\\/PowerPathWrapper.dll"), p
+            .getBuildArtifact("Debug"));
     }
 }

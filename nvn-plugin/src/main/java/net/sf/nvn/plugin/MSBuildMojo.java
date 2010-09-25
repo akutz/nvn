@@ -32,12 +32,11 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import net.sf.nvn.commons.DependencyUtils;
-import net.sf.nvn.commons.dotnet.PlatformType;
 import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -505,46 +504,18 @@ public class MSBuildMojo extends AbstractExeMojo
             cmdLineBuff.append(" ");
         }
 
-        cmdLineBuff.append(getPath(this.buildFile));
-
+        if (this.tempBuildFile == null)
+        {
+            cmdLineBuff.append(getPath(this.buildFile));
+        }
+        else
+        {
+            cmdLineBuff.append(getPath(this.tempBuildFile));
+        }
+           
         String clbs = cmdLineBuff.toString();
 
         return clbs;
-    }
-
-    /**
-     * Finds the build file (either a sln, csproj, or vbproj file).
-     * 
-     * @return The build file.
-     * @throws MojoExecutionException When an error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    File findBuildFile() throws MojoExecutionException
-    {
-        Collection slnFiles =
-            FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
-            {
-                "sln"
-            }, false);
-
-        if (slnFiles != null && slnFiles.size() > 0)
-        {
-            return (File) slnFiles.iterator().next();
-        }
-
-        Collection projFiles =
-            FileUtils.listFiles(super.mavenProject.getBasedir(), new String[]
-            {
-                "csproj", "vbproj"
-            }, false);
-
-        if (projFiles != null && projFiles.size() > 0)
-        {
-            return (File) projFiles.iterator().next();
-        }
-
-        throw new MojoExecutionException(
-            "Error finding solution or project file");
     }
 
     /**
@@ -574,25 +545,15 @@ public class MSBuildMojo extends AbstractExeMojo
         }
 
         BuildConfiguration abc = getBuildConfig();
-        PlatformType abp = getBuildPlatform();
 
         String config = "Debug";
-        String platform = "AnyCPU";
+        String platform = getBuildPlatform().toString();
         File outputPath = new File("bin\\Debug");
 
         if (abc != null)
         {
             config = abc.getName();
             outputPath = abc.getOutputPath();
-        }
-
-        if (abp != null)
-        {
-            platform = getBuildPlatform().toString();
-            //if (platform.equals("AnyCPU"))
-            //{
-            //    platform = "Any CPU";
-            //}
         }
 
         if (!this.properties.containsKey("Configuration"))
@@ -615,7 +576,8 @@ public class MSBuildMojo extends AbstractExeMojo
      * @param project The maven project.
      * @throws MojoExecutionException
      */
-    @SuppressWarnings({
+    @SuppressWarnings(
+    {
         "rawtypes", "unchecked"
     })
     void initReferencePaths(MavenProject project) throws MojoExecutionException
@@ -778,9 +740,99 @@ public class MSBuildMojo extends AbstractExeMojo
     {
         if (this.buildFile == null)
         {
-            this.buildFile = findBuildFile();
+            this.buildFile = getBuildFile();
+        }
+
+        boolean processProjectReferences = false;
+
+        if (getMSBuildProject().getProjectReferences().size() > 0)
+        {
+            // If any of the project references are not available then we need
+            // to process them.
+            for (String k : getMSBuildProject().getProjectReferences().keySet())
+            {
+                File f = new File(super.mavenProject.getBasedir(), k);
+
+                if (!f.exists())
+                {
+                    processProjectReferences = true;
+                    break;
+                }
+            }
+
+            if (processProjectReferences)
+            {
+                StringBuilder buff = new StringBuilder();
+                buff.append("    <ItemGroup>\r\n");
+
+                for (String k : getMSBuildProject()
+                    .getProjectReferences()
+                    .keySet())
+                {
+                    File f = new File(super.mavenProject.getBasedir(), k);
+
+                    if (!f.exists())
+                    {
+                        String name =
+                            getMSBuildProject().getProjectReferences().get(k);
+                        buff.append(String.format(
+                            "        <Reference Include=\"%s\" />\r\n",
+                            name));
+                    }
+                }
+
+                buff.append("    </ItemGroup>");
+
+                String buffStr = buff.toString();
+                debug("Adding reference content: " + buffStr);
+
+                @SuppressWarnings("rawtypes")
+                List buildFileLines;
+
+                // Read in the text from the build file.
+                try
+                {
+                    buildFileLines = FileUtils.readLines(this.buildFile);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException("Error reading "
+                        + this.buildFile, e);
+                }
+
+                List<String> tmpBuildFileLines = new ArrayList<String>();
+
+                for (Object o : buildFileLines)
+                {
+                    String l = (String) o;
+
+                    if (l.matches("(?i)^\\s*\\</Project\\>\\s*$"))
+                    {
+                        tmpBuildFileLines.add(buffStr);
+                    }
+
+                    tmpBuildFileLines.add(l);
+                }
+
+                this.tempBuildFile =
+                    new File(
+                        this.buildFile.getParentFile(),
+                        this.buildFile.getName() + ".tmp");
+
+                try
+                {
+                    FileUtils.writeLines(this.tempBuildFile, tmpBuildFileLines);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException("Error writing to "
+                        + this.tempBuildFile, e);
+                }
+            }
         }
     }
+
+    private File tempBuildFile;
 
     @Override
     String getMojoName()
@@ -804,6 +856,9 @@ public class MSBuildMojo extends AbstractExeMojo
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
-        // Do nothing
+        if (this.tempBuildFile != null)
+        {
+            this.tempBuildFile.delete();
+        }
     }
 }

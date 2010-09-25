@@ -46,6 +46,8 @@ public enum PlatformType
     x86,
 
     x64,
+    
+    Win32,
 
     Itanium;
 
@@ -73,11 +75,15 @@ public enum PlatformType
         }
         else if (value.matches("(?i)x64"))
         {
-            return PlatformType.x86;
+            return PlatformType.x64;
+        }
+        else if (value.matches("(?i)win32"))
+        {
+            return PlatformType.Win32;
         }
         else if (value.matches("(?i)itanium"))
         {
-            return PlatformType.x86;
+            return PlatformType.Itanium;
         }
 
         return null;

@@ -44,6 +44,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Foo.csproj">
+      <Project>{B3D4D547-D37B-47C7-A1D5-948A6E4C64E0}</Project>
+      <Name>Foo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\.">
+      <Project>{B3D4D547-D37B-47C7-A1D5-948A6E4C64E0}</Project>
+      <Name>AlwaysTrue</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="CI\ConfigurationItem.cs" />
     <Compile Include="CI\Label.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

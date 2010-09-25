@@ -84,25 +84,22 @@ public class DependencyUtils
         File depFile2 =
             new File(parent, String.format("%s.%s", assemblyName, ext));
 
-        if (!depFile2.exists())
+        try
         {
-            try
-            {
-                FileUtils.copyFile(depFile, depFile2);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException(String.format(
-                    "Error copying %s to %s",
-                    depFile,
-                    depFile2), e);
-            }
+            FileUtils.copyFile(depFile, depFile2);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(String.format(
+                "Error copying %s to %s",
+                depFile,
+                depFile2), e);
         }
 
         File pdbFile = new File(parent, filename + "-sources.pdb");
         File pdbFile2 = new File(parent, assemblyName + ".pdb");
 
-        if (pdbFile.exists() && !pdbFile2.exists())
+        if (pdbFile.exists())
         {
             try
             {
@@ -120,7 +117,7 @@ public class DependencyUtils
         File docFile = new File(parent, filename + "-dotnetdoc.xml");
         File docFile2 = new File(parent, assemblyName + ".xml");
 
-        if (docFile.exists() && !docFile2.exists())
+        if (docFile.exists())
         {
             try
             {

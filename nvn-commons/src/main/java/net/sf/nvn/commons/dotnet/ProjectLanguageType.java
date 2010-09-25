@@ -97,7 +97,7 @@ public enum ProjectLanguageType
         {
             return ProjectLanguageType.VisualBasic;
         }
-        else if (fileExtension.matches("(?i)vcproj"))
+        else if (fileExtension.matches("(?i)vcx?proj"))
         {
             return ProjectLanguageType.CPP;
         }
