@@ -4,12 +4,12 @@
     <parent>
         <artifactId>nvn</artifactId>
         <groupId>net.sf.nvn</groupId>
-        <version>0.0.3-SNAPSHOT</version>
+        <version>0.0.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-plugin</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
     <packaging>maven-plugin</packaging>
     <name>nvn-plugin</name>
     <description>A Maven plug-in for managing .NET projects.</description>
@@ -17,7 +17,7 @@
         <dependency>
             <groupId>net.sf.nvn</groupId>
             <artifactId>nvn-commons</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
