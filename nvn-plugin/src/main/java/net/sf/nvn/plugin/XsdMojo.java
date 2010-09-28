@@ -38,7 +38,6 @@ import java.io.Writer;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.sf.nvn.commons.ProcessUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
@@ -364,19 +363,8 @@ public class XsdMojo extends AbstractExeMojo
             return;
         }
 
-        String stdout;
-
-        try
-        {
-            stdout = ProcessUtils.getStdOut(process);
-        }
-        catch (IOException e)
-        {
-            throw new MojoExecutionException("Error getting xsd stdout", e);
-        }
-
         Pattern filePatt = Pattern.compile("Writing file (.)(.+)\\1\\.");
-        Matcher fileMatcher = filePatt.matcher(stdout);
+        Matcher fileMatcher = filePatt.matcher(super.stdout);
 
         if (!fileMatcher.find())
         {

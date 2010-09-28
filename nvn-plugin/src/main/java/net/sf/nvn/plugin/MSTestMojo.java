@@ -32,6 +32,8 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -380,6 +382,42 @@ public class MSTestMojo extends AbstractExeMojo
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
-        // Do nothing
+        if (this.resultsFile == null)
+        {
+            return;
+        }
+
+        String msg =
+            String.format(
+                "##teamcity[importData type='mstest' path='%s']",
+                this.resultsFile);
+        info(msg);
+    }
+
+    @Override
+    boolean showExecOutput()
+    {
+        return false;
+    }
+
+    @Override
+    void postExec(Process process) throws MojoExecutionException
+    {
+        System.out.println(super.stdout);
+
+        if (this.resultsFile != null)
+        {
+            return;
+        }
+        
+        Pattern patt = Pattern.compile("Results file\\:\\s*(.*\\.trx)");
+        Matcher matt = patt.matcher(stdout);
+
+        if (matt.find())
+        {
+            String path = matt.group(1);
+            debug("Test results file at " + path);
+            this.resultsFile = new File(path);
+        }
     }
 }

@@ -164,7 +164,7 @@ public final class ProcessUtils
      * @param in The input stream.
      * @param out The output stream.
      */
-    final static void pipe(final InputStream in, final OutputStream out)
+    public final static void pipe(final InputStream in, final OutputStream out)
     {
         new Thread(new Runnable()
         {

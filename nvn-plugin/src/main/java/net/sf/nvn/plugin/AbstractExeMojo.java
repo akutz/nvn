@@ -30,6 +30,7 @@
 
 package net.sf.nvn.plugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -275,6 +276,18 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     }
 
     /**
+     * The stdout of the process is copied here when showExecOutput returns
+     * false.
+     */
+    protected String stdout;
+
+    /**
+     * The stderr of the process is copied here when showExecOutput returns
+     * false.
+     */
+    protected String stderr;
+
+    /**
      * Executes the given command with Runtime.exec(String, String[]).
      * 
      * @param cmd The command line string to execute.
@@ -287,7 +300,25 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             Process p =
                 ProcessUtils.exec(cmd, this.procEnvVars, showExecOutput());
 
+            ByteArrayOutputStream stdoutBos = null;
+            ByteArrayOutputStream stderrBos = null;
+
+            if (!showExecOutput())
+            {
+                stdoutBos = new ByteArrayOutputStream();
+                stderrBos = new ByteArrayOutputStream();
+
+                ProcessUtils.pipe(p.getInputStream(), stdoutBos);
+                ProcessUtils.pipe(p.getErrorStream(), stderrBos);
+            }
+
             int exitCode = p.waitFor();
+
+            if (stdoutBos != null && stderrBos != null)
+            {
+                this.stdout = stdoutBos.toString();
+                this.stderr = stderrBos.toString();
+            }
 
             postExec(p);
 
