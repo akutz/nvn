@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bindings
+    version="1.0"
+    xmlns="http://java.sun.com/xml/ns/jaxb"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    
+    <bindings schemaLocation="Microsoft.Build.CommonTypes.xsd">
+        <bindings node="//xs:element[@name='Xdcmake']">
+            <class name="XDCMakeLowerCase" />
+        </bindings>
+        <bindings node="//xs:element[@name='Bscmake']">
+            <class name="BSCMakeLowerCase" />
+        </bindings>
+        <bindings node="//xs:element[@name='Midl']">
+            <class name="MIDLLowerCase" />
+        </bindings>
+    </bindings>
+    
+</bindings>
