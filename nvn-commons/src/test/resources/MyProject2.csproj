@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7C6CBD2E-92BB-467E-A725-4CCD4E295A22}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EMC.VSI.VSphere4.Features.SPO.StoragePoolManager.Common</RootNamespace>
+    <AssemblyName>SpmCommon</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>
+    </ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EMC.VSI.Features">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\Plugins\EMC Virtual Storage Integrator (VSI) for vSphere4\EMC.VSI.Features.dll</HintPath>
+    </Reference>
+    <Reference Include="EMC.VSI.VSphere4.Controls">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\Plugins\EMC Virtual Storage Integrator (VSI) for vSphere4\EMC.VSI.VSphere4.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\Plugins\EMC Virtual Storage Integrator (VSI) for vSphere4\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VI.Utils">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VI.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="VIClient">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VIClient.dll</HintPath>
+    </Reference>
+    <Reference Include="VimUiFramework">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VimUiFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="VimVmomi">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VimVmomi.dll</HintPath>
+    </Reference>
+    <Reference Include="VIPlugins2">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VIPlugins2.dll</HintPath>
+    </Reference>
+    <Reference Include="VMware.CustomControls">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\VMware.CustomControls.dll</HintPath>
+    </Reference>
+    <Reference Include="vpxClientCommon">
+      <HintPath>C:\Program Files\VMware\Infrastructure\Virtual Infrastructure Client\4.0\vpxClientCommon.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Jobs.cs" />
+    <Compile Include="PollingManager.cs" />
+    <Compile Include="SpmCommonViews.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SpmResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SpmResources.resx</DependentUpon>
+      <CustomToolNamespace>EMC.VSI.VSphere4.Features.SPO.StoragePoolManager</CustomToolNamespace>
+    </Compile>
+    <Compile Include="SpmSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SpmSettingsControl.designer.cs">
+      <DependentUpon>SpmSettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SpmStoragePages.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SpmUtilities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Wizards\AddDatastoreWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\AddDatastoreWizard.designer.cs">
+      <DependentUpon>AddDatastoreWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\AddRdmWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\AddRdmWizard.designer.cs">
+      <DependentUpon>AddRdmWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\AddServerWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\AddServerWizard.designer.cs">
+      <DependentUpon>AddServerWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\BatchAddRdmWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\BatchAddRdmWizard.designer.cs">
+      <DependentUpon>BatchAddRdmWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\EditServerWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\EditServerWizard.designer.cs">
+      <DependentUpon>EditServerWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\EditStorageAllocationWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\EditStorageAllocationWizard.designer.cs">
+      <DependentUpon>EditStorageAllocationWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\ExpandOperationWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\ExpandOperationWizard.Designer.cs">
+      <DependentUpon>ExpandOperationWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\ExpandValidationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\ExpandValidationDialog.Designer.cs">
+      <DependentUpon>ExpandValidationDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\ExtendDatastoreWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\ExtendDatastoreWizard.designer.cs">
+      <DependentUpon>ExtendDatastoreWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\LunBatchWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wizards\LunBatchWizard.Designer.cs">
+      <DependentUpon>LunBatchWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\NewCapacityControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\NewCapacityControl.Designer.cs">
+      <DependentUpon>NewCapacityControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectCapacityPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectCapacityPage.Designer.cs">
+      <DependentUpon>SelectCapacityPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectCapacityUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectCapacityUserControl.Designer.cs">
+      <DependentUpon>SelectCapacityUserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectCompatibilityMode.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectCompatibilityMode.Designer.cs">
+      <DependentUpon>SelectCompatibilityMode.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastoreFormattingPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastoreFormattingPage.Designer.cs">
+      <DependentUpon>SelectDatastoreFormattingPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastorePage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastorePage.designer.cs">
+      <DependentUpon>SelectDatastorePage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastorePropertiesPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectDatastorePropertiesPage.Designer.cs">
+      <DependentUpon>SelectDatastorePropertiesPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectExpandedCapacityPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectExpandedCapacityPage.Designer.cs">
+      <DependentUpon>SelectExpandedCapacityPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectNewCapacityPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectNewCapacityPage.Designer.cs">
+      <DependentUpon>SelectNewCapacityPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectRdmAdvancedOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectRdmAdvancedOptions.Designer.cs">
+      <DependentUpon>SelectRdmAdvancedOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectServerPropertiesPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectServerPropertiesPage.Designer.cs">
+      <DependentUpon>SelectServerPropertiesPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectStorageTypeAllocationsPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectStorageTypeAllocationsPage.designer.cs">
+      <DependentUpon>SelectStorageTypeAllocationsPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\SelectStorageTypePage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\SelectStorageTypePage.designer.cs">
+      <DependentUpon>SelectStorageTypePage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Wizards\StorageTypeAllocationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Wizards\StorageTypeAllocationControl.Designer.cs">
+      <DependentUpon>StorageTypeAllocationControl.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="SpmResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>SpmResources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>EMC.VSI.VSphere4.Features.SPO.StoragePoolManager.Common</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SpmSettingsControl.resx">
+      <DependentUpon>SpmSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\BatchAddRdmWizard.resx">
+      <DependentUpon>BatchAddRdmWizard.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\ExpandValidationDialog.resx">
+      <DependentUpon>ExpandValidationDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\NewCapacityControl.resx">
+      <DependentUpon>NewCapacityControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectCapacityPage.resx">
+      <DependentUpon>SelectCapacityPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectCapacityUserControl.resx">
+      <DependentUpon>SelectCapacityUserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectCompatibilityMode.resx">
+      <DependentUpon>SelectCompatibilityMode.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectDatastoreFormattingPage.resx">
+      <DependentUpon>SelectDatastoreFormattingPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectDatastorePage.resx">
+      <DependentUpon>SelectDatastorePage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectDatastorePropertiesPage.resx">
+      <DependentUpon>SelectDatastorePropertiesPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectExpandedCapacityPage.resx">
+      <DependentUpon>SelectExpandedCapacityPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectNewCapacityPage.resx">
+      <DependentUpon>SelectNewCapacityPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectRdmAdvancedOptions.resx">
+      <DependentUpon>SelectRdmAdvancedOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectServerPropertiesPage.resx">
+      <DependentUpon>SelectServerPropertiesPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectStorageTypeAllocationsPage.resx">
+      <DependentUpon>SelectStorageTypeAllocationsPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\SelectStorageTypePage.resx">
+      <DependentUpon>SelectStorageTypePage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Wizards\StorageTypeAllocationControl.resx">
+      <DependentUpon>StorageTypeAllocationControl.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VSI_256.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\EMC.VSI.VSphere4.Features.SPO.Common.csproj">
+      <Project>{B3D4D547-D37B-47C7-A1D5-948A6E4C64E0}</Project>
+      <Name>EMC.VSI.VSphere4.Features.SPO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpmClient\SpmClient.csproj">
+      <Project>{994E5A20-49B0-4E39-A879-4448522129E8}</Project>
+      <Name>SpmClient</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
