@@ -32,6 +32,7 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -303,11 +304,12 @@ public class CandleMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("candle.exe");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     void preExecute() throws MojoExecutionException
     {
@@ -338,6 +340,17 @@ public class CandleMojo extends AbstractExeMojo
             this.outputFile =
                 new File(super.mavenProject.getBuild().getDirectory(), won);
             debug("WixObj File: " + this.outputFile);
+        }
+
+        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        {
+            if (this.preProcessorParmaeters == null)
+            {
+                this.preProcessorParmaeters = new HashMap<String, String>();
+            }
+
+            this.preProcessorParmaeters.put("DEBUG", "True");
+            info("Set DEBUG pre-process param");
         }
     }
 

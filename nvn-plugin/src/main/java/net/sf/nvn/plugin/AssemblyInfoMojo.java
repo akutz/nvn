@@ -37,7 +37,7 @@ import java.io.Writer;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.sf.nvn.commons.dotnet.OutputFileType;
+import net.sf.nvn.commons.msbuild.OutputFileType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;

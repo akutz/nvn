@@ -513,7 +513,7 @@ public class WsdlMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("wsdl.exe");
     }

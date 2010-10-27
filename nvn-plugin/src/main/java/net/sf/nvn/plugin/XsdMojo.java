@@ -106,7 +106,8 @@ public class XsdMojo extends AbstractExeMojo
 
     /**
      * Generates classes that correspond to the specified schema. To read XML
-     * data into the object, use the <a href="http://msdn.microsoft.com/en-us/library/system.xml.serialization.xmlserializer.deserialize(VS.71).aspx"
+     * data into the object, use the <a href=
+     * "http://msdn.microsoft.com/en-us/library/system.xml.serialization.xmlserializer.deserialize(VS.71).aspx"
      * >System.XML.Serialization.XMLSerializer.Deserializer</a> method.
      * 
      * @parameter
@@ -117,7 +118,8 @@ public class XsdMojo extends AbstractExeMojo
      * Generates a class derived from <a href=
      * "http://msdn.microsoft.com/en-us/library/system.data.dataset(VS.71).aspx"
      * >DataSet</a> that corresponds to the specified schema. To read XML data
-     * into the derived class, use the <a href="http://msdn.microsoft.com/en-us/library/system.data.dataset.readxml(VS.71).aspx"
+     * into the derived class, use the <a href=
+     * "http://msdn.microsoft.com/en-us/library/system.data.dataset.readxml(VS.71).aspx"
      * >System.Data.DataSet.ReadXml</a> method.
      * 
      * @parameter
@@ -136,7 +138,8 @@ public class XsdMojo extends AbstractExeMojo
      * Specifies the programming language to use. Choose from
      * <strong>CS</strong> (C#; default), <strong>VB</strong> (Visual Basic),
      * <strong>JS</strong> (JScript), or <strong>VJS</strong> (Visual J#). You
-     * can also specify a fully qualified name for a class implementing <a href="http://msdn.microsoft.com/en-us/library/system.codedom.compiler.codedomprovider(VS.71).aspx"
+     * can also specify a fully qualified name for a class implementing <a href=
+     * "http://msdn.microsoft.com/en-us/library/system.codedom.compiler.codedomprovider(VS.71).aspx"
      * >System.CodeDom.Compiler.CodeDomProvider</a>.
      * 
      * @parameter default-value="CS"
@@ -181,7 +184,8 @@ public class XsdMojo extends AbstractExeMojo
     File parameters;
 
     /**
-     * Implements the <a href="http://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged.aspx"
+     * Implements the <a href=
+     * "http://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged.aspx"
      * >INotifyPropertyChanged</a> interface on all generated types to enable
      * data binding.
      * 
@@ -356,7 +360,7 @@ public class XsdMojo extends AbstractExeMojo
     }
 
     @Override
-    void postExec(Process process) throws MojoExecutionException
+    void postExec(int execution, Process process) throws MojoExecutionException
     {
         if (process.exitValue() != 0)
         {
@@ -452,7 +456,7 @@ public class XsdMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("xsd.exe");
     }
@@ -622,9 +626,9 @@ public class XsdMojo extends AbstractExeMojo
                     if (enumLoc
                         .contains("System.Xml.Serialization.XmlEnumAttribute"))
                     {
-                        println(out, enumLoc.replace(
-                            "System.Xml.Serliazation.",
-                            ""));
+                        println(
+                            out,
+                            enumLoc.replace("System.Xml.Serliazation.", ""));
                         ++y;
                         skipNextEnumAttrWrite = true;
                         continue;

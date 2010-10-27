@@ -32,14 +32,19 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * A MOJO for creating a bootstrapper for an MSI package and its prerequisites.
@@ -61,30 +66,69 @@ public class BootstrapperMojo extends AbstractExeMojo
     File icon;
 
     /**
-     * The MSI package's prerequisite files. This array's elements must have
-     * 1-to-1 matches with preReqNames.
+     * The bootstrapper's license file.
      * 
      * @parameter
      * @required
      */
-    File[] preReqFiles;
+    File license;
 
     /**
-     * The MSI package's prerequisite names. This array's elements must have
-     * 1-to-1 matches with preReqFiles.
+     * The background image used when displaying the license screen and final
+     * screen.
      * 
      * @parameter
      * @required
      */
-    String[] preReqNames;
+    File licensePageBackground;
 
     /**
-     * The MSI package.
+     * The banner image used when displaying the installer's progress.
      * 
      * @parameter
      * @required
      */
-    File msi;
+    File installPageBackground;
+
+    /**
+     * @parameter
+     * @required
+     */
+    String endPageUrlLink;
+
+    /**
+     * @parameter
+     * @required
+     */
+    String endPageUrlText;
+
+    /**
+     * The pre-requisite configuration object.
+     * 
+     * @parameter
+     * @required
+     */
+    InstallPackageConfig installPackageConfig;
+
+    /**
+     * @parameter
+     */
+    RegKeyConfig regKeyConfig;
+
+    /**
+     * @parameter
+     */
+    RegValueConfig regValueConfig;
+
+    /**
+     * @parameter
+     */
+    RunningProcessConfig runningProcessConfig;
+
+    /**
+     * @parameter
+     */
+    ProductRemoverConfig productRemoverConfig;
 
     /**
      * The name of the output file to create sans extension.
@@ -94,18 +138,59 @@ public class BootstrapperMojo extends AbstractExeMojo
      */
     String outputFileName;
 
+    /**
+     * Settings this parameter to true embeds a special manifest inside the
+     * bootstrapper executable that requests UAC privilege escalation on Windows
+     * Vista and newer operating systems.
+     * 
+     * @parameter default-value="true"
+     */
+    boolean demandUac;
+
     private File outProjFile;
+
+    private File manifest;
+
+    private File bootstrapExe;
+
+    @Override
+    int getExecutions()
+    {
+        return 2;
+    }
+
+    protected boolean skipExec(int execution)
+    {
+        return execution == 1 && !this.demandUac;
+    }
 
     @Override
     String getArgs(int execution)
     {
-        return quote(this.outProjFile.toString());
+        if (execution == 0)
+        {
+            return quote(this.outProjFile.toString());
+        }
+        else
+        {
+            return String.format(
+                "-manifest %s -outputresource:%s;#1",
+                quote(getPath(this.manifest)),
+                quote(getPath(this.bootstrapExe)));
+        }
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
-        return new File("msbuild.exe");
+        if (execution == 0)
+        {
+            return new File("msbuild.exe");
+        }
+        else
+        {
+            return new File("mt.exe");
+        }
     }
 
     @Override
@@ -135,9 +220,12 @@ public class BootstrapperMojo extends AbstractExeMojo
                 appIco), e);
         }
 
+        initInstallPackagesFileParts();
         initProjFile();
         initResFile();
-        initProgramFile();
+        initAssemblyInfoFile();
+        initInstallResourcesFile();
+        initEtcFiles();
     }
 
     private File tmpProjDir;
@@ -147,16 +235,126 @@ public class BootstrapperMojo extends AbstractExeMojo
         return file.getPath().replaceAll("\\\\", "\\\\\\\\");
     }
 
-    private void initProjFile() throws MojoExecutionException
+    private void initInstallPackagesFileParts() throws MojoExecutionException
+    {
+        for (int x = 0; x < this.installPackageConfig.installPackages.size(); ++x)
+        {
+            InstallPackage ip =
+                this.installPackageConfig.installPackages.get(x);
+
+            int chunks = calcChunks(ip);
+            ip.fileParts = new File[chunks];
+
+            FileInputStream fis;
+
+            try
+            {
+                fis = new FileInputStream(ip.file);
+            }
+            catch (FileNotFoundException e)
+            {
+                throw new MojoExecutionException(
+                    "Error creating input stream for: " + ip.file);
+            }
+
+            for (int y = 0; y < chunks; ++y)
+            {
+                byte[] page = new byte[4096];
+                int read = 0;
+                int total = 0;
+
+                try
+                {
+                    ip.fileParts[y] =
+                        new File(
+                            super.mavenProject.getBuild().getDirectory(),
+                            String.format("InstallPackage%02d_%02d", x, y));
+
+                    ip.fileParts[y].delete();
+
+                    FileOutputStream fos =
+                        new FileOutputStream(ip.fileParts[y]);
+
+                    while ((read = fis.read(page)) != -1)
+                    {
+                        fos.write(page, 0, read);
+
+                        total += read;
+
+                        if (total >= CHUNK_SIZE)
+                        {
+                            break;
+                        }
+                    }
+
+                    fos.close();
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException("Error chunking file: "
+                        + ip.file);
+                }
+            }
+
+            try
+            {
+                fis.close();
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException("Error closing : " + ip.file);
+            }
+        }
+    }
+
+    private void initEtcFiles() throws MojoExecutionException
+    {
+        initFile("Properties/Resources.Designer.cs");
+        initFile("RunningProcess.cs");
+        initFile("InstallManager.cs");
+        initFile("InstallPackage.cs");
+        initFile("Program.cs");
+        initFile("RegValue.cs");
+        initFile("RegKey.cs");
+        initFile("MsiNative.cs");
+        initFile("ProductRemover.cs");
+        initFile("InstallCheck.cs");
+        initFile("ExtensionAttribute.cs");
+
+        initFile("BeginAndEndPage.cs");
+        initFile("BeginAndEndPage.Designer.cs");
+        initFile("BeginAndEndPage.resx");
+
+        initFile("EndPage.cs");
+        initFile("EndPage.Designer.cs");
+        initFile("EndPage.resx");
+
+        initFile("Page.cs");
+        initFile("Page.Designer.cs");
+        initFile("Page.resx");
+
+        initFile("LicensePage.cs");
+        initFile("LicensePage.Designer.cs");
+        initFile("LicensePage.resx");
+
+        initFile("InstallPage.cs");
+        initFile("InstallPage.Designer.cs");
+        initFile("InstallPage.resx");
+
+        initFile("MainForm.cs");
+        initFile("MainForm.Designer.cs");
+        initFile("MainForm.resx");
+    }
+
+    private void initFile(String path) throws MojoExecutionException
     {
         InputStream stream =
-            this.getClass().getResourceAsStream(
-                "/msibootstrapper/MsiBootstrapper.csproj");
+            this.getClass().getResourceAsStream("/nvnbootstrapper/" + path);
 
         if (stream == null)
         {
             throw new MojoExecutionException(
-                "Error getting stream for '/msibootstrapper/MsiBootstrapper.csproj'");
+                "Error getting stream for '/nvnbootstrapper/" + path + "'");
         }
 
         String content;
@@ -168,12 +366,49 @@ public class BootstrapperMojo extends AbstractExeMojo
         catch (IOException e)
         {
             throw new MojoExecutionException(
-                "Error getting string for MsiBootstrapper.csproj",
+                "Error getting string for " + path,
                 e);
         }
 
-        content =
-            content.replaceAll("\\$\\{BuildConfig\\}", getBuildConfigName());
+        File outFile = new File(this.tmpProjDir, path);
+
+        try
+        {
+            FileUtils.writeStringToFile(outFile, content);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException("Error writing data to: "
+                + outFile, e);
+        }
+    }
+
+    private void initProjFile() throws MojoExecutionException
+    {
+        InputStream stream =
+            this.getClass().getResourceAsStream(
+                "/nvnbootstrapper/NvnBootstrapper.csproj");
+
+        if (stream == null)
+        {
+            throw new MojoExecutionException(
+                "Error getting stream for '/nvnbootstrapper/NvnBootstrapper.csproj'");
+        }
+
+        String content;
+
+        try
+        {
+            content = IOUtils.toString(stream);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(
+                "Error getting string for NvnBootstrapper.csproj",
+                e);
+        }
+
+        content = content.replaceAll("\\$\\{BuildConfig\\}", getBuildConfig());
         content =
             content.replaceAll("\\$\\{ProjectGuid\\}", UUID
                 .randomUUID()
@@ -185,18 +420,33 @@ public class BootstrapperMojo extends AbstractExeMojo
 
         buff.append(String.format(
             "<None Include=\"%s\" />\n",
-            getString(this.msi)));
+            getString(this.icon)));
 
-        for (File f : this.preReqFiles)
+        buff.append(String.format(
+            "<None Include=\"%s\" />\n",
+            getString(this.license)));
+
+        buff.append(String.format(
+            "<None Include=\"%s\" />\n",
+            getString(this.licensePageBackground)));
+
+        buff.append(String.format(
+            "<None Include=\"%s\" />\n",
+            getString(this.installPageBackground)));
+
+        for (InstallPackage ip : this.installPackageConfig.installPackages)
         {
-            buff.append(String.format(
-                "    <None Include=\"%s\" />\n",
-                getString(f)));
+            for (File filePart : ip.fileParts)
+            {
+                buff.append(String.format(
+                    "    <None Include=\"%s\" />\r\n",
+                    getString(filePart)));
+            }
         }
 
         content = content.replaceAll("\\$\\{Resources\\}", buff.toString());
 
-        this.outProjFile = new File(this.tmpProjDir, "MsiBootstrapper.csproj");
+        this.outProjFile = new File(this.tmpProjDir, "NvnBootstrapper.csproj");
 
         try
         {
@@ -215,12 +465,12 @@ public class BootstrapperMojo extends AbstractExeMojo
     {
         InputStream stream =
             this.getClass().getResourceAsStream(
-                "/msibootstrapper/Resources.resx");
+                "/nvnbootstrapper/Properties/Resources.resx");
 
         if (stream == null)
         {
             throw new MojoExecutionException(
-                "Error getting stream for '/msibootstrapper/Resources.resx'");
+                "Error getting stream for '/nvnbootstrapper/Properties/Resources.resx'");
         }
 
         String content;
@@ -236,54 +486,42 @@ public class BootstrapperMojo extends AbstractExeMojo
                 e);
         }
 
+        content = content.replaceAll("\\$\\{Icon\\}", getString(this.icon));
+        content =
+            content.replaceAll("\\$\\{License\\}", getString(this.license));
+        content =
+            content.replaceAll(
+                "\\$\\{LicensePageBackground\\}",
+                getString(this.licensePageBackground));
+        content =
+            content.replaceAll(
+                "\\$\\{InstallPageBackground\\}",
+                getString(this.installPageBackground));
+
         StringBuilder buff = new StringBuilder();
 
-        String targetNameEntry =
-            String.format(
-                "  <data name=\"TargetName\" "
-                    + "xml:space=\"preserve\"><value>%s</value>" + "</data>\n",
-                this.outputFileName);
-        buff.append(targetNameEntry);
-
-        String targetDataEntry =
-            String.format(
-                "  <data name=\"TargetData\" "
-                    + "type=\"System.Resources.ResXFileRef, "
-                    + "System.Windows.Forms\"><value>%s;System.Byte[], "
-                    + "mscorlib, Version=2.0.0.0,Culture=neutral, "
-                    + "PublicKeyToken=b77a5c561934e089</value></data>\n",
-                getString(this.msi));
-        buff.append(targetDataEntry);
-
-        for (int x = 0; x < this.preReqNames.length; ++x)
+        for (InstallPackage ip : this.installPackageConfig.installPackages)
         {
-            String name = this.preReqNames[x];
-            File file = this.preReqFiles[x];
-
-            String nameEntry =
-                String.format(
-                    "  <data name=\"PreReq%02dName\" "
-                        + "xml:space=\"preserve\"><value>%s</value>"
-                        + "</data>\n",
-                    x,
-                    name);
-            buff.append(nameEntry);
-
-            String dataEntry =
-                String.format(
-                    "  <data name=\"PreReq%02dData\" "
-                        + "type=\"System.Resources.ResXFileRef, "
-                        + "System.Windows.Forms\"><value>%s;System.Byte[], "
-                        + "mscorlib, Version=2.0.0.0,Culture=neutral, "
-                        + "PublicKeyToken=b77a5c561934e089</value></data>\n",
-                    x,
-                    getString(file));
-            buff.append(dataEntry);
+            for (File filePart : ip.fileParts)
+            {
+                String dataEntry =
+                    String
+                        .format(
+                            "  <data name=\"%s\" "
+                                + "type=\"System.Resources.ResXFileRef, "
+                                + "System.Windows.Forms\"><value>%s;System.Byte[], "
+                                + "mscorlib, Version=2.0.0.0,Culture=neutral, "
+                                + "PublicKeyToken=b77a5c561934e089</value></data>\r\n",
+                            FilenameUtils.getBaseName(filePart.toString()),
+                            getString(filePart));
+                buff.append(dataEntry);
+            }
         }
 
-        content = content.replaceAll("\\$\\{Resources\\}", buff.toString());
+        content =
+            content.replaceAll("\\$\\{InstallPackages\\}", buff.toString());
 
-        File outFile = new File(this.tmpProjDir, "Resources.resx");
+        File outFile = new File(this.tmpProjDir, "Properties\\Resources.resx");
 
         try
         {
@@ -296,15 +534,16 @@ public class BootstrapperMojo extends AbstractExeMojo
         }
     }
 
-    private void initProgramFile() throws MojoExecutionException
+    private void initAssemblyInfoFile() throws MojoExecutionException
     {
         InputStream stream =
-            this.getClass().getResourceAsStream("/msibootstrapper/Program.cs");
+            this.getClass().getResourceAsStream(
+                "/nvnbootstrapper/Properties/AssemblyInfo.cs");
 
         if (stream == null)
         {
             throw new MojoExecutionException(
-                "Error getting stream for '/msibootstrapper/Program.cs'");
+                "Error getting stream for '/nvnbootstrapper/Properties/AssemblyInfo.cs'");
         }
 
         String content;
@@ -316,14 +555,16 @@ public class BootstrapperMojo extends AbstractExeMojo
         catch (IOException e)
         {
             throw new MojoExecutionException(
-                "Error getting string for Program.cs",
+                "Error getting string for AssemblyInfo.cs",
                 e);
         }
 
         content =
-            content.replaceAll("\\$\\{AssemblyName\\}", this.outputFileName);
+            content.replaceAll("\\$\\{AssemblyTitle\\}", this.outputFileName);
         content =
-            content.replaceAll("\\$\\{OrganizationName\\}", super.mavenProject
+            content.replaceAll("\\$\\{AssemblyProduct\\}", this.outputFileName);
+        content =
+            content.replaceAll("\\$\\{AssemblyCompany\\}", super.mavenProject
                 .getOrganization()
                 .getName());
         content =
@@ -336,14 +577,14 @@ public class BootstrapperMojo extends AbstractExeMojo
                 .toString());
         content =
             content.replaceAll(
-                "\\$\\{StandardVersion\\}",
+                "\\$\\{NvnVersion\\}",
                 super.getStandardVersion());
         content =
             content.replaceAll(
-                "\\$\\{Version\\}",
+                "\\$\\{MavenVersion\\}",
                 super.mavenProject.getVersion());
 
-        File outFile = new File(this.tmpProjDir, "Program.cs");
+        File outFile = new File(this.tmpProjDir, "Properties\\AssemblyInfo.cs");
 
         try
         {
@@ -356,48 +597,365 @@ public class BootstrapperMojo extends AbstractExeMojo
         }
     }
 
+    private void initInstallResourcesFile() throws MojoExecutionException
+    {
+        InputStream stream =
+            this.getClass().getResourceAsStream(
+                "/nvnbootstrapper/InstallResources.cs");
+
+        if (stream == null)
+        {
+            throw new MojoExecutionException(
+                "Error getting stream for '/nvnbootstrapper/InstallResources.cs'");
+        }
+
+        String content;
+
+        try
+        {
+            content = IOUtils.toString(stream);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException(
+                "Error getting string for InstallResources.cs",
+                e);
+        }
+
+        content =
+            content.replaceAll("\\$\\{ProductName\\}", this.outputFileName);
+        content =
+            content.replaceAll("\\$\\{EndPageUrlLink\\}", this.endPageUrlLink);
+        content =
+            content.replaceAll("\\$\\{EndPageUrlText\\}", this.endPageUrlText);
+
+        StringBuilder buff = new StringBuilder();
+
+        if (this.productRemoverConfig == null)
+        {
+            buff
+                .append("public static ProductRemover[] ProductRemovers = new ProductRemovers[0];\r\n");
+        }
+        else
+        {
+            buff
+                .append("public static ProductRemover[] ProductRemovers = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (ProductRemover pr : this.productRemoverConfig.productRemovers)
+            {
+                String l =
+                    String
+                        .format(
+                            "new ProductRemover {ProductCode=@\"%s\", Name=@\"%s\", Message=@\"%s\"},\r\n",
+                            pr.productCode,
+                            pr.name,
+                            pr.message);
+                buff.append(l);
+            }
+
+            buff.append("};\r\n");
+        }
+
+        if (this.regKeyConfig == null)
+        {
+            buff.append("public static RegKey[] RegKeys = new RegKey[0];\r\n");
+        }
+        else
+        {
+            buff.append("public static RegKey[] RegKeys = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RegKey rk : this.regKeyConfig.regKeys)
+            {
+                buff.append(rk.toString());
+            }
+
+            buff.append("};\r\n");
+        }
+
+        if (this.regValueConfig == null)
+        {
+            buff
+                .append("public static RegValue[] RegValues = new RegValue[0];\r\n");
+        }
+        else
+        {
+            buff.append("public static RegValue[] RegValues = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RegValue rv : this.regValueConfig.regValues)
+            {
+                buff.append(rv.toString());
+            }
+
+            buff.append("};\r\n");
+        }
+
+        if (this.runningProcessConfig == null)
+        {
+            buff
+                .append("public static RunningProcess[] RunningProcesses = new RunningProcess[0];\r\n");
+        }
+        else
+        {
+            buff
+                .append("public static RunningProcess[] RunningProcesses = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RunningProcess rp : this.runningProcessConfig.runningProcesses)
+            {
+                buff.append(rp.toString());
+            }
+
+            buff.append("};\r\n");
+        }
+
+        buff
+            .append("public static InstallPackage[] InstallPackages = new[]\r\n");
+        buff.append("{\r\n");
+
+        for (int x = 0; x < this.installPackageConfig.installPackages.size(); ++x)
+        {
+            InstallPackage ip =
+                this.installPackageConfig.installPackages.get(x);
+
+            buff.append("new InstallPackage {\r\n");
+
+            buff.append("ResourceKeys=new[] {");
+
+            for (File filePart : ip.fileParts)
+            {
+                buff.append(String.format(
+                    "@\"%s\",\r\n",
+                    FilenameUtils.getBaseName(filePart.toString())));
+            }
+
+            buff.append("},\r\n");
+            buff.append(String.format("Name=@\"%s\",\r\n", ip.name));
+            buff.append(String.format(
+                "Extension=@\"%s\",\r\n",
+                FilenameUtils.getExtension(ip.file.toString())));
+            buff.append(String.format(
+                "SupportsUninstall=%s,\r\n",
+                ip.supportsUninstall ? "true" : "false"));
+
+            if (StringUtils.isNotEmpty(ip.installArgs))
+            {
+                buff.append(String.format(
+                    "InstallArgs=@\"%s\",\r\n",
+                    ip.installArgs));
+            }
+
+            if (StringUtils.isNotEmpty(ip.uninstallArgs))
+            {
+                buff.append(String.format(
+                    "UninstallArgs=@\"%s\",\r\n",
+                    ip.uninstallArgs));
+            }
+
+            if (StringUtils.isNotEmpty(ip.quietInstallArgs))
+            {
+                buff.append(String.format(
+                    "QuietInstallArgs=@\"%s\",\r\n",
+                    ip.quietInstallArgs));
+            }
+
+            if (StringUtils.isNotEmpty(ip.quietUninstallArgs))
+            {
+                buff.append(String.format(
+                    "QuietUninstallArgs=@\"%s\",\r\n",
+                    ip.quietUninstallArgs));
+            }
+
+            if (StringUtils.isNotEmpty(ip.prompt))
+            {
+                buff.append(String.format("Prompt=@\"%s\",\r\n", ip.prompt));
+            }
+
+            if (ip.regKeys == null)
+            {
+                buff.append("RegKeys = new RegKey[0],\r\n");
+            }
+            else
+            {
+                buff.append("RegKey[] RegKeys = new[]\r\n");
+                buff.append("{\r\n");
+
+                for (RegKey rk : ip.regKeys)
+                {
+                    buff.append(rk.toString());
+                }
+
+                buff.append("},\r\n");
+            }
+
+            if (ip.regValues == null)
+            {
+                buff.append("RegValues = new RegValue[0],\r\n");
+            }
+            else
+            {
+                buff.append("RegValues = new[]\r\n");
+                buff.append("{\r\n");
+
+                for (RegValue rv : ip.regValues)
+                {
+                    buff.append(rv.toString());
+                }
+
+                buff.append("},\r\n");
+            }
+
+            if (ip.runningProcesses == null)
+            {
+                buff.append("RunningProcesses = new RunningProcess[0],\r\n");
+            }
+            else
+            {
+                buff.append("RunningProcesses = new[]\r\n");
+                buff.append("{\r\n");
+
+                for (RunningProcess rp : ip.runningProcesses)
+                {
+                    buff.append(rp.toString());
+                }
+
+                buff.append("},\r\n");
+            }
+
+            buff.append("},\r\n");
+        }
+
+        buff.append("};\r\n");
+
+        content =
+            content.replaceAll("\\$\\{InstallResources\\}", buff.toString());
+
+        File outFile = new File(this.tmpProjDir, "InstallResources.cs");
+
+        try
+        {
+            FileUtils.writeStringToFile(outFile, content);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException("Error writing data to: "
+                + outFile, e);
+        }
+    }
+
+    private final static int CHUNK_SIZE = 10485760;
+
+    private static int calcChunks(InstallPackage ip)
+    {
+        double fsizeB = ip.file.length();
+        double chunks = Math.ceil(fsizeB / (double) CHUNK_SIZE);
+        return (int) chunks;
+    }
+
     @Override
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
         if (executionException != null)
         {
-            debug("Skipping post processing because error occurred");
-            return;
+            publishTeamCityArtifact(this.bootstrapExe);
         }
+    }
 
-        File tmpBootstrapExe =
-            new File(String.format(
-                "%s\\bin\\%s\\%s.exe",
-                this.tmpProjDir,
-                getBuildConfigName(),
-                this.outputFileName));
-
-        File bootstrapExe =
-            new File(
-                super.mavenProject.getBuild().getDirectory(),
-                tmpBootstrapExe.getName());
-
-        try
+    @Override
+    void postExec(int execution, Process process) throws MojoExecutionException
+    {
+        if (execution == 0 && process.exitValue() == 0)
         {
-            FileUtils.copyFile(tmpBootstrapExe, bootstrapExe);
+            File tmpBootstrapExe =
+                new File(String.format(
+                    "%s\\bin\\%s\\%s.exe",
+                    this.tmpProjDir,
+                    getBuildConfig(),
+                    this.outputFileName));
+
+            this.bootstrapExe =
+                new File(
+                    super.mavenProject.getBuild().getDirectory(),
+                    tmpBootstrapExe.getName());
+
+            try
+            {
+                FileUtils.copyFile(tmpBootstrapExe, bootstrapExe);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException(String.format(
+                    "Error copying %s to %s",
+                    tmpBootstrapExe,
+                    bootstrapExe), e);
+            }
+
+            /*try
+            {
+                FileUtils.deleteDirectory(this.tmpProjDir);
+            }
+            catch (IOException e)
+            {
+                throw new MojoExecutionException("Error deleting "
+                    + this.tmpProjDir, e);
+            }*/
+
+            if (this.demandUac)
+            {
+                final String format =
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n"
+                        + "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\r\n"
+                        + "   <assemblyIdentity version=\"%1$s\" processorArchitecture=\"X86\" name=\"%2$s\" type=\"win32\"/>\r\n"
+                        + "    <description>%3$s</description>\r\n"
+                        + "      <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\r\n"
+                        + "         <security>\r\n"
+                        + "            <requestedPrivileges>\r\n"
+                        + "               <requestedExecutionLevel level=\"requireAdministrator\"/>\r\n"
+                        + "            </requestedPrivileges>\r\n"
+                        + "         </security>\r\n" + "      </trustInfo>\r\n"
+                        + "</assembly>";
+
+                String exePath = bootstrapExe.toString();
+                String exeBaseName = FilenameUtils.getBaseName(exePath);
+                String exeExtension = FilenameUtils.getExtension(exePath);
+
+                String text =
+                    String.format(
+                        format,
+                        super.getStandardVersion(),
+                        exeBaseName,
+                        super.mavenProject.getDescription());
+
+                File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+
+                this.manifest =
+                    new File(tmpDir, String.format(
+                        "%s.%s.manifest",
+                        exeBaseName,
+                        exeExtension));
+
+                try
+                {
+                    FileUtils.writeStringToFile(this.manifest, text);
+                }
+                catch (IOException e)
+                {
+                    throw new MojoExecutionException(
+                        "Error writing manifest file: " + this.manifest);
+                }
+
+                debug("wrote manifest file: " + this.manifest);
+            }
         }
-        catch (IOException e)
+        else if (execution == 0 && process.exitValue() != 0)
         {
-            throw new MojoExecutionException(String.format(
-                "Error copying %s to %s",
-                tmpBootstrapExe,
-                bootstrapExe), e);
-        }
-
-        try
-        {
-            FileUtils.deleteDirectory(this.tmpProjDir);
-        }
-        catch (IOException e)
-        {
-            throw new MojoExecutionException("Error deleting "
-                + this.tmpProjDir, e);
+            debug(
+                "disabling demanduac because bootstrapper exit code: %s",
+                process.exitValue());
+            this.demandUac = false;
         }
     }
 

@@ -32,6 +32,7 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
@@ -462,7 +463,7 @@ public class SignToolMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("signtool.exe");
     }
@@ -470,17 +471,49 @@ public class SignToolMojo extends AbstractExeMojo
     @Override
     void preExecute() throws MojoExecutionException
     {
-        String lightOutPath =
-            super.mavenProject.getProperties().getProperty("light.output");
-
-        if (StringUtils.isNotEmpty(lightOutPath))
+        if (this.files == null)
         {
-            File lightOut = new File(lightOutPath);
-            this.files = new File[]
+            String lightOutPath =
+                super.mavenProject.getProperties().getProperty("light.output");
+
+            if (StringUtils.isNotEmpty(lightOutPath))
             {
-                lightOut
-            };
-            debug("Using light out file: " + lightOut);
+                File lightOut = new File(lightOutPath);
+
+                this.files = new File[]
+                {
+                    lightOut
+                };
+                debug("Using light out file: " + lightOut);
+            }
+        }
+
+        if (this.certificate == null
+            && StringUtils.isNotEmpty(System.getenv("SIGNTOOL_CERTIFICATE")))
+        {
+            this.certificate = new File(System.getenv("SIGNTOOL_CERTIFICATE"));
+        }
+
+        if (StringUtils.isEmpty(this.password)
+            && StringUtils.isNotEmpty(System.getenv("SIGNTOOL_PASSWORD")))
+        {
+            this.password = System.getenv("SIGNTOOL_PASSWORD");
+        }
+
+        if (this.timestampUrl == null
+            && StringUtils.isNotEmpty(System.getenv("SIGNTOOL_TIMESTAMPURL")))
+        {
+            String tsurl = System.getenv("SIGNTOOL_TIMESTAMPURL");
+
+            try
+            {
+                this.timestampUrl = new URL(tsurl);
+            }
+            catch (MalformedURLException e)
+            {
+                throw new MojoExecutionException(
+                    "Error parsing timestamp url: " + tsurl);
+            }
         }
     }
 
@@ -488,7 +521,18 @@ public class SignToolMojo extends AbstractExeMojo
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
-        // Do nothing
+        if (executionException != null)
+        {
+            return;
+        }
+
+        if (this.files != null)
+        {
+            for (File f : this.files)
+            {
+                publishTeamCityArtifact(f);
+            }
+        }
     }
 
     @Override

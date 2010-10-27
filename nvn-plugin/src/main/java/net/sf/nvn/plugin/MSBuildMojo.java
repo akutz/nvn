@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import net.sf.nvn.commons.DependencyUtils;
-import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Dependency;
@@ -59,7 +58,7 @@ public class MSBuildMojo extends AbstractExeMojo
      * 
      * @parameter
      */
-    File buildFile;
+    // File buildFile;
 
     /**
      * A list of additional directories to resolve your project's references
@@ -67,6 +66,13 @@ public class MSBuildMojo extends AbstractExeMojo
      */
     @SuppressWarnings("rawtypes")
     List referencePaths;
+
+    /**
+     * A value indicating whether or not to enable project references.
+     * 
+     * @parameter default-value="true"
+     */
+    boolean projectReferencesEnabled;
 
     /**
      * Hides the startup banner and copyright message.
@@ -506,13 +512,13 @@ public class MSBuildMojo extends AbstractExeMojo
 
         if (this.tempBuildFile == null)
         {
-            cmdLineBuff.append(getPath(this.buildFile));
+            cmdLineBuff.append(getPath(getMSBuildProject().getFile()));
         }
         else
         {
             cmdLineBuff.append(getPath(this.tempBuildFile));
         }
-           
+
         String clbs = cmdLineBuff.toString();
 
         return clbs;
@@ -544,30 +550,18 @@ public class MSBuildMojo extends AbstractExeMojo
             this.properties = new Properties();
         }
 
-        BuildConfiguration abc = getBuildConfig();
-
-        String config = "Debug";
-        String platform = getBuildPlatform().toString();
-        File outputPath = new File("bin\\Debug");
-
-        if (abc != null)
-        {
-            config = abc.getName();
-            outputPath = abc.getOutputPath();
-        }
-
         if (!this.properties.containsKey("Configuration"))
         {
-            this.properties.put("Configuration", config);
+            this.properties.put("Configuration", getBuildConfig());
         }
 
         if (!this.properties.containsKey("Platform"))
         {
 
-            this.properties.put("Platform", platform);
+            this.properties.put("Platform", getBuildPlatform());
         }
 
-        this.properties.put("OutputPath", getPath(outputPath));
+        this.properties.put("OutputPath", getPath(getBuildDir()));
     }
 
     /**
@@ -654,11 +648,6 @@ public class MSBuildMojo extends AbstractExeMojo
     void initReferencePaths() throws MojoExecutionException
     {
         initReferencePaths(super.mavenProject);
-
-        // if (super.mavenProject.hasParent())
-        // {
-        // initReferencePaths(super.mavenProject.getParent());
-        // }
     }
 
     /**
@@ -738,11 +727,6 @@ public class MSBuildMojo extends AbstractExeMojo
      */
     void loadBuildFile() throws MojoExecutionException
     {
-        if (this.buildFile == null)
-        {
-            this.buildFile = getBuildFile();
-        }
-
         boolean processProjectReferences = false;
 
         if (getMSBuildProject().getProjectReferences().size() > 0)
@@ -760,7 +744,7 @@ public class MSBuildMojo extends AbstractExeMojo
                 }
             }
 
-            if (processProjectReferences)
+            if (!this.projectReferencesEnabled || processProjectReferences)
             {
                 StringBuilder buff = new StringBuilder();
                 buff.append("    <ItemGroup>\r\n");
@@ -771,7 +755,7 @@ public class MSBuildMojo extends AbstractExeMojo
                 {
                     File f = new File(super.mavenProject.getBasedir(), k);
 
-                    if (!f.exists())
+                    if (!this.projectReferencesEnabled || !f.exists())
                     {
                         String name =
                             getMSBuildProject().getProjectReferences().get(k);
@@ -792,15 +776,19 @@ public class MSBuildMojo extends AbstractExeMojo
                 // Read in the text from the build file.
                 try
                 {
-                    buildFileLines = FileUtils.readLines(this.buildFile);
+                    buildFileLines =
+                        FileUtils.readLines(getMSBuildProject().getFile());
                 }
                 catch (IOException e)
                 {
                     throw new MojoExecutionException("Error reading "
-                        + this.buildFile, e);
+                        + getMSBuildProject().getFile(), e);
                 }
 
                 List<String> tmpBuildFileLines = new ArrayList<String>();
+
+                int x = 0;
+                boolean foundProjRef = false;
 
                 for (Object o : buildFileLines)
                 {
@@ -811,13 +799,32 @@ public class MSBuildMojo extends AbstractExeMojo
                         tmpBuildFileLines.add(buffStr);
                     }
 
-                    tmpBuildFileLines.add(l);
+                    if (!projectReferencesEnabled
+                        && l.matches("(?i)^\\s*\\<ProjectReference.*?$"))
+                    {
+                        foundProjRef = true;
+                    }
+
+                    if (foundProjRef)
+                    {
+                        ++x;
+
+                        if (x == 4)
+                        {
+                            foundProjRef = false;
+                            x = 0;
+                        }
+                    }
+                    else
+                    {
+                        tmpBuildFileLines.add(l);
+                    }
                 }
 
                 this.tempBuildFile =
                     new File(
-                        this.buildFile.getParentFile(),
-                        this.buildFile.getName() + ".tmp");
+                        getMSBuildProject().getFile().getParentFile(),
+                        getMSBuildProject().getFile().getName() + ".tmp");
 
                 try
                 {
@@ -847,7 +854,7 @@ public class MSBuildMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("msbuild.exe");
     }
@@ -856,9 +863,42 @@ public class MSBuildMojo extends AbstractExeMojo
     void postExecute(MojoExecutionException executionException)
         throws MojoExecutionException
     {
-        if (this.tempBuildFile != null)
+        if (this.tempBuildFile != null && executionException == null)
         {
             this.tempBuildFile.delete();
+        }
+
+        initPdbAndDocArtifacts();
+        
+        publishTeamCityArtifact(getBinArtifact());
+        publishTeamCityArtifact(getPdbArtifact());
+        publishTeamCityArtifact(getDocArtifact());
+    }
+
+    void initPdbAndDocArtifacts() throws MojoExecutionException
+    {
+        if (getPdbArtifact() != null)
+        {
+            if (getPdbArtifact().exists())
+            {
+                this.projectHelper.attachArtifact(
+                    this.mavenProject,
+                    "pdb",
+                    "sources",
+                    getPdbArtifact());
+            }
+        }
+
+        if (getDocArtifact() != null)
+        {
+            if (getDocArtifact().exists())
+            {
+                this.projectHelper.attachArtifact(
+                    this.mavenProject,
+                    "xml",
+                    "dotnetdoc",
+                    getDocArtifact());
+            }
         }
     }
 }

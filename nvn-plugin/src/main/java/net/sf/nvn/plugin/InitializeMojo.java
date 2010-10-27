@@ -35,7 +35,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
+import net.sf.nvn.commons.msbuild.MSBuildProject;
+import net.sf.nvn.commons.msbuild.ProjectLanguageType;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -54,6 +55,15 @@ import org.codehaus.plexus.util.StringUtils;
  */
 public class InitializeMojo extends AbstractNvnMojo
 {
+    /**
+     * <p>
+     * The MSBuild project file to use.
+     * </p>
+     * 
+     * @parameter
+     */
+    File msbuildProjectFile;
+
     /**
      * <p>
      * The build configuration.
@@ -151,8 +161,8 @@ public class InitializeMojo extends AbstractNvnMojo
         initMSBuildProject();
         initBuildConfig();
         initBuildPlatform();
-        initArtifacts();
         initBuildDirectory();
+        initArtifacts();
     }
 
     @Override
@@ -174,13 +184,23 @@ public class InitializeMojo extends AbstractNvnMojo
         return true;
     }
 
+    /**
+     * Initializes the Maven project's build directory with the MSBuild
+     * project's build directory.
+     */
     void initBuildDirectory()
     {
-        File buildOutputDir = super.getBuildConfig().getOutputPath();
+        File relBuildDir =
+            getMSBuildProject().getBuildDir(
+                getBuildConfig(),
+                getBuildPlatform());
+        initNvnProp(NPK_BUILD_DIR, relBuildDir);
+        info("Initialized build directory (relative): " + relBuildDir);
+
         File baseDir = super.mavenProject.getBasedir();
-        File buildDir = new File(baseDir, buildOutputDir.toString());
-        super.mavenProject.getBuild().setDirectory(buildDir.toString());
-        debug("Initialized build directory: " + buildDir);
+        File absBuildDir = new File(baseDir, relBuildDir.toString());
+        super.mavenProject.getBuild().setDirectory(absBuildDir.toString());
+        info("Initialized build directory (absolute): " + absBuildDir);
     }
 
     /**
@@ -197,7 +217,7 @@ public class InitializeMojo extends AbstractNvnMojo
             super.mavenProject.setVersion(this.defaultVersion);
         }
 
-        debug("initialized version: " + myVersion);
+        info("initialized version: " + myVersion);
     }
 
     /**
@@ -210,22 +230,45 @@ public class InitializeMojo extends AbstractNvnMojo
         Pattern p = Pattern.compile("(?:\\d|\\.)+");
         Matcher m = p.matcher(super.mavenProject.getVersion());
 
-        String stdVersion;
+        String numericVersion;
 
         if (m.find())
         {
-            stdVersion = m.group();
+            numericVersion = m.group();
+
+            // If the numeric version only has three parts (MAJOR.MINOR.BUILD)
+            // then add a fourth part, REVISION with a value of 0.
+            if (numericVersion.matches("^\\d*?\\.\\d*\\.\\d*$"))
+            {
+                if (numericVersion.endsWith(".0")
+                    && this.enableTeamCityIntegration)
+                {
+                    String bn = System.getenv("BUILD_NUMBER");
+
+                    if (StringUtils.isNotEmpty(bn) && bn.matches("\\d+"))
+                    {
+                        numericVersion =
+                            numericVersion.substring(
+                                0,
+                                numericVersion.length() - 2)
+                                + "."
+                                + System.getenv("BUILD_NUMBER");
+                    }
+                }
+
+                numericVersion = numericVersion + ".0";
+            }
         }
         else
         {
             throw new MojoExecutionException(
-                "Error parsing standard version from "
+                "Error parsing numeric version from "
                     + super.mavenProject.getVersion());
         }
 
-        setStandardVersion(stdVersion);
+        initNvnProp(NPK_VERSION, numericVersion);
 
-        debug("initialized standard version: " + stdVersion);
+        info("initialized standard version: " + numericVersion);
     }
 
     /**
@@ -246,19 +289,16 @@ public class InitializeMojo extends AbstractNvnMojo
             return;
         }
 
-        File basedir = this.mavenProject.getBasedir();
+        File bd = this.mavenProject.getBasedir();
+        String bc = getBuildConfig();
+        String bp = getBuildPlatform();
 
-        String bcn = getBuildConfigName();
-        debug("got build config name: " + bcn);
+        String artName = getMSBuildProject().getArtifactName(bc, bp);
+        initNvnProp(NPK_ARTIFACT_NAME, artName);
+        info("artifact name: " + artName);
 
-        String filepath = getMSBuildProject().getBuildArtifact(bcn).getPath();
-        File file = new File(basedir, filepath);
-
-        this.mavenProject.getProperties().put(
-            "project.msbuild.artifactPrefix",
-            getMSBuildProject().getMSBuildArtifactPrefix());
-
-        Artifact artifact =
+        // Create the binary artifact.
+        Artifact artBin =
             this.factory.createBuildArtifact(
                 this.mavenProject.getGroupId(),
                 this.mavenProject.getArtifactId(),
@@ -269,9 +309,7 @@ public class InitializeMojo extends AbstractNvnMojo
 
         try
         {
-            String nvnName = getMSBuildProject().getMSBuildArtifactPrefix();
-
-            nmd = NvnArtifactMetadata.instance(artifact, nvnName);
+            nmd = NvnArtifactMetadata.instance(artBin, artName);
         }
         catch (IOException e)
         {
@@ -280,42 +318,31 @@ public class InitializeMojo extends AbstractNvnMojo
                 e);
         }
 
-        artifact.addMetadata(nmd);
-        artifact.setFile(file);
-        debug("set artifact file %s", file);
+        artBin.addMetadata(nmd);
 
-        this.mavenProject.setArtifact(artifact);
+        // Get the binary artifact's file.
+        File artBinFile =
+            new File(bd, getMSBuildProject().getBinArtifact(bc, bp).toString());
+        artBin.setFile(artBinFile);
+        this.mavenProject.setArtifact(artBin);
+        initNvnProp(NPK_ARTIFACT_BIN, artBinFile);
+        info("initialized bin artifact: %s", artBinFile);
 
-        File pdbFile = getMSBuildProject().getBuildSymbolsArtifact(bcn);
-        if (pdbFile != null)
+        File artPdbFile =
+            new File(bd, getMSBuildProject().getPdbArtifact(bc, bp).toString());
+
+        if (artPdbFile != null)
         {
-            filepath = pdbFile.getPath();
-            pdbFile = new File(basedir, filepath);
-
-            if (pdbFile.exists())
-            {
-                this.projectHelper.attachArtifact(
-                    this.mavenProject,
-                    "pdb",
-                    "sources",
-                    pdbFile);
-            }
+            initNvnProp(NPK_ARTIFACT_PDB, artPdbFile);
+            info("initialized pdb artifact: %s", artPdbFile);
         }
 
-        File docFile = getMSBuildProject().getBuildDocumentationArtifact(bcn);
-        if (docFile != null)
+        File artDocFile = getMSBuildProject().getDocArtifact(bc, bp);
+        if (artDocFile != null)
         {
-            filepath = docFile.getPath();
-            docFile = new File(basedir, filepath);
-
-            if (docFile.exists())
-            {
-                this.projectHelper.attachArtifact(
-                    this.mavenProject,
-                    "xml",
-                    "dotnetdoc",
-                    docFile);
-            }
+            artDocFile = new File(bd, artDocFile.toString());
+            initNvnProp(NPK_ARTIFACT_DOC, artDocFile);
+            info("initialized doc artifact: %s", artDocFile);
         }
     }
 
@@ -340,18 +367,18 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         if (StringUtils.isNotEmpty(this.buildConfig))
         {
-            setBuildConfigName(this.buildConfig);
+            initNvnProp(NPK_CONFIG, this.buildConfig);
         }
         else if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
         {
-            setBuildConfigName(this.buildConfigDebug);
+            initNvnProp(NPK_CONFIG, this.buildConfigDebug);
         }
         else
         {
-            setBuildConfigName(this.buildConfigRelease);
+            initNvnProp(NPK_CONFIG, this.buildConfigRelease);
         }
 
-        debug("build configuration: %s", getBuildConfigName());
+        info("build configuration: %s", getBuildConfig());
     }
 
     /**
@@ -376,69 +403,85 @@ public class InitializeMojo extends AbstractNvnMojo
     {
         if (StringUtils.isNotEmpty(this.buildPlatform))
         {
-            setBuildPlatform(this.buildPlatform);
-            debug("buildPlatform set to explicit version");
+            initNvnProp(NPK_PLATFORM, this.buildPlatform);
+        }
+        else if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
+        {
+            initNvnProp(NPK_PLATFORM, this.buildPlatformDebug);
         }
         else
         {
-            setBuildPlatform(getBuildConfig().getPlatform().toString());
-            debug("buildPlatform set to build config setting");
+            initNvnProp(NPK_PLATFORM, this.buildPlatformRelease);
         }
-        /*
-         * else if (!getBuildFile().toString().matches("(?i)^.*sln$")) {
-         * setBuildPlatform(getBuildConfig().getPlatform().toString());
-         * debug("buildPlatform set to build config setting"); } else if
-         * (super.mavenProject.getVersion().contains("-SNAPSHOT")) {
-         * setBuildPlatform(this.buildPlatformDebug);
-         * debug("buildPlatform set to debug platform default"); } else {
-         * setBuildPlatform(this.buildPlatformRelease);
-         * debug("buildPlatform set to release platform default"); }
-         */
 
-        debug("build platform:      %s", getBuildPlatform());
+        info("build platform:      %s", getBuildPlatform());
     }
 
     @SuppressWarnings("rawtypes")
     void initMSBuildProject() throws MojoExecutionException
     {
-        Collection files =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
+        if (this.msbuildProjectFile == null)
+        {
+            Collection files =
+                FileUtils.listFiles(
+                    this.mavenProject.getBasedir(),
+                    new String[]
+                    {
+                        "csproj", "vbproj", "vcxproj"
+                    },
+                    false);
+
+            if (files == null)
             {
-                "csproj", "vbproj", "vcproj", "vcxproj"
-            }, false);
+                debug("project file list is null");
+                return;
+            }
 
-        if (files == null)
-        {
-            debug("project file list is null");
-            return;
+            if (files.size() == 0)
+            {
+                debug("project file list is empty");
+                return;
+            }
+
+            this.msbuildProjectFile = (File) files.iterator().next();
         }
-
-        if (files.size() == 0)
-        {
-            debug("project file list is empty");
-            return;
-        }
-
-        File projectFile = (File) files.iterator().next();
 
         try
         {
-            MSBuildProject msb = MSBuildProject.instance(projectFile);
+            MSBuildProject msb =
+                MSBuildProject.instance(this.msbuildProjectFile);
 
             if (msb == null)
             {
-                info("project file could not be unmarshalled: " + projectFile);
+                info("project file could not be unmarshalled: "
+                    + this.msbuildProjectFile);
             }
             else
             {
-                setMSBuildProject(msb);
+                initNvnProp(NPK_PROJECT, msb);
+                info("initialized msproject");
+
+                // If this is a C++ project then adjust the default build
+                // platforms from 'AnyCPU' to 'Win32'.
+                if (msb.getProjectLanguage() == ProjectLanguageType.CPP)
+                {
+                    if (this.buildPlatformDebug.equals("AnyCPU"))
+                    {
+                        this.buildPlatformDebug = "Win32";
+                    }
+
+                    if (this.buildPlatformRelease.equals("AnyCPU"))
+                    {
+                        this.buildPlatformRelease = "Win32";
+                    }
+                }
             }
         }
         catch (Exception e)
         {
             throw new MojoExecutionException(String.format(
                 "Error reading MSBuild project from %s",
-                projectFile), e);
+                this.msbuildProjectFile), e);
         }
     }
 }

@@ -199,7 +199,7 @@ public class MSTestMojo extends AbstractExeMojo
 
         this.testContainers = new File[]
         {
-            getMSBuildProject().getBuildArtifact(getBuildConfigName())
+            getBinArtifact(),
         };
     }
 
@@ -373,7 +373,7 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("mstest.exe");
     }
@@ -387,11 +387,14 @@ public class MSTestMojo extends AbstractExeMojo
             return;
         }
 
-        String msg =
-            String.format(
-                "##teamcity[importData type='mstest' path='%s']",
-                this.resultsFile);
-        info(msg);
+        if (super.enableTeamCityIntegration)
+        {
+            String msg =
+                String.format(
+                    "##teamcity[importData type='mstest' path='%s']",
+                    this.resultsFile);
+            info(msg);
+        }
     }
 
     @Override
@@ -401,7 +404,7 @@ public class MSTestMojo extends AbstractExeMojo
     }
 
     @Override
-    void postExec(Process process) throws MojoExecutionException
+    void postExec(int execution, Process process) throws MojoExecutionException
     {
         System.out.println(super.stdout);
 
@@ -409,7 +412,7 @@ public class MSTestMojo extends AbstractExeMojo
         {
             return;
         }
-        
+
         Pattern patt = Pattern.compile("Results file\\:\\s*(.*\\.trx)");
         Matcher matt = patt.matcher(stdout);
 

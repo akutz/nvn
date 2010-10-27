@@ -3,6 +3,7 @@ package net.sf.nvn.plugin;
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -366,11 +367,12 @@ public class LightMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("light.exe");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     void preExecute() throws MojoExecutionException
     {
@@ -432,6 +434,17 @@ public class LightMojo extends AbstractExeMojo
                 }
             }
         }
+
+        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        {
+            if (this.preProcessorParmaeters == null)
+            {
+                this.preProcessorParmaeters = new HashMap<String, String>();
+            }
+
+            this.preProcessorParmaeters.put("DEBUG", "True");
+            info("Set DEBUG pre-process param");
+        }
     }
 
     @Override
@@ -444,6 +457,8 @@ public class LightMojo extends AbstractExeMojo
                 "light.output",
                 this.outputFile.toString());
             debug("set 'light.output' to '%s'", this.outputFile);
+
+            publishTeamCityArtifact(this.outputFile);
         }
     }
 

@@ -32,7 +32,6 @@ package net.sf.nvn.plugin;
 
 import static net.sf.nvn.commons.StringUtils.quote;
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +39,8 @@ import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.nvn.commons.ProjectUtils;
-import net.sf.nvn.commons.dotnet.PlatformType;
-import net.sf.nvn.commons.dotnet.ProjectLanguageType;
-import net.sf.nvn.commons.dotnet.v35.msbuild.BuildConfiguration;
-import net.sf.nvn.commons.dotnet.v35.msbuild.MSBuildProject;
-import org.apache.commons.io.FileUtils;
+import net.sf.nvn.commons.msbuild.MSBuildProject;
+import net.sf.nvn.commons.msbuild.ProjectLanguageType;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -56,6 +52,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.wagon.PathUtils;
 
 /**
  * The base class for all nvn MOJOs.
@@ -65,6 +62,75 @@ import org.apache.maven.project.MavenProjectHelper;
  */
 public abstract class AbstractNvnMojo extends AbstractMojo
 {
+    /**
+     * The NVN property prefix for NVN properties that are set in the Maven
+     * project's properties collection.
+     */
+    private final static String NPK_PREFIX = "nvn.";
+
+    /**
+     * The property key for the MSBuildProject object.
+     */
+    protected final static String NPK_PROJECT = "project";
+
+    /**
+     * The property key for the build configuration name (Debug, Release, etc.)
+     */
+    protected final static String NPK_CONFIG = "config";
+
+    /**
+     * The property key for the build platform type (AnyCPU, x64, Win32, etc.)
+     */
+    protected final static String NPK_PLATFORM = "platform";
+
+    /**
+     * The property key for the standard version.
+     */
+    protected final static String NPK_VERSION = "version";
+
+    /**
+     * The property key for the project's build directory. Unlike the default
+     * Maven property 'project.build.directory', this property value is relative
+     * to the project's base directory.
+     */
+    protected final static String NPK_BUILD_DIR = "build.directory";
+
+    /**
+     * The property key for the name of the project's artifact. The value does
+     * not include any type of file extension or path, it is simply the name of
+     * the artifact. For example, if an MSBuild project produces an artifact at
+     * '\bin\Debug\HelloWorld.exe' then the name of the artifact is
+     * 'HelloWorld'.
+     */
+    protected final static String NPK_ARTIFACT_NAME = "artifact.name";
+
+    /**
+     * The property key for the project's binary artifact.
+     */
+    protected final static String NPK_ARTIFACT_BIN = "artifact.bin";
+
+    /**
+     * The property key for the project's symbols artifact.
+     */
+    protected final static String NPK_ARTIFACT_PDB = "artifact.pdb";
+
+    /**
+     * The property key for the project's documentation artifact.
+     */
+    protected final static String NPK_ARTIFACT_DOC = "artifact.doc";
+
+    /**
+     * The property key for the project's import library artifact. This may be
+     * the same as the binary artifact if the project is a C++ StaticLibrary
+     * project.
+     */
+    protected final static String NPK_ARTIFACT_LIB = "artifact.lib";
+
+    /**
+     * The property key for the project's type library artifact.
+     */
+    protected final static String NPK_ARTIFACT_TLB = "artifact.tlb";
+
     /**
      * Used to look up Artifacts in the remote repository.
      * 
@@ -149,6 +215,51 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * @parameter default-value="false"
      */
     boolean skip;
+
+    /**
+     * <p>
+     * Setting this parameter to true enables NVN to integrate with my favorite
+     * build server, <a href="http://www.jetbrains.com/teamcity/">JetBrains
+     * TeamCity</a>. TeamCity integration means different things for different
+     * MOJOs:
+     * </p>
+     * <ul>
+     * <li>For many MOJOs, TeamCity integration enables the emission of <a
+     * href="http://bit.ly/aLP8hl">TeamCity messages</a> where appropriate. For
+     * example, the mstest mojo emits messages that indicate the location of the
+     * resulting report file.</li>
+     * <li>For the AssemblyInfo MOJO the TeamCity build number is added to the
+     * AssemblyInfoInformationalVersion attribute.</li>
+     * </ul>
+     * 
+     * <p>
+     * The default value is true for all MOJOs, but there are instances where it
+     * may be desirable to override this value. For instance, the msbuild,
+     * light, and bootstrap MOJOs all emit messages that instruct TeamCity to
+     * attach artifacts to the running build configuration. This can result in
+     * the use of additional disk space on the build server and may need to be
+     * disabled if lack of storage is a concern.
+     * </p>
+     * 
+     * @parameter default-value="true"
+     */
+    boolean enableTeamCityIntegration;
+
+    /**
+     * <p>
+     * This parameter allows the level of integration with TeamCity to be
+     * fine-tuned. When set to false, the MOJOs that would otherwise emit a
+     * message indicating that there is an artifact to be published to TeamCity
+     * will not do so.
+     * </p>
+     * <p>
+     * This parameter has no effect when {@link enableTeamCityIntegration} is
+     * set to false.
+     * </p>
+     * 
+     * @parameter default-value="true"
+     */
+    boolean publishTeamCityArtifacts;
 
     /**
      * Force the execution of this plug-in even if its project type requirement
@@ -420,19 +531,20 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     }
 
     /**
-     * Gets the active build configuration.
+     * Initializes an NVN property in the Maven project's properties collection.
      * 
-     * @return The active build configuration.
+     * @param key The property's key.
+     * @param value The property's value.
      */
-    BuildConfiguration getBuildConfig()
+    protected void initNvnProp(String key, Object value)
     {
-        if (!(isCSProject() || isVBProject() || isCppProject()))
-        {
-            return null;
-        }
+        nvnPropertiesRWL.writeLock().lock();
 
-        return getMSBuildProject().getBuildConfigurations().get(
-            getBuildConfigName());
+        key = NPK_PREFIX + key;
+        getNvnProperties().put(key, value);
+        this.mavenProject.getProperties().put(key, value.toString());
+
+        nvnPropertiesRWL.writeLock().unlock();
     }
 
     /**
@@ -441,14 +553,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * 
      * @return The name of the active build configuration.
      */
-    String getBuildConfigName()
+    String getBuildConfig()
     {
-        return getProperty("build.config.name");
-    }
-
-    void setBuildConfigName(String toSet)
-    {
-        setProperty("build.config.name", toSet);
+        return getNvnProp(NPK_CONFIG);
     }
 
     /**
@@ -456,29 +563,74 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * 
      * @return The build platform.
      */
-    PlatformType getBuildPlatform()
+    String getBuildPlatform()
     {
-        return getProperty("build.platform");
+        return getNvnProp(NPK_PLATFORM);
     }
 
     /**
-     * Sets the build platform.
+     * Gets the artifact name.
      * 
-     * @param toSet The build platform.
+     * @return The artifact name.
      */
-    void setBuildPlatform(String toSet)
+    String getArtifactName()
     {
-        setBuildPlatform(PlatformType.parse(toSet));
+        return getNvnProp(NPK_ARTIFACT_NAME);
     }
 
     /**
-     * Sets the build platform.
-     * 
-     * @param toSet The build platform.
+     * The build directory.
      */
-    void setBuildPlatform(PlatformType toSet)
+    private File buildDir;
+
+    /**
+     * Gets the build directory.
+     * 
+     * @return The build directory.
+     */
+    File getBuildDir()
     {
-        setProperty("build.platform", toSet);
+        if (this.buildDir != null)
+        {
+            return this.buildDir;
+        }
+
+        this.buildDir = new File(this.mavenProject.getBuild().getDirectory());
+        return this.buildDir;
+    }
+
+    /**
+     * Gets the binary artifact.
+     * 
+     * @return The binary artifact.
+     */
+    File getBinArtifact()
+    {
+        return getNvnProp(NPK_ARTIFACT_BIN);
+    }
+
+    /**
+     * Gets the project's documentation artifact using the current configuration
+     * name and platform type.
+     * 
+     * @return The project's documentation artifact using the current
+     *         configuration name and platform type.
+     */
+    File getDocArtifact()
+    {
+        return getNvnProp(NPK_ARTIFACT_DOC);
+    }
+
+    /**
+     * Gets the project's symbols artifact using the current configuration name
+     * and platform type.
+     * 
+     * @return The project's symbols artifact using the current configuration
+     *         name and platform type.
+     */
+    File getPdbArtifact()
+    {
+        return getNvnProp(NPK_ARTIFACT_PDB);
     }
 
     /**
@@ -507,18 +659,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      */
     MSBuildProject getMSBuildProject()
     {
-        return getProperty("msbuild.project");
-    }
-
-    /**
-     * Sets the MSBuild project associated with this Maven project.
-     * 
-     * @param toSet The MSBuild project associated with this Maven project.
-     */
-    void setMSBuildProject(MSBuildProject toSet)
-    {
-        setProperty("msbuild.project", toSet);
-        debug("set msbuild project");
+        return getNvnProp(NPK_PROJECT);
     }
 
     /**
@@ -559,73 +700,28 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return isMSBuildProject()
             && getMSBuildProject().getProjectLanguage() == ProjectLanguageType.VisualBasic;
     }
-    
-    @SuppressWarnings("rawtypes")
-    File getBuildFile() throws MojoExecutionException
-    {
-        /*Collection slnFiles =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "sln"
-            }, false);
-
-        if (slnFiles != null && slnFiles.size() > 0)
-        {
-            return (File) slnFiles.iterator().next();
-        }*/
-
-        Collection projFiles =
-            FileUtils.listFiles(this.mavenProject.getBasedir(), new String[]
-            {
-                "csproj", "vbproj", "vcxproj"
-            }, false);
-
-        if (projFiles != null && projFiles.size() > 0)
-        {
-            return (File) projFiles.iterator().next();
-        }
-
-        throw new MojoExecutionException(
-            "Error finding solution or project file");
-    }
-
-    /**
-     * Sets a property on the current Maven project's properties collection.
-     * 
-     * @param name The property's name.
-     * @param value The property's value.
-     */
-    void setProperty(String name, Object value)
-    {
-        nvnPropertiesRWL.writeLock().lock();
-
-        name = "nvn.properties." + name;
-        getNvnProperties().put(name, value);
-
-        nvnPropertiesRWL.writeLock().unlock();
-    }
 
     /**
      * Gets a property from the current Maven project's properties collection.
      * 
      * @param <T> The property's type.
-     * @param name The property's name.
+     * @param name The property's key.
      * @return The property's value.
      */
     @SuppressWarnings("unchecked")
-    <T> T getProperty(String name)
+    <T> T getNvnProp(String key)
     {
+        key = NPK_PREFIX + key;
+
         T value = null;
 
         nvnPropertiesRWL.readLock().lock();
 
         Properties nvnProps = getNvnProperties();
 
-        name = "nvn.properties." + name;
-
-        if (nvnProps.containsKey(name))
+        if (nvnProps.containsKey(key))
         {
-            value = (T) nvnProps.get(name);
+            value = (T) nvnProps.get(key);
         }
 
         nvnPropertiesRWL.readLock().unlock();
@@ -660,17 +756,51 @@ public abstract class AbstractNvnMojo extends AbstractMojo
 
     protected String getStandardVersion()
     {
-        return this.mavenProject.getProperties().getProperty(
-            "project.version.standard");
+        return getNvnProp(NPK_VERSION);
     }
 
-    protected void setStandardVersion(String toSet)
+    /**
+     * Publishes an artifact to TeamCity by emitting a TeamCity message with the
+     * relative path to the artifact.
+     * 
+     * @param file The absolute path to the artifact.
+     */
+    void publishTeamCityArtifact(File file)
     {
-        this.mavenProject.getProperties().setProperty(
-            "project.version.standard",
-            toSet);
+        if (!this.enableTeamCityIntegration || !this.publishTeamCityArtifacts)
+        {
+            return;
+        }
+
+        if (file == null)
+        {
+            return;
+        }
+
+        if (!file.exists())
+        {
+            debug("not publishing non-existent artifact to teacmcity: %s", file);
+        }
+
+        File bd = null;
+        MavenProject mp = this.mavenProject;
+
+        while (bd == null)
+        {
+            if (mp.isExecutionRoot())
+            {
+                bd = mp.getBasedir();
+            }
+            else
+            {
+                mp = mp.getParent();
+            }
+        }
+
+        String relpath = PathUtils.toRelative(bd, file.toString());
+        info("##teamcity[publishArtifacts '%s => .']", relpath);
     }
-    
+
     /**
      * The read/write lock for {@link #getNvnProperties()} and
      * {@link #nvnStorage}.

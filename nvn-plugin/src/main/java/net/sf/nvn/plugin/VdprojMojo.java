@@ -118,7 +118,7 @@ public class VdprojMojo extends AbstractExeMojo
 
         cmdLineBuff.append("/Build");
         cmdLineBuff.append(" ");
-        cmdLineBuff.append(quote(getBuildConfigName()));
+        cmdLineBuff.append(quote(getBuildConfig()));
         cmdLineBuff.append(" ");
 
         cmdLineBuff.append("/Project");
@@ -460,7 +460,7 @@ public class VdprojMojo extends AbstractExeMojo
     }
 
     @Override
-    File getDefaultCommand()
+    File getCommand(int execution)
     {
         return new File("devenv.exe");
     }

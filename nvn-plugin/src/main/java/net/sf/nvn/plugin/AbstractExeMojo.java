@@ -48,13 +48,6 @@ import org.codehaus.plexus.util.CollectionUtils;
 public abstract class AbstractExeMojo extends AbstractNvnMojo
 {
     /**
-     * The command used to start the external process.
-     * 
-     * @parameter
-     */
-    File command;
-
-    /**
      * This content of this parameter, if specified, will override all other of
      * this Mojo's configuration parameters and execute the specified command
      * with this string as its sole command line argument(s).
@@ -212,35 +205,43 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     abstract String getArgs(int execution);
 
     /**
-     * Gets a file with the default command to execute.
+     * Gets a file with the command to execute.
      * 
-     * @return A file with the default command to execute.
+     * @param execution The execution count.
+     * 
+     * @return A file with the command to execute.
      */
-    abstract File getDefaultCommand();
+    abstract File getCommand(int execution);
 
     /**
-     * The number of executions to process.
+     * Get the number of executions to process.
+     * 
+     * @return The number of executions to process.
      */
-    int executionCount = 0;
+    int getExecutions()
+    {
+        return 1;
+    }
 
     /**
      * Builds the string that is executed by Runtime.exec(String, String[]).
      * 
-     * @param execution The execution count.
+     * @param execution The execution index.
      * 
      * @return The string that is executed by Runtime.exec(String, String[]).
      */
     final String buildCmdLineString(int execution)
     {
-        if (this.command == null)
-        {
-            this.command = getDefaultCommand();
-        }
-
         String args =
             StringUtils.isEmpty(this.args) ? getArgs(execution) : this.args;
-        String cmd = String.format("%s %s", getPath(this.command), args);
+        String cmd =
+            String.format("%s %s", getPath(getCommand(execution)), args);
         return cmd;
+    }
+    
+    protected boolean skipExec(int execution)
+    {
+        return false;
     }
 
     @Override
@@ -248,20 +249,26 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     {
         initProcEnvVars();
 
-        for (int x = 0; x <= this.executionCount; ++x)
+        for (int x = 0; x < getExecutions(); ++x)
         {
+            if (skipExec(x))
+            {
+                continue;
+            }
+            
             String cmd = buildCmdLineString(x);
             info("execution #%s: %s", x, cmd);
-            exec(cmd);
+            exec(x, cmd);
         }
     }
 
     /**
      * Invoked after exec(String cmd) has completed.
      * 
+     * @param execution The execution index.
      * @param process The completed process that was executed.
      */
-    void postExec(Process process) throws MojoExecutionException
+    void postExec(int execution, Process process) throws MojoExecutionException
     {
     }
 
@@ -290,10 +297,11 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
     /**
      * Executes the given command with Runtime.exec(String, String[]).
      * 
+     * @param execution The execution index.
      * @param cmd The command line string to execute.
      * @throws MojoExecutionException When an error occurs.
      */
-    final void exec(String cmd) throws MojoExecutionException
+    final void exec(int execution, String cmd) throws MojoExecutionException
     {
         try
         {
@@ -320,7 +328,7 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                 this.stderr = stderrBos.toString();
             }
 
-            postExec(p);
+            postExec(execution, p);
 
             if (exitCode != 0)
             {
