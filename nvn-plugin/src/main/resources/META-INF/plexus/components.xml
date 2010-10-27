@@ -54,6 +54,56 @@
         <component>
             <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
             </role>
+            <role-hint>lib</role-hint>
+            <implementation>
+                org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+            </implementation>
+            <configuration>
+                <lifecycles>
+                    <lifecycle>
+                        <id>clean</id>
+                        <phases>
+                            <pre-clean>
+                                net.sf.nvn:nvn-plugin:initialize
+                            </pre-clean>
+                            <clean>
+                                net.sf.nvn:nvn-plugin:clean
+                            </clean>
+                        </phases>
+                    </lifecycle>
+                    <lifecycle>
+                        <id>default</id>
+                        <phases>
+                            <initialize>
+                                net.sf.nvn:nvn-plugin:initialize
+                            </initialize>
+                            <generate-sources>
+                                net.sf.nvn:nvn-plugin:assembly-info,
+                                net.sf.nvn:nvn-plugin:wsdl,
+                                net.sf.nvn:nvn-plugin:xsd
+                            </generate-sources>
+                            <compile>
+                                net.sf.nvn:nvn-plugin:msbuild
+                            </compile>
+                            <install>
+                                org.apache.maven.plugins:maven-install-plugin:install
+                            </install>
+                            <package>
+                                net.sf.nvn:nvn-plugin:candle,
+                                net.sf.nvn:nvn-plugin:light,
+                                net.sf.nvn:nvn-plugin:signtool
+                            </package>
+                            <deploy>
+                                org.apache.maven.plugins:maven-deploy-plugin:deploy
+                            </deploy>
+                        </phases>
+                    </lifecycle>
+                </lifecycles>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.lifecycle.mapping.LifecycleMapping
+            </role>
             <role-hint>mstest</role-hint>
             <implementation>
                 org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
@@ -127,6 +177,9 @@
                             <compile>
                                 net.sf.nvn:nvn-plugin:msbuild
                             </compile>
+                            <install>
+                                org.apache.maven.plugins:maven-install-plugin:install
+                            </install>
                             <package>
                                 net.sf.nvn:nvn-plugin:candle,
                                 net.sf.nvn:nvn-plugin:light,
@@ -192,6 +245,32 @@
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
+            <role-hint>config</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>config</type>
+                <extension>config</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>tlb</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>tlb</type>
+                <extension>tlb</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
             <role-hint>exe</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
             </implementation>
@@ -218,12 +297,51 @@
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler
             </role>
+            <role-hint>lib</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>lib</type>
+                <extension>lib</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
             <role-hint>mstest</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
             </implementation>
             <configuration>
                 <type>mstest</type>
                 <extension>dll</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>msi</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>msi</type>
+                <extension>msi</extension>
+                <language>dotnet</language>
+                <addedToClasspath>false</addedToClasspath>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler
+            </role>
+            <role-hint>msm</role-hint>
+            <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>msm</type>
+                <extension>msm</extension>
                 <language>dotnet</language>
                 <addedToClasspath>false</addedToClasspath>
             </configuration>
