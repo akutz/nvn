@@ -20,7 +20,7 @@ namespace NvnBootstrapper
 
         public string FilePath { get; set; }
 
-        public int SuccessfulExitCode { get; set; }
+        public int[] ExitCodes { get; set; }
 
         public RegValue[] RegValues { get; set; }
 

@@ -1,9 +1,10 @@
-﻿namespace NvnBootstrapper
+namespace NvnBootstrapper
 {
-    internal class RegValue : InstallCheck
+    /// <summary>
+    /// A registry value.
+    /// </summary>
+    internal class RegValue : RegKey
     {
-        public string KeyPath { get; set; }
-
         public string ValueName { get; set; }
 
         public string Value { get; set; }

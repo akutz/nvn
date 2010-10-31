@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("${AssemblyTitle}")]
@@ -9,4 +9,4 @@ using System.Runtime.InteropServices;
 [assembly: Guid("${AssemblyGuid}")]
 [assembly: AssemblyVersion("${NvnVersion}")]
 [assembly: AssemblyFileVersion("${NvnVersion}")]
-[assembly: AssemblyInformationalVersion("${MavenVersion}")]
+[assembly: AssemblyInformationalVersion("${NvnVersionWithPrefixAndSuffix}")]

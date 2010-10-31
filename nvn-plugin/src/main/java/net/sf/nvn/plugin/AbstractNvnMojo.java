@@ -39,6 +39,7 @@ import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.nvn.commons.ProjectUtils;
+import net.sf.nvn.commons.Version;
 import net.sf.nvn.commons.msbuild.MSBuildProject;
 import net.sf.nvn.commons.msbuild.ProjectLanguageType;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -754,7 +755,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return props;
     }
 
-    protected String getStandardVersion()
+    protected Version getNvnVersion()
     {
         return getNvnProp(NPK_VERSION);
     }

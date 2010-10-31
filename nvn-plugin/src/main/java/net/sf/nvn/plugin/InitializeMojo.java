@@ -33,8 +33,7 @@ package net.sf.nvn.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import net.sf.nvn.commons.Version;
 import net.sf.nvn.commons.msbuild.MSBuildProject;
 import net.sf.nvn.commons.msbuild.ProjectLanguageType;
 import org.apache.commons.io.FileUtils;
@@ -141,6 +140,26 @@ public class InitializeMojo extends AbstractNvnMojo
      */
     String defaultVersion;
 
+    /**
+     * <p>
+     * Setting this parameter to true causes this mojo to read the BUILD_NUMBER
+     * environment variable set by TeamCity and replace the number of
+     * significant digits in the project's version that the BUILD_NUMBER is
+     * composed of from right to left.
+     * </p>
+     * <p>
+     * For example, if the project's version is "4.0.0-SNAPSHOT" and the value
+     * of BUILD_NUMBER is "42" then the NVN version will be set to "4.0.0.42".
+     * </p>
+     * <p>
+     * If though the BUILD_NUMBER value is "0.42" then the NVN version will be
+     * set to "4.0.0.42".
+     * </p>
+     * 
+     * @parameter default-value="true"
+     */
+    boolean enableTeamCityBuildNumber;
+
     @Override
     String getMojoName()
     {
@@ -157,7 +176,7 @@ public class InitializeMojo extends AbstractNvnMojo
     void nvnExecute() throws MojoExecutionException
     {
         initVersion();
-        initStandardVersion();
+        initNvnVersion();
         initMSBuildProject();
         initBuildConfig();
         initBuildPlatform();
@@ -225,50 +244,73 @@ public class InitializeMojo extends AbstractNvnMojo
      * 
      * @throws MojoExecutionException When an error occurs.
      */
-    void initStandardVersion() throws MojoExecutionException
+    void initNvnVersion() throws MojoExecutionException
     {
-        Pattern p = Pattern.compile("(?:\\d|\\.)+");
-        Matcher m = p.matcher(super.mavenProject.getVersion());
+        Version v;
 
-        String numericVersion;
-
-        if (m.find())
+        try
         {
-            numericVersion = m.group();
+            v = Version.parse(super.mavenProject.getVersion());
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException("Error parsing version from "
+                + super.mavenProject.getVersion());
+        }
 
-            // If the numeric version only has three parts (MAJOR.MINOR.BUILD)
-            // then add a fourth part, REVISION with a value of 0.
-            if (numericVersion.matches("^\\d*?\\.\\d*\\.\\d*$"))
+        if (super.enableTeamCityIntegration && this.enableTeamCityBuildNumber)
+        {
+            String envVarBuildNum = System.getenv("BUILD_NUMBER");
+
+            if (StringUtils.isNotEmpty(envVarBuildNum))
             {
-                if (numericVersion.endsWith(".0")
-                    && this.enableTeamCityIntegration)
-                {
-                    String bn = System.getenv("BUILD_NUMBER");
+                Version buildNumVer;
 
-                    if (StringUtils.isNotEmpty(bn) && bn.matches("\\d+"))
-                    {
-                        numericVersion =
-                            numericVersion.substring(
-                                0,
-                                numericVersion.length() - 2)
-                                + "."
-                                + System.getenv("BUILD_NUMBER");
-                    }
+                try
+                {
+                    buildNumVer = Version.parse(envVarBuildNum);
+                }
+                catch (Exception e)
+                {
+                    throw new MojoExecutionException(
+                        "Error parsing version from " + envVarBuildNum);
                 }
 
-                numericVersion = numericVersion + ".0";
+                switch (buildNumVer.getNumberOfComponents())
+                {
+                    case 1 :
+                    {
+                        v.setRevision(buildNumVer.getMajor());
+                        break;
+                    }
+                    case 2 :
+                    {
+                        v.setBuild(buildNumVer.getMajor());
+                        v.setRevision(buildNumVer.getMinor());
+                        break;
+                    }
+                    case 3 :
+                    {
+                        v.setMinor(buildNumVer.getMajor());
+                        v.setBuild(buildNumVer.getMinor());
+                        v.setRevision(buildNumVer.getBuild());
+                        break;
+                    }
+                    case 4 :
+                    {
+                        v.setMajor(buildNumVer.getMajor());
+                        v.setMinor(buildNumVer.getMinor());
+                        v.setBuild(buildNumVer.getBuild());
+                        v.setRevision(buildNumVer.getRevision());
+                        break;
+                    }
+                }
             }
         }
-        else
-        {
-            throw new MojoExecutionException(
-                "Error parsing numeric version from "
-                    + super.mavenProject.getVersion());
-        }
 
-        initNvnProp(NPK_VERSION, numericVersion);
+        initNvnProp(NPK_VERSION, v);
 
-        info("initialized standard version: " + numericVersion);
+        info("initialized nvn version: " + v);
     }
 
     /**

@@ -26,7 +26,7 @@ namespace NvnBootstrapper
             {
                 this.lblStatus.Text =
                     string.Format(
-                        @"{0} Bootstrapper completed successfully.",
+                        @"{0} completed successfully.",
                         InstallResources.ProductName);
                 this.lblExplanation.Text = string.Empty;
             }
@@ -34,7 +34,7 @@ namespace NvnBootstrapper
             {
                 this.lblStatus.Text =
                     string.Format(
-                        @"{0} Bootstrapper did not complete successfully",
+                        @"{0} did not complete successfully",
                         InstallResources.ProductName);
                 this.lblExplanation.Text = InstallManager.InstallError;
             }

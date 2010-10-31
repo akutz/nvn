@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RegUtils.cs" />
     <Compile Include="ExtensionAttribute.cs" />
     <Compile Include="InstallCheck.cs" />
     <Compile Include="RunningProcess.cs" />

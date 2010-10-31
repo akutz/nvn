@@ -43,7 +43,9 @@ public class RegValue extends InstallCheck implements Serializable
     /**
      * The registry key's path.
      */
-    String keyPath;
+    String path;
+    
+    boolean x64;
 
     /**
      * The registry key's value name.
@@ -92,7 +94,8 @@ public class RegValue extends InstallCheck implements Serializable
     {
         StringBuilder buff = new StringBuilder();
         buff.append("new RegValue {");
-        buff.append(String.format("KeyPath=@\"%s\", ", keyPath));
+        buff.append(String.format("Path=@\"%s\", ", path));
+        buff.append(String.format("X64=%s,", x64 ? "true" : "false"));
         buff.append(String.format("ValueName=@\"%s\", ", valueName));
         buff.append(String.format("Value=@\"%s\", ", value));
         buff.append(String.format("TypeName=@\"%s\", ", typeName));

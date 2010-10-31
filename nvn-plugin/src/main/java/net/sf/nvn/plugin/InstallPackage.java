@@ -32,6 +32,8 @@ package net.sf.nvn.plugin;
 
 import java.io.File;
 import java.io.Serializable;
+import org.apache.commons.io.FilenameUtils;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * An install package.
@@ -45,36 +47,165 @@ public class InstallPackage implements Serializable
      * The serial version UID.
      */
     private static final long serialVersionUID = 8492597991547421295L;
-    
+
     /**
      * The name of the installer.
      */
     String name;
-    
+
     /**
      * The install package's file.
      */
     File file;
-    
+
     File[] fileParts;
 
     String installArgs;
-    
+
     String uninstallArgs;
-    
+
     String quietInstallArgs;
-    
+
     String quietUninstallArgs;
-    
+
     boolean supportsUninstall;
-    
-    int successfulExitCode;
-    
+
+    Integer[] exitCodes;
+
     RegKey[] regKeys;
-    
+
     RegValue[] regValues;
-    
+
     RunningProcess[] runningProcesses;
-    
+
     String prompt;
+
+    @Override
+    public String toString()
+    {
+        StringBuilder buff = new StringBuilder();
+
+        buff.append("new InstallPackage {\r\n");
+
+        buff.append("ResourceKeys=new[] {\r\n");
+
+        for (File filePart : fileParts)
+        {
+            buff.append(String.format(
+                "@\"%s\",\r\n",
+                FilenameUtils.getBaseName(filePart.toString())));
+        }
+
+        buff.append("},\r\n");
+        buff.append(String.format("Name=@\"%s\",\r\n", name));
+        buff.append(String.format(
+            "Extension=@\"%s\",\r\n",
+            FilenameUtils.getExtension(file.toString())));
+        buff.append(String.format(
+            "SupportsUninstall=%s,\r\n",
+            supportsUninstall ? "true" : "false"));
+
+        if (StringUtils.isNotEmpty(installArgs))
+        {
+            buff.append(String.format("InstallArgs=@\"%s\",\r\n", installArgs));
+        }
+
+        if (StringUtils.isNotEmpty(uninstallArgs))
+        {
+            buff.append(String.format(
+                "UninstallArgs=@\"%s\",\r\n",
+                uninstallArgs));
+        }
+
+        if (StringUtils.isNotEmpty(quietInstallArgs))
+        {
+            buff.append(String.format(
+                "QuietInstallArgs=@\"%s\",\r\n",
+                quietInstallArgs));
+        }
+
+        if (StringUtils.isNotEmpty(quietUninstallArgs))
+        {
+            buff.append(String.format(
+                "QuietUninstallArgs=@\"%s\",\r\n",
+                quietUninstallArgs));
+        }
+
+        if (StringUtils.isNotEmpty(prompt))
+        {
+            buff.append(String.format("Prompt=@\"%s\",\r\n", prompt));
+        }
+
+        if (exitCodes == null)
+        {
+            buff.append("ExitCodes = new[] {0},\r\n");
+        }
+        else
+        {
+            buff.append("ExitCodes = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (int x : this.exitCodes)
+            {
+                buff.append(String.format("%s, ", x));
+            }
+
+            buff.append("},\r\n");
+        }
+
+        if (regKeys == null)
+        {
+            buff.append("RegKeys = new RegKey[0],\r\n");
+        }
+        else
+        {
+            buff.append("RegKeys = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RegKey rk : regKeys)
+            {
+                buff.append(rk.toString());
+            }
+
+            buff.append("},\r\n");
+        }
+
+        if (regValues == null)
+        {
+            buff.append("RegValues = new RegValue[0],\r\n");
+        }
+        else
+        {
+            buff.append("RegValues = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RegValue rv : regValues)
+            {
+                buff.append(rv.toString());
+            }
+
+            buff.append("},\r\n");
+        }
+
+        if (runningProcesses == null)
+        {
+            buff.append("RunningProcesses = new RunningProcess[0],\r\n");
+        }
+        else
+        {
+            buff.append("RunningProcesses = new[]\r\n");
+            buff.append("{\r\n");
+
+            for (RunningProcess rp : runningProcesses)
+            {
+                buff.append(rp.toString());
+            }
+
+            buff.append("},\r\n");
+        }
+
+        buff.append("},\r\n");
+
+        return buff.toString();
+    }
 }

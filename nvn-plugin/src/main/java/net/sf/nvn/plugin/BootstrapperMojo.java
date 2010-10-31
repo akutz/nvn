@@ -44,7 +44,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
  * A MOJO for creating a bootstrapper for an MSI package and its prerequisites.
@@ -314,6 +313,7 @@ public class BootstrapperMojo extends AbstractExeMojo
         initFile("InstallManager.cs");
         initFile("InstallPackage.cs");
         initFile("Program.cs");
+        initFile("RegUtils.cs");
         initFile("RegValue.cs");
         initFile("RegKey.cs");
         initFile("MsiNative.cs");
@@ -576,13 +576,13 @@ public class BootstrapperMojo extends AbstractExeMojo
                 .randomUUID()
                 .toString());
         content =
-            content.replaceAll(
-                "\\$\\{NvnVersion\\}",
-                super.getStandardVersion());
+            content.replaceAll("\\$\\{NvnVersion\\}", super
+                .getNvnVersion()
+                .toString());
         content =
-            content.replaceAll(
-                "\\$\\{MavenVersion\\}",
-                super.mavenProject.getVersion());
+            content.replaceAll("\\$\\{NvnVersionWithPrefixAndSuffix\\}", super
+                .getNvnVersion()
+                .toStringWithPrefixAndSuffix());
 
         File outFile = new File(this.tmpProjDir, "Properties\\AssemblyInfo.cs");
 
@@ -715,116 +715,9 @@ public class BootstrapperMojo extends AbstractExeMojo
             .append("public static InstallPackage[] InstallPackages = new[]\r\n");
         buff.append("{\r\n");
 
-        for (int x = 0; x < this.installPackageConfig.installPackages.size(); ++x)
+        for (InstallPackage ip : this.installPackageConfig.installPackages)
         {
-            InstallPackage ip =
-                this.installPackageConfig.installPackages.get(x);
-
-            buff.append("new InstallPackage {\r\n");
-
-            buff.append("ResourceKeys=new[] {");
-
-            for (File filePart : ip.fileParts)
-            {
-                buff.append(String.format(
-                    "@\"%s\",\r\n",
-                    FilenameUtils.getBaseName(filePart.toString())));
-            }
-
-            buff.append("},\r\n");
-            buff.append(String.format("Name=@\"%s\",\r\n", ip.name));
-            buff.append(String.format(
-                "Extension=@\"%s\",\r\n",
-                FilenameUtils.getExtension(ip.file.toString())));
-            buff.append(String.format(
-                "SupportsUninstall=%s,\r\n",
-                ip.supportsUninstall ? "true" : "false"));
-
-            if (StringUtils.isNotEmpty(ip.installArgs))
-            {
-                buff.append(String.format(
-                    "InstallArgs=@\"%s\",\r\n",
-                    ip.installArgs));
-            }
-
-            if (StringUtils.isNotEmpty(ip.uninstallArgs))
-            {
-                buff.append(String.format(
-                    "UninstallArgs=@\"%s\",\r\n",
-                    ip.uninstallArgs));
-            }
-
-            if (StringUtils.isNotEmpty(ip.quietInstallArgs))
-            {
-                buff.append(String.format(
-                    "QuietInstallArgs=@\"%s\",\r\n",
-                    ip.quietInstallArgs));
-            }
-
-            if (StringUtils.isNotEmpty(ip.quietUninstallArgs))
-            {
-                buff.append(String.format(
-                    "QuietUninstallArgs=@\"%s\",\r\n",
-                    ip.quietUninstallArgs));
-            }
-
-            if (StringUtils.isNotEmpty(ip.prompt))
-            {
-                buff.append(String.format("Prompt=@\"%s\",\r\n", ip.prompt));
-            }
-
-            if (ip.regKeys == null)
-            {
-                buff.append("RegKeys = new RegKey[0],\r\n");
-            }
-            else
-            {
-                buff.append("RegKey[] RegKeys = new[]\r\n");
-                buff.append("{\r\n");
-
-                for (RegKey rk : ip.regKeys)
-                {
-                    buff.append(rk.toString());
-                }
-
-                buff.append("},\r\n");
-            }
-
-            if (ip.regValues == null)
-            {
-                buff.append("RegValues = new RegValue[0],\r\n");
-            }
-            else
-            {
-                buff.append("RegValues = new[]\r\n");
-                buff.append("{\r\n");
-
-                for (RegValue rv : ip.regValues)
-                {
-                    buff.append(rv.toString());
-                }
-
-                buff.append("},\r\n");
-            }
-
-            if (ip.runningProcesses == null)
-            {
-                buff.append("RunningProcesses = new RunningProcess[0],\r\n");
-            }
-            else
-            {
-                buff.append("RunningProcesses = new[]\r\n");
-                buff.append("{\r\n");
-
-                for (RunningProcess rp : ip.runningProcesses)
-                {
-                    buff.append(rp.toString());
-                }
-
-                buff.append("},\r\n");
-            }
-
-            buff.append("},\r\n");
+            buff.append(ip.toString());
         }
 
         buff.append("};\r\n");
@@ -893,15 +786,11 @@ public class BootstrapperMojo extends AbstractExeMojo
                     bootstrapExe), e);
             }
 
-            /*try
-            {
-                FileUtils.deleteDirectory(this.tmpProjDir);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException("Error deleting "
-                    + this.tmpProjDir, e);
-            }*/
+            /*
+             * try { FileUtils.deleteDirectory(this.tmpProjDir); } catch
+             * (IOException e) { throw new
+             * MojoExecutionException("Error deleting " + this.tmpProjDir, e); }
+             */
 
             if (this.demandUac)
             {
@@ -925,7 +814,7 @@ public class BootstrapperMojo extends AbstractExeMojo
                 String text =
                     String.format(
                         format,
-                        super.getStandardVersion(),
+                        super.getNvnVersion(),
                         exeBaseName,
                         super.mavenProject.getDescription());
 

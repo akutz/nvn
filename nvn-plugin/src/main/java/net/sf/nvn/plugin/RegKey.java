@@ -40,13 +40,16 @@ public class RegKey extends InstallCheck implements Serializable
     private static final long serialVersionUID = -7588236956300993927L;
 
     String path;
+    
+    boolean x64;
 
     @Override
     public String toString()
     {
         return String.format(
-            "new RegKey {Path=@\"%s\", ErrorMessage=@\"%s\", Inverse=%s,},\r\n",
+            "new RegKey {Path=@\"%s\", X64=%s, ErrorMessage=@\"%s\", Inverse=%s,},\r\n",
             path,
+            x64 ? "true" : "false",
             errorMessage,
             inverse ? "true" : "false");
     }

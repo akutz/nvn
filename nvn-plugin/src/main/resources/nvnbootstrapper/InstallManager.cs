@@ -9,7 +9,6 @@ namespace NvnBootstrapper
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Windows.Forms;
-    using Microsoft.Win32;
 
     internal static class InstallManager
     {
@@ -22,6 +21,20 @@ namespace NvnBootstrapper
         public delegate void InstallProgressInitEvent(int total);
 
         #endregion
+
+        /// <summary>
+        /// The GUID used to identify the bootstrapper's named, single install mutex
+        /// as well as the name of the file in the system's temporary directory used to
+        /// record the name of the currently running bootstrapper.
+        /// </summary>
+        private const string BootstrapperGuid =
+            @"B44584C3-ECA1-495D-A17E-6A8C3BD8403C";
+
+        /// <summary>
+        /// The mutex to guarantee that there is only a single bootstrapper
+        /// running at any given time.
+        /// </summary>
+        private static Mutex singleInstallMutex;
 
         private static readonly string TempPath = Path.GetTempPath();
 
@@ -39,6 +52,27 @@ namespace NvnBootstrapper
         /// </summary>
         private static bool installing;
 
+        private static readonly DirectoryInfo SystemTempDir;
+
+        private static readonly FileInfo InstallInProgressFile;
+
+        /// <summary>
+        /// The static constructor.
+        /// </summary>
+        static InstallManager()
+        {
+            SystemTempDir =
+                new DirectoryInfo(
+                    string.Format(
+                        @"{0}\Temp",
+                        Environment.GetEnvironmentVariable(@"SystemRoot")));
+
+            InstallInProgressFile =
+                new FileInfo(
+                    string.Format(
+                        @"{0}\{1}.txt", SystemTempDir.FullName, BootstrapperGuid));
+        }
+
         /// <summary>
         /// Gets or sets the install form.
         /// </summary>
@@ -49,8 +83,58 @@ namespace NvnBootstrapper
         /// </summary>
         public static string InstallError { get; set; }
 
+        /// <summary>
+        /// Gets a string that indicates the name of a bootstrapper installer in progress.
+        /// A null value is returned if there is no existing install in progress.
+        /// </summary>
+        private static void ProcessInstallInProgress()
+        {
+            bool createdNew;
+
+            singleInstallMutex = new Mutex(
+                true, BootstrapperGuid, out createdNew);
+
+            if (createdNew)
+            {
+                Application.ApplicationExit +=
+                    (s, e) => singleInstallMutex.ReleaseMutex();
+
+                if (SystemTempDir.Exists)
+                {
+                    File.WriteAllText(
+                        InstallInProgressFile.FullName,
+                        InstallResources.ProductName);
+                }
+
+                return;
+            }
+
+            if (InstallInProgressFile.Exists)
+            {
+                InstallError =
+                    string.Format(
+                        @"Concurrent installations are not allowed. " +
+                            @"Please complete the installation for '{0}' " +
+                                @"and then try again.",
+                        File.ReadAllText(InstallInProgressFile.FullName));
+            }
+            else
+            {
+                InstallError = @"Concurrent installations are not allowed. " +
+                    @"Please complete the other installation " +
+                        @"and then try again.";
+            }
+        }
+
         public static void ProcessGlobalChecks()
         {
+            ProcessInstallInProgress();
+
+            if (InstallError != null)
+            {
+                return;
+            }
+
             ProcessRegKeys();
 
             if (InstallError != null)
@@ -128,41 +212,19 @@ namespace NvnBootstrapper
         /// </returns>
         private static bool ProcessRegKey(RegKey rk)
         {
-            var p = rk.Path;
-            RegistryKey frk = null;
+            var frk = rk.X64
+                ? RegUtils.OpenKey(
+                    rk.Path, false, RegUtils.ProcessArchitecture.X64)
+                : RegUtils.OpenKey(rk.Path);
 
-            if (p.StartsWith(@"HKCR"))
+            var frkIsNull = frk == null;
+
+            if (!frkIsNull)
             {
-                p = p.Replace(@"HKCR\", string.Empty);
-                frk = Registry.ClassesRoot.OpenSubKey(p);
-            }
-            else if (p.StartsWith(@"HKCU"))
-            {
-                p = p.Replace(@"HKCU\", string.Empty);
-                frk = Registry.CurrentUser.OpenSubKey(p);
-            }
-            else if (p.StartsWith(@"HKLM"))
-            {
-                p = p.Replace(@"HKLM\", string.Empty);
-                frk = Registry.LocalMachine.OpenSubKey(p);
-            }
-            else if (p.StartsWith(@"HKU"))
-            {
-                p = p.Replace(@"HKU\", string.Empty);
-                frk = Registry.Users.OpenSubKey(p);
-            }
-            else if (p.StartsWith(@"HKCC"))
-            {
-                p = p.Replace(@"HKCC\", string.Empty);
-                frk = Registry.CurrentConfig.OpenSubKey(p);
-            }
-            else if (p.StartsWith(@"HKPD"))
-            {
-                p = p.Replace(@"HKPD\", string.Empty);
-                frk = Registry.PerformanceData.OpenSubKey(p);
+                frk.Close();
             }
 
-            return rk.Inverse ? frk == null : frk != null;
+            return rk.Inverse ? frkIsNull : !frkIsNull;
         }
 
         /// <summary>
@@ -195,9 +257,19 @@ namespace NvnBootstrapper
                 return false;
             }
 
-            var kp = ExpandRegRootName(rv.KeyPath);
+            var frk = rv.X64
+                ? RegUtils.OpenKey(
+                    rv.Path, false, RegUtils.ProcessArchitecture.X64)
+                : RegUtils.OpenKey(rv.Path);
 
-            var ov = Registry.GetValue(kp, rv.ValueName, null);
+            if (frk == null)
+            {
+                return false;
+            }
+
+            var ov = frk.GetValue(rv.ValueName);
+
+            frk.Close();
 
             if (ov == null)
             {
@@ -525,8 +597,7 @@ namespace NvnBootstrapper
                     IncrementInstallProgress();
                 }
 
-                SendInstallMessage(
-                    @"Installation completed.");
+                SendInstallMessage(@"Installation completed.");
             }
             else
             {
@@ -681,16 +752,7 @@ namespace NvnBootstrapper
 
             p.WaitForExit();
 
-            var xit = p.ExitCode;
-
-            if (xit != ip.SuccessfulExitCode)
-            {
-                InstallError =
-                    string.Format(
-                        @"An error occurred while installing {0}. An exit code of '{1}' was returned.",
-                        ip.Name,
-                        xit);
-            }
+            ProcessExitCode(ip, p.ExitCode);
         }
 
         private static void InstallExePackage(InstallPackage ip)
@@ -718,15 +780,29 @@ namespace NvnBootstrapper
 
             p.WaitForExit();
 
-            var xit = p.ExitCode;
+            ProcessExitCode(ip, p.ExitCode);
+        }
 
-            if (xit != ip.SuccessfulExitCode)
+        private static void ProcessExitCode(InstallPackage ip, int exitCode)
+        {
+            var success = false;
+
+            foreach (var i in ip.ExitCodes)
+            {
+                if (i == exitCode)
+                {
+                    success = true;
+                    break;
+                }
+            }
+
+            if (!success)
             {
                 InstallError =
                     string.Format(
                         @"An error occurred while installing {0}. An exit code of '{1}' was returned.",
                         ip.Name,
-                        xit);
+                        exitCode);
             }
         }
 
@@ -790,41 +866,6 @@ namespace NvnBootstrapper
             p.Start();
 
             p.WaitForExit();
-        }
-
-        private static string ExpandRegRootName(string path)
-        {
-            if (path.StartsWith(@"HKCR\"))
-            {
-                return path.Replace(@"HKCR\", @"HKEY_CLASSES_ROOT\");
-            }
-
-            if (path.StartsWith(@"HKCU\"))
-            {
-                return path.Replace(@"HKCU\", @"HKEY_CURRENT_USER\");
-            }
-
-            if (path.StartsWith(@"HKLM\"))
-            {
-                return path.Replace(@"HKLM\", @"HKEY_LOCAL_MACHINE\");
-            }
-
-            if (path.StartsWith(@"HKU\"))
-            {
-                return path.Replace(@"HKU\", @"HKEY_USERS\");
-            }
-
-            if (path.StartsWith(@"HKCC\"))
-            {
-                return path.Replace(@"HKCC\", @"HKEY_CURRENT_CONFIG\");
-            }
-
-            if (path.StartsWith(@"HKPD\"))
-            {
-                return path.Replace(@"HKPD\", @"HKEY_PERFORMANCE_DATA\");
-            }
-
-            return path;
         }
 
         private static void InitInstallProgress(int total)

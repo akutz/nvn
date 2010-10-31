@@ -88,13 +88,6 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     String assemblyDescription;
 
     /**
-     * The value of the AssemblyInformationalVersion attribute.
-     * 
-     * @parameter default-value="${project.version}"
-     */
-    String assemblyInformationalVersion;
-
-    /**
      * The location of the .NET AssemblyInfo file to output.
      * 
      * @parameter default-value="${basedir}/Properties/AssemblyInfo.cs"
@@ -346,12 +339,10 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
             }
 
             outAttr(out, "Guid", this.guid);
-            outAttr(out, "AssemblyVersion", getStandardVersion());
-            outAttr(out, "AssemblyFileVersion", getStandardVersion());
-            outAttr(
-                out,
-                "AssemblyInformationalVersion",
-                this.assemblyInformationalVersion);
+            outAttr(out, "AssemblyVersion", getNvnVersion().toString());
+            outAttr(out, "AssemblyFileVersion", getNvnVersion().toString());
+            outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
+                .toStringWithPrefixAndSuffix());
 
             out.close();
 
