@@ -137,26 +137,22 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
 
         if (StringUtils.isNotEmpty(m.group(2)))
         {
-            v.major = m.group(2);
-            ++v.numberOfComponents;
+            v.setMajor(m.group(2));
         }
 
         if (StringUtils.isNotEmpty(m.group(3)))
         {
-            v.minor = m.group(3);
-            ++v.numberOfComponents;
+            v.setMinor(m.group(3));
         }
 
         if (StringUtils.isNotEmpty(m.group(4)))
         {
-            v.build = m.group(4);
-            ++v.numberOfComponents;
+            v.setBuild(m.group(4));
         }
 
         if (StringUtils.isNotEmpty(m.group(5)))
         {
-            v.revision = m.group(5);
-            ++v.numberOfComponents;
+            v.setRevision(m.group(5));
         }
 
         v.suffix = m.group(6);
@@ -196,6 +192,11 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
         if (!toSet.matches("\\d+"))
         {
             throw new IllegalArgumentException("Argument is not numeric");
+        }
+        
+        if (this.numberOfComponents < 1)
+        {
+            this.numberOfComponents = 1;
         }
 
         this.major = toSet;
