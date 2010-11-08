@@ -3,6 +3,8 @@ namespace NvnBootstrapper
     internal class InstallPackage
     {
         public string Name { get; set; }
+        
+        public string FileName { get; set; }
 
         public string Extension { get; set; }
 

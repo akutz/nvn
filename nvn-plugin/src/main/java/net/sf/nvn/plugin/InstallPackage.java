@@ -54,6 +54,11 @@ public class InstallPackage implements Serializable
     String name;
 
     /**
+     * The name of the installer file that will be written to the file system.
+     */
+    String fileName;
+
+    /**
      * The install package's file.
      */
     File file;
@@ -98,6 +103,9 @@ public class InstallPackage implements Serializable
 
         buff.append("},\r\n");
         buff.append(String.format("Name=@\"%s\",\r\n", name));
+        buff.append(String.format(
+            "FileName=@\"%s\",\r\n",
+            StringUtils.isNotEmpty(this.fileName) ? this.fileName : this.name));
         buff.append(String.format(
             "Extension=@\"%s\",\r\n",
             FilenameUtils.getExtension(file.toString())));

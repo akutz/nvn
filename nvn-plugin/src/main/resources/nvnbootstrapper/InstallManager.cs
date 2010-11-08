@@ -575,7 +575,7 @@ namespace NvnBootstrapper
                 }
 
                 ip.FilePath = string.Format(
-                    @"{0}\{1}.{2}", TempPath, ip.Name, ip.Extension);
+                    @"{0}\{1}.{2}", TempPath, ip.FileName, ip.Extension);
                 ExtractInstallPackage(ip);
                 InstallInstallPackage(ip);
 

@@ -54,13 +54,6 @@ import org.apache.maven.project.MavenProject;
 public class MSBuildMojo extends AbstractExeMojo
 {
     /**
-     * The path to the solution or project to build.
-     * 
-     * @parameter
-     */
-    // File buildFile;
-
-    /**
      * A list of additional directories to resolve your project's references
      * against.
      */

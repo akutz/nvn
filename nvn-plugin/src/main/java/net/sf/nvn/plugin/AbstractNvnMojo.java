@@ -90,6 +90,22 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     protected final static String NPK_VERSION = "version";
 
     /**
+     * The property key for the standard version's MAJOR component.
+     */
+    protected final static String NPK_VERSION_1 = "version.1";
+
+    /**
+     * The property key for the standard version's MAJOR and MINOR components.
+     */
+    protected final static String NPK_VERSION_2 = "version.2";
+
+    /**
+     * The property key for the standard version's MAJOR, MINOR, and BUILD
+     * components.
+     */
+    protected final static String NPK_VERSION_3 = "version.3";
+
+    /**
      * The property key for the project's build directory. Unlike the default
      * Maven property 'project.build.directory', this property value is relative
      * to the project's base directory.

@@ -138,6 +138,14 @@ public class BootstrapperMojo extends AbstractExeMojo
     String outputFileName;
 
     /**
+     * The name of the product the bootstrapper is responsible for installing.
+     * 
+     * @parameter
+     * @required
+     */
+    String productName;
+
+    /**
      * Settings this parameter to true embeds a special manifest inside the
      * bootstrapper executable that requests UAC privilege escalation on Windows
      * Vista and newer operating systems.
@@ -560,9 +568,9 @@ public class BootstrapperMojo extends AbstractExeMojo
         }
 
         content =
-            content.replaceAll("\\$\\{AssemblyTitle\\}", this.outputFileName);
+            content.replaceAll("\\$\\{AssemblyTitle\\}", this.productName);
         content =
-            content.replaceAll("\\$\\{AssemblyProduct\\}", this.outputFileName);
+            content.replaceAll("\\$\\{AssemblyProduct\\}", this.productName);
         content =
             content.replaceAll("\\$\\{AssemblyCompany\\}", super.mavenProject
                 .getOrganization()
@@ -623,7 +631,7 @@ public class BootstrapperMojo extends AbstractExeMojo
         }
 
         content =
-            content.replaceAll("\\$\\{ProductName\\}", this.outputFileName);
+            content.replaceAll("\\$\\{ProductName\\}", this.productName);
         content =
             content.replaceAll("\\$\\{EndPageUrlLink\\}", this.endPageUrlLink);
         content =

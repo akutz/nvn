@@ -309,6 +309,9 @@ public class InitializeMojo extends AbstractNvnMojo
         }
 
         initNvnProp(NPK_VERSION, v);
+        initNvnProp(NPK_VERSION_1, v.toString(1));
+        initNvnProp(NPK_VERSION_2, v.toString(2));
+        initNvnProp(NPK_VERSION_3, v.toString(3));
 
         info("initialized nvn version: " + v);
     }

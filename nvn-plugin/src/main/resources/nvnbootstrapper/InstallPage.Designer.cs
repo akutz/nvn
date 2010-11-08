@@ -66,7 +66,7 @@ namespace NvnBootstrapper
             this.lblInstallingHeader.Font = new System.Drawing.Font("Tahoma", 10F, System.Drawing.FontStyle.Bold);
             this.lblInstallingHeader.Location = new System.Drawing.Point(5, 14);
             this.lblInstallingHeader.Name = "lblInstallingHeader";
-            this.lblInstallingHeader.Size = new System.Drawing.Size(570, 31);
+            this.lblInstallingHeader.Size = new System.Drawing.Size(427, 31);
             this.lblInstallingHeader.TabIndex = 0;
             this.lblInstallingHeader.Text = "Installing Nvn Bootstrapper";
             this.lblInstallingHeader.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
