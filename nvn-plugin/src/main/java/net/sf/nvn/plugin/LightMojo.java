@@ -26,6 +26,14 @@ import org.codehaus.plexus.util.StringUtils;
 public class LightMojo extends AbstractExeMojo
 {
     /**
+     * Settings this parameter to true causes a light pre-processor parameter of
+     * DEBUG to be included when the version ends with "-SNAPSHOT".
+     * 
+     * @parameter default-value="true"
+     */
+    boolean enableDebugSymbolForSnapshotBuilds;
+
+    /**
      * The source object files.
      * 
      * @parameter
@@ -435,7 +443,8 @@ public class LightMojo extends AbstractExeMojo
             }
         }
 
-        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        if (this.enableDebugSymbolForSnapshotBuilds
+            && super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
         {
             if (this.preProcessorParmaeters == null)
             {

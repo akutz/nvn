@@ -414,7 +414,7 @@ public class InitializeMojo extends AbstractNvnMojo
         {
             initNvnProp(NPK_CONFIG, this.buildConfig);
         }
-        else if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
+        else if (this.mavenProject.getVersion().endsWith("-SNAPSHOT"))
         {
             initNvnProp(NPK_CONFIG, this.buildConfigDebug);
         }
@@ -450,7 +450,7 @@ public class InitializeMojo extends AbstractNvnMojo
         {
             initNvnProp(NPK_PLATFORM, this.buildPlatform);
         }
-        else if (this.mavenProject.getVersion().contains("-SNAPSHOT"))
+        else if (this.mavenProject.getVersion().endsWith("-SNAPSHOT"))
         {
             initNvnProp(NPK_PLATFORM, this.buildPlatformDebug);
         }

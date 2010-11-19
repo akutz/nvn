@@ -5,7 +5,6 @@ namespace NvnBootstrapper
     using System.Diagnostics;
     using System.IO;
     using System.Resources;
-    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Windows.Forms;
@@ -423,8 +422,7 @@ namespace NvnBootstrapper
                 }
             }
 
-            foreach (var prod in
-                new MsiEnumWrapper<Product>(default(Product), EnumProducts))
+            foreach (var prod in MsiUtil.Products)
             {
                 var toRemove = new List<ProductRemover>();
 
@@ -492,14 +490,6 @@ namespace NvnBootstrapper
             }
         }
 
-        private static int EnumProducts(int index, ref Product data)
-        {
-            var buffer = new StringBuilder(Msi.GuidLength);
-            var ret = Msi.MsiEnumProducts(index, buffer);
-            data.ProductCode = buffer.ToString();
-            return ret;
-        }
-
         public static void OnAllPurposeClick(Page sender)
         {
             if (!installing && sender is InstallPage)
@@ -533,8 +523,10 @@ namespace NvnBootstrapper
 
             var installedPkgs = new List<InstallPackage>();
 
-            foreach (var ip in InstallResources.InstallPackages)
+            for (var x = 0; x < InstallResources.InstallPackages.Length; ++x)
             {
+                var ip = InstallResources.InstallPackages[x];
+
                 if (!ValidateInstallPackage(ip))
                 {
                     total -= 2;
@@ -577,7 +569,9 @@ namespace NvnBootstrapper
                 ip.FilePath = string.Format(
                     @"{0}\{1}.{2}", TempPath, ip.FileName, ip.Extension);
                 ExtractInstallPackage(ip);
-                InstallInstallPackage(ip);
+
+                InstallInstallPackage(
+                    ip, x == (InstallResources.InstallPackages.Length - 1));
 
                 if (InstallError != null)
                 {
@@ -673,7 +667,8 @@ namespace NvnBootstrapper
             IncrementInstallProgress();
         }
 
-        private static void InstallInstallPackage(InstallPackage ip)
+        private static void InstallInstallPackage(
+            InstallPackage ip, bool lastPackage)
         {
             SendInstallMessage(@"Installing " + ip.Name);
 
@@ -681,7 +676,7 @@ namespace NvnBootstrapper
             {
                 case @"msi":
                 {
-                    InstallMsiPackage(ip);
+                    InstallMsiPackage(ip, lastPackage);
                     break;
                 }
                 case @"exe":
@@ -715,21 +710,53 @@ namespace NvnBootstrapper
             DecrementInstallProgress();
         }
 
-        private static void InstallMsiPackage(InstallPackage ip)
+        private static void InstallMsiPackage(
+            InstallPackage ip, bool lastPackage)
         {
             string argsPatt;
 
-            if (!string.IsNullOrEmpty(ip.InstallArgs))
+            var showInstaller = false;
+
+            // If this is the last package being installed then
+            // it should be considered the target package of the
+            // bootstrapper. Check to see if a package with the
+            // same ProductCode is already installed, and if it
+            // is then show the installer.
+            if (lastPackage)
             {
-                argsPatt = ip.InstallArgs;
+                var newPc = MsiUtil.GetProductCode(new FileInfo(ip.FilePath));
+
+                // Find the old product code if it exists.
+                foreach (var prod in MsiUtil.Products)
+                {
+                    if (prod.ProductCode == newPc)
+                    {
+                        showInstaller = true;
+                        break;
+                    }
+                }
             }
-            else if (!string.IsNullOrEmpty(ip.QuietInstallArgs))
+
+            if (showInstaller)
             {
-                argsPatt = ip.QuietInstallArgs;
+                argsPatt = !string.IsNullOrEmpty(ip.InstallArgs)
+                    ? ip.InstallArgs
+                    : @"/i ""{0}"" /norestart /l ""{1}""";
             }
             else
             {
-                argsPatt = @"/i ""{0}"" /qn /norestart /l ""{1}""";
+                if (!string.IsNullOrEmpty(ip.InstallArgs))
+                {
+                    argsPatt = ip.InstallArgs;
+                }
+                else if (!string.IsNullOrEmpty(ip.QuietInstallArgs))
+                {
+                    argsPatt = ip.QuietInstallArgs;
+                }
+                else
+                {
+                    argsPatt = @"/i ""{0}"" /qn /norestart /l ""{1}""";
+                }
             }
 
             var args = string.Format(
@@ -744,14 +771,19 @@ namespace NvnBootstrapper
                         FileName = @"msiexec",
                         Arguments = args,
                         UseShellExecute = false,
-                        CreateNoWindow = true,
+                        CreateNoWindow = !showInstaller,
                     }
             };
 
             p.Start();
 
-            p.WaitForExit();
+            if (showInstaller)
+            {
+                Application.Exit();
+                return;
+            }
 
+            p.WaitForExit();
             ProcessExitCode(ip, p.ExitCode);
         }
 

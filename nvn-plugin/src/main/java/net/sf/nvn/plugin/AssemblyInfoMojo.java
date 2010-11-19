@@ -60,6 +60,14 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
         .compile("(?i)\\[assembly\\s*:\\s*Guid\\(\"(.*)\"\\)\\]");
 
     /**
+     * When this parameter is set to true the informational version will use the
+     * NVN version instead of the Maven version.
+     * 
+     * @parameter
+     */
+    boolean useNvnInformationalVersion;
+
+    /**
      * The value of the AssemblyTitle attribute.
      * 
      * @parameter default-value="${project.name}"
@@ -341,8 +349,17 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
             outAttr(out, "Guid", this.guid);
             outAttr(out, "AssemblyVersion", getNvnVersion().toString());
             outAttr(out, "AssemblyFileVersion", getNvnVersion().toString());
-            outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
-                .toStringWithPrefixAndSuffix());
+
+            if (this.useNvnInformationalVersion)
+            {
+                outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
+                    .toString());
+            }
+            else
+            {
+                outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
+                    .toStringWithPrefixAndSuffix());
+            }
 
             out.close();
 

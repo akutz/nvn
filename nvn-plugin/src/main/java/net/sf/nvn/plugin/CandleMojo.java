@@ -55,6 +55,14 @@ import org.codehaus.plexus.util.StringUtils;
 public class CandleMojo extends AbstractExeMojo
 {
     /**
+     * Settings this parameter to true causes a light pre-processor parameter of
+     * DEBUG to be included when the version ends with "-SNAPSHOT".
+     * 
+     * @parameter default-value="true"
+     */
+    boolean enableDebugSymbolForSnapshotBuilds;
+    
+    /**
      * The source files to process.
      * 
      * @parameter
@@ -342,7 +350,8 @@ public class CandleMojo extends AbstractExeMojo
             debug("WixObj File: " + this.outputFile);
         }
 
-        if (super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
+        if (this.enableDebugSymbolForSnapshotBuilds
+            && super.mavenProject.getVersion().endsWith("-SNAPSHOT"))
         {
             if (this.preProcessorParmaeters == null)
             {

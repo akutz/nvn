@@ -776,13 +776,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         return getNvnProp(NPK_VERSION);
     }
 
-    /**
-     * Publishes an artifact to TeamCity by emitting a TeamCity message with the
-     * relative path to the artifact.
-     * 
-     * @param file The absolute path to the artifact.
-     */
-    void publishTeamCityArtifact(File file)
+    void publishTeamCityArtifact(File file, String directoryOrArchive)
     {
         if (!this.enableTeamCityIntegration || !this.publishTeamCityArtifacts)
         {
@@ -797,6 +791,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         if (!file.exists())
         {
             debug("not publishing non-existent artifact to teacmcity: %s", file);
+            return;
         }
 
         File bd = null;
@@ -815,7 +810,21 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         }
 
         String relpath = PathUtils.toRelative(bd, file.toString());
-        info("##teamcity[publishArtifacts '%s => .']", relpath);
+        info(
+            "##teamcity[publishArtifacts '%s => %s']",
+            relpath,
+            directoryOrArchive);
+    }
+
+    /**
+     * Publishes an artifact to TeamCity by emitting a TeamCity message with the
+     * relative path to the artifact.
+     * 
+     * @param file The absolute path to the artifact.
+     */
+    void publishTeamCityArtifact(File file)
+    {
+        publishTeamCityArtifact(file, ".");
     }
 
     /**

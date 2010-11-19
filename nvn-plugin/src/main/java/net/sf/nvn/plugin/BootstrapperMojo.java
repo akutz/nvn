@@ -324,7 +324,7 @@ public class BootstrapperMojo extends AbstractExeMojo
         initFile("RegUtils.cs");
         initFile("RegValue.cs");
         initFile("RegKey.cs");
-        initFile("MsiNative.cs");
+        initFile("MsiUtil.cs");
         initFile("ProductRemover.cs");
         initFile("InstallCheck.cs");
         initFile("ExtensionAttribute.cs");
