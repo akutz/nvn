@@ -91,6 +91,21 @@ public class VersionTest
         Assert.assertTrue(v7.compareTo(v6) < 0);
         v6.setBuild(1);
         Assert.assertTrue(v7.compareTo(v6) == 0);
+        
+        v6.addMinor(2);
+        v6.addRevision(3);
+        Assert.assertEquals(v6.toString(), "4.2.1.3");
+        v6.addMinor(-1);
+        Assert.assertEquals(v6.toString(), "4.1.1.3");
+        v6.addMajor(-8);
+        Assert.assertEquals(v6.toString(), "0.1.1.3");
+        
+        v6.setMinor("003");
+        Assert.assertEquals(v6.toString(), "0.003.1.3");
+        v6.addMinor(10);
+        Assert.assertEquals(v6.toString(), "0.013.1.3");
+        v6.addMinor(1000);
+        Assert.assertEquals(v6.toString(), "0.1013.1.3");
     }
 
     private Version testParseVersion4(String toParse) throws Exception
