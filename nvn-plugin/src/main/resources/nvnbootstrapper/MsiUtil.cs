@@ -303,19 +303,56 @@ namespace NvnBootstrapper
                 return hresult;
             }
 
-            product.ProductCode = buffer.ToString();
+            try
+            {
+                product.ProductCode = buffer.ToString();
+            }
+            catch
+            {
+                product.ProductCode = null;
+            }
 
-            product.InstallDate =
-                DateTime.ParseExact(
-                    GetProperty(product, @"InstallDate"),
-                    @"yyyyMMdd",
-                    DateTimeFormatProvider);
+            try
+            {
+                product.InstallDate =
+                    DateTime.ParseExact(
+                        GetProperty(product, @"InstallDate"),
+                        @"yyyyMMdd",
+                        DateTimeFormatProvider);
+            }
+            catch 
+            {
+                product.InstallDate = DateTime.MinValue;
+            }
 
-            product.LocalPackage =
-                new FileInfo(GetProperty(product, @"LocalPackage"));
-            product.ProductName = GetProperty(product, @"InstalledProductName");
-            product.ProductVersion = GetProperty(product, @"VersionString");
-
+            try
+            {
+                product.LocalPackage =
+                    new FileInfo(GetProperty(product, @"LocalPackage"));
+            }
+            catch
+            {
+                product.LocalPackage = null;
+            }
+            
+            try
+            {
+                product.ProductName = GetProperty(product, @"InstalledProductName");
+            }
+            catch
+            {
+                product.ProductName = null;
+            }
+            
+            try
+            {
+                product.ProductVersion = GetProperty(product, @"VersionString");
+            }
+            catch
+            {
+                product.ProductVersion = null;
+            }
+            
             return ErrorSuccess;
         }
 
