@@ -193,7 +193,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
         {
             throw new IllegalArgumentException("Argument is not numeric");
         }
-        
+
         if (this.numberOfComponents < 1)
         {
             this.numberOfComponents = 1;
@@ -565,12 +565,12 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
     public String toStringWithPrefixAndSuffix(int components)
     {
         StringBuilder buff = new StringBuilder();
-        
+
         if (StringUtils.isNotEmpty(this.prefix))
         {
             buff.append(this.prefix);
         }
-        
+
         buff.append(this.major);
 
         if (components > 4)
@@ -600,7 +600,7 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
                 break;
             }
         }
-        
+
         if (StringUtils.isNotEmpty(this.suffix))
         {
             buff.append(this.suffix);
@@ -663,5 +663,78 @@ public class Version implements Serializable, Cloneable, Comparable<Version>
         }
 
         return result;
+    }
+
+    /**
+     * Adds a whole integer (positive or negative) to a version component.
+     * 
+     * @param toAdd The whole integer (positive or negative) to add.
+     * @param toAddTo The version component to add the integer to.
+     * @return A string representing the sum that contains at least the same
+     *         number of digits (padded at the left side) as the original
+     *         version component.
+     */
+    private static String add(final int toAdd, final String toAddTo)
+    {
+        int l = toAddTo.length();
+        int i = Integer.parseInt(toAddTo);
+        i += toAdd;
+
+        if (i < 0)
+        {
+            i = 0;
+        }
+
+        String f = String.format("%%0%sd", l);
+        String s = String.format(f, i);
+        return s;
+    }
+
+    /**
+     * Adds a whole (positive or negative) integer to the MAJOR component of the
+     * version. If the number to add is negative and results in a sum less than
+     * 0, the sum is set to 0.
+     * 
+     * @param toAdd A whole (positive or negative) integer.
+     */
+    public void addMajor(int toAdd)
+    {
+        this.major = add(toAdd, this.major);
+    }
+
+    /**
+     * Adds a whole (positive or negative) integer to the MINOR component of the
+     * version. If the number to add is negative and results in a sum less than
+     * 0, the sum is set to 0.
+     * 
+     * @param toAdd A whole (positive or negative) integer.
+     */
+    public void addMinor(int toAdd)
+    {
+        this.minor = add(toAdd, this.minor);
+    }
+
+    /**
+     * Adds a whole (positive or negative) integer to the BUILD component of the
+     * version. If the number to add is negative and results in a sum less than
+     * 0, the sum is set to 0.
+     * 
+     * @param toAdd A whole (positive or negative) integer.
+     */
+    public void addBuild(int toAdd)
+    {
+        this.build = add(toAdd, this.build);
+    }
+
+    /**
+     * Adds a whole (positive or negative) integer to the REVISION component of
+     * the version. If the number to add is negative and results in a sum less
+     * than 0, the sum is set to 0.
+     * 
+     * @param toAdd A whole (positive or negative) integer.
+     */
+    public void addRevision(int toAdd)
+    {
+        this.revision = add(toAdd, this.revision);
     }
 }
