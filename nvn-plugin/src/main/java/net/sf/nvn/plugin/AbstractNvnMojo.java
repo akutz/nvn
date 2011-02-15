@@ -777,6 +777,7 @@ public abstract class AbstractNvnMojo extends AbstractMojo
     }
 
     void publishTeamCityArtifact(File file, String directoryOrArchive)
+        throws MojoExecutionException
     {
         if (!this.enableTeamCityIntegration || !this.publishTeamCityArtifacts)
         {
@@ -795,18 +796,21 @@ public abstract class AbstractNvnMojo extends AbstractMojo
         }
 
         File bd = null;
-        MavenProject mp = this.mavenProject;
 
-        while (bd == null)
+        for (int x = 0; x < this.reactorProjects.size(); ++x)
         {
+            MavenProject mp = (MavenProject) this.reactorProjects.get(x);
             if (mp.isExecutionRoot())
             {
                 bd = mp.getBasedir();
+                break;
             }
-            else
-            {
-                mp = mp.getParent();
-            }
+        }
+
+        if (bd == null)
+        {
+            throw new MojoExecutionException(
+                "Error finding execution root while publishing artifacts.");
         }
 
         String relpath = PathUtils.toRelative(bd, file.toString());
@@ -821,8 +825,9 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * relative path to the artifact.
      * 
      * @param file The absolute path to the artifact.
+     * @throws MojoExecutionException When an error occurs.
      */
-    void publishTeamCityArtifact(File file)
+    void publishTeamCityArtifact(File file) throws MojoExecutionException
     {
         publishTeamCityArtifact(file, ".");
     }

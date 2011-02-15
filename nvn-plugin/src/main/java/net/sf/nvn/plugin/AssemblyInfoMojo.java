@@ -96,6 +96,27 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
     String assemblyDescription;
 
     /**
+     * The value of the AssemblyVersion attribute.
+     * 
+     * @parameter
+     */
+    String assemblyVersion;
+
+    /**
+     * The value of the AssemblyFileVersion attribute.
+     * 
+     * @parameter
+     */
+    String assemblyFileVersion;
+
+    /**
+     * The value of the AssemblyInformationalVersion attribute.
+     * 
+     * @parameter
+     */
+    String assemblyInformationalVersion;
+
+    /**
      * The location of the .NET AssemblyInfo file to output.
      * 
      * @parameter default-value="${basedir}/Properties/AssemblyInfo.cs"
@@ -347,18 +368,48 @@ public class AssemblyInfoMojo extends AbstractNvnMojo
             }
 
             outAttr(out, "Guid", this.guid);
-            outAttr(out, "AssemblyVersion", getNvnVersion().toString());
-            outAttr(out, "AssemblyFileVersion", getNvnVersion().toString());
 
-            if (this.useNvnInformationalVersion)
+            if (StringUtils.isEmpty(this.assemblyVersion))
             {
-                outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
-                    .toString());
+                outAttr(out, "AssemblyVersion", getNvnVersion().toString());
             }
             else
             {
-                outAttr(out, "AssemblyInformationalVersion", getNvnVersion()
-                    .toStringWithPrefixAndSuffix());
+                outAttr(out, "AssemblyVersion", this.assemblyVersion);
+            }
+
+            if (StringUtils.isEmpty(this.assemblyFileVersion))
+            {
+                outAttr(out, "AssemblyFileVersion", getNvnVersion().toString());
+            }
+            else
+            {
+                outAttr(out, "AssemblyFileVersion", this.assemblyFileVersion);
+            }
+
+            if (StringUtils.isEmpty(this.assemblyInformationalVersion))
+            {
+                if (this.useNvnInformationalVersion)
+                {
+                    outAttr(
+                        out,
+                        "AssemblyInformationalVersion",
+                        getNvnVersion().toString());
+                }
+                else
+                {
+                    outAttr(
+                        out,
+                        "AssemblyInformationalVersion",
+                        getNvnVersion().toStringWithPrefixAndSuffix());
+                }
+            }
+            else
+            {
+                outAttr(
+                    out,
+                    "AssemblyInformationalVersion",
+                    this.assemblyInformationalVersion);
             }
 
             out.close();

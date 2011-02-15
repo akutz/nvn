@@ -57,6 +57,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class BootstrapperMojo extends AbstractExeMojo
 {
     /**
+     * When this parameter is set to true the informational version will use the
+     * NVN version instead of the Maven version.
+     * 
+     * @parameter
+     */
+    boolean useNvnInformationalVersion;
+
+    /**
      * The bootstrapper's icon file.
      * 
      * @parameter
@@ -587,10 +595,21 @@ public class BootstrapperMojo extends AbstractExeMojo
             content.replaceAll("\\$\\{NvnVersion\\}", super
                 .getNvnVersion()
                 .toString());
-        content =
-            content.replaceAll("\\$\\{NvnVersionWithPrefixAndSuffix\\}", super
-                .getNvnVersion()
-                .toStringWithPrefixAndSuffix());
+
+        if (this.useNvnInformationalVersion)
+        {
+            content =
+                content.replaceAll(
+                    "\\$\\{NvnVersionWithPrefixAndSuffix\\}",
+                    super.getNvnVersion().toString());
+        }
+        else
+        {
+            content =
+                content.replaceAll(
+                    "\\$\\{NvnVersionWithPrefixAndSuffix\\}",
+                    super.getNvnVersion().toStringWithPrefixAndSuffix());
+        }
 
         File outFile = new File(this.tmpProjDir, "Properties\\AssemblyInfo.cs");
 
@@ -630,8 +649,7 @@ public class BootstrapperMojo extends AbstractExeMojo
                 e);
         }
 
-        content =
-            content.replaceAll("\\$\\{ProductName\\}", this.productName);
+        content = content.replaceAll("\\$\\{ProductName\\}", this.productName);
         content =
             content.replaceAll("\\$\\{EndPageUrlLink\\}", this.endPageUrlLink);
         content =

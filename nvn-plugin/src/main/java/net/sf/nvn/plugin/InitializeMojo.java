@@ -355,6 +355,7 @@ public class InitializeMojo extends AbstractNvnMojo
         try
         {
             nmd = NvnArtifactMetadata.instance(artBin, artName);
+            debug("created nvn artifact file: " + nmd.getFilename());
         }
         catch (IOException e)
         {

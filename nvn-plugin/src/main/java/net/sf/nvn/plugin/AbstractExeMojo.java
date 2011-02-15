@@ -108,6 +108,23 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * </ul>
      * 
      * <p>
+     * If the Visual Studio .NET 2010 is detected then the following variables
+     * are appended to the external process's environment automatically:
+     * </p>
+     * 
+     * <ul>
+     * <li><strong>DevEnvDir</strong>=%ProgramFiles%\Microsoft Visual Studio
+     * 10.0\Common7\IDE</li>
+     * <li><strong>Path</strong>=%ProgramFiles%\Microsoft Visual Studio
+     * 10.0\Common7\IDE;%ProgramFiles%\Microsoft Visual Studio
+     * 10.0\Common7\Tools;</li>
+     * <li><strong>VS100COMNTOOLS</strong>=%ProgramFiles%\Microsoft Visual
+     * Studio 10.0\Common7\Tools\</li>
+     * <li><strong>VSINSTALLDIR</strong>=%ProgramFiles%\Microsoft Visual Studio
+     * 10.0</li>
+     * </ul>
+     * 
+     * <p>
      * If the Visual Studio .NET 2008 is detected then the following variables
      * are appended to the external process's environment automatically:
      * </p>
@@ -125,6 +142,22 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * </ul>
      * 
      * <p>
+     * If the Windows SDK 7.1 is detected then the following variables are
+     * appended to the external process's environment automatically:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * <strong>FxTools</strong>=%SystemRoot%\Microsoft.NET\Framework\v4.0.30319
+     * ;%SystemRoot%\Microsoft.NET\Framework\v3.5;%
+     * SystemRoot%\Microsoft.NET\Framework\v2.0.50727</li>
+     * <li><strong>MSSdk</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.1</li>
+     * <li><strong>Path</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.1\Bin</li>
+     * <li><strong>SdkTools</strong>=%ProgramFiles%\Microsoft
+     * SDKs\Windows\v7.1\Bin</li>
+     * </ul>
+     * 
+     * <p>
      * If the Windows SDK 7.0A is detected then the following variables are
      * appended to the external process's environment automatically:
      * </p>
@@ -132,13 +165,29 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
      * <ul>
      * <li>
      * <strong>FxTools</strong>=%SystemRoot%\Microsoft.NET\Framework\v4.0.30319
-     * ;% SystemRoot%\Microsoft.NET\Framework\v3.5;%
+     * ;%SystemRoot%\Microsoft.NET\Framework\v3.5;%
      * SystemRoot%\Microsoft.NET\Framework\v2.0.50727</li>
      * <li><strong>MSSdk</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0A</li>
      * <li><strong>Path</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0A\Bin
      * </li>
      * <li><strong>SdkTools</strong>=%ProgramFiles%\Microsoft
      * SDKs\Windows\v7.0A\Bin</li>
+     * </ul>
+     * 
+     * <p>
+     * If the Windows SDK 7.0 is detected then the following variables are
+     * appended to the external process's environment automatically:
+     * </p>
+     * 
+     * <ul>
+     * <li>
+     * <strong>FxTools</strong>=%SystemRoot%\Microsoft.NET\Framework\v4.0.30319
+     * ;%SystemRoot%\Microsoft.NET\Framework\v3.5;%
+     * SystemRoot%\Microsoft.NET\Framework\v2.0.50727</li>
+     * <li><strong>MSSdk</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0</li>
+     * <li><strong>Path</strong>=%ProgramFiles%\Microsoft SDKs\Windows\v7.0\Bin</li>
+     * <li><strong>SdkTools</strong>=%ProgramFiles%\Microsoft
+     * SDKs\Windows\v7.0\Bin</li>
      * </ul>
      * 
      * <p>
@@ -238,7 +287,7 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             String.format("%s %s", getPath(getCommand(execution)), args);
         return cmd;
     }
-    
+
     protected boolean skipExec(int execution)
     {
         return false;
@@ -255,7 +304,7 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             {
                 continue;
             }
-            
+
             String cmd = buildCmdLineString(x);
             info("execution #%s: %s", x, cmd);
             exec(x, cmd);
@@ -413,7 +462,7 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
             String rootDir = installDir.replace("\\Common7\\IDE", "");
             String toolsDir = installDir.replace("\\IDE", "\\Tools");
             putEnvVar("DevEnvDir", installDir);
-            putEnvVar("VS90COMNTOOLS", toolsDir);
+            putEnvVar("VS100COMNTOOLS", toolsDir);
             putEnvVar("VSINSTALLDIR", rootDir);
             path = String.format("%s;%s;%s", installDir, toolsDir, path);
         }
@@ -467,6 +516,12 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                 String.format(
                     "%1$s\\Windows Installer XML v3.5\\bin",
                     System.getenv("ProgramFiles"));
+            path = String.format("%1$s;%2$s", installDir, path);
+        }
+
+        if (existsDotCover10())
+        {
+            String installDir = String.format("%s\\bin", getDotCover10Dir());
             path = String.format("%1$s;%2$s", installDir, path);
         }
 
@@ -537,6 +592,153 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                 System.getenv("SystemRoot"));
         File f = new File(path);
         return f.exists();
+    }
+
+    /**
+     * Gets a flag indicating whether or not dotCover 1.0 has been detected on
+     * this system.
+     * 
+     * @return A flag indicating whether or not dotCover 1.0 has been detected
+     *         on this system.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    boolean existsDotCover10() throws MojoExecutionException
+    {
+        try
+        {
+            boolean exists =
+                RegistryUtils
+                    .exists(
+                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\dotCover\\v1.0\\vs10.0",
+                        "InstallDir")
+                    || RegistryUtils
+                        .exists(
+                            "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\dotCover\\v1.0\\vs9.0",
+                            "InstallDir");
+
+            if (exists)
+            {
+                return true;
+            }
+
+            exists =
+                RegistryUtils.exists(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\TeamCity\\Agent",
+                    "InstallPath");
+
+            if (!exists)
+            {
+                return false;
+            }
+
+            return StringUtils.isNotEmpty(getTeamCityDotCoverDir());
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error checking for dotCover 1.0",
+                e);
+        }
+    }
+
+    /**
+     * Gets the dotCover 1.0 installation directory.
+     * 
+     * @return The dotCover 1.0 installation directory.
+     * @throws MojoExecutionException When an error occurs.
+     */
+    String getDotCover10Dir() throws MojoExecutionException
+    {
+        String installDir = null;
+
+        try
+        {
+            installDir =
+                RegistryUtils
+                    .read(
+                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\dotCover\\v1.0\\vs10.0",
+                        "InstallDir");
+        }
+        catch (Exception e)
+        {
+            // Do nothing
+        }
+
+        if (StringUtils.isEmpty(installDir))
+        {
+            try
+            {
+                installDir =
+                    RegistryUtils
+                        .read(
+                            "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\dotCover\\v1.0\\vs9.0",
+                            "InstallDir");
+
+            }
+            catch (Exception e)
+            {
+                // Do nothing
+            }
+        }
+
+        if (StringUtils.isEmpty(installDir))
+        {
+            installDir = getTeamCityDotCoverDir();
+        }
+
+        if (StringUtils.isEmpty(installDir))
+        {
+            throw new MojoExecutionException(
+                "Error getting dotCover 1.0 installation directory");
+        }
+
+        return installDir;
+    }
+
+    String getTeamCityDotCoverDir() throws MojoExecutionException
+    {
+        String path;
+
+        try
+        {
+            path =
+                RegistryUtils.read(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\TeamCity\\Agent",
+                    "InstallPath");
+        }
+        catch (Exception e)
+        {
+            throw new MojoExecutionException(
+                "Error reading TeamCity Agent registry key",
+                e);
+        }
+
+        path = String.format("%s\\plugins\\dotCover\\bin", path);
+
+        File installDir = new File(path);
+
+        if (installDir.exists())
+        {
+            return path;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    String getMSTestExePath() throws MojoExecutionException
+    {
+        if (existsVSNet2010())
+        {
+            return getVSNet2010Dir() + "\\mstest.exe";
+        }
+        else if (existsVSNet2008())
+        {
+            return getVSNet2008Dir() + "\\mstest.exe";
+        }
+
+        return null;
     }
 
     /**
