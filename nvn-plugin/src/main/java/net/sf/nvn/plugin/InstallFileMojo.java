@@ -307,25 +307,10 @@ public class InstallFileMojo extends AbstractMojo
                 packaging,
                 classifier);
         
-        NvnArtifactMetadata nmd;
-        
         if (StringUtils.isEmpty(this.assemblyName))
         {
             this.assemblyName = FilenameUtils.getBaseName(this.file.getName());
         }
-
-        try
-        {
-           nmd = NvnArtifactMetadata.instance(artifact, this.assemblyName);
-        }
-        catch (IOException e)
-        {
-            throw new MojoExecutionException(
-                "Error creating NvnArtifactMetadata",
-                e);
-        }
-
-        artifact.addMetadata(nmd);
 
         if (file.equals(getLocalRepoFile(artifact)))
         {
@@ -389,6 +374,38 @@ public class InstallFileMojo extends AbstractMojo
             if (generatedPomFile != null)
             {
                 generatedPomFile.delete();
+            }
+        }
+        
+        File nvnFile;
+
+        try
+        {
+            nvnFile = InitializeMojo.getNvnFile(artifact, this.assemblyName);
+        }
+        catch (IOException e)
+        {
+            throw new MojoExecutionException("Error creating nvn artifact", e);
+        }
+
+        if (nvnFile != null)
+        {
+            artifact =
+                artifactFactory.createArtifactWithClassifier(
+                    groupId,
+                    artifactId,
+                    version,
+                    "nvn",
+                    null);
+            try
+            {
+                installer.install(nvnFile, artifact, localRepository);
+                installChecksums(artifact);
+            }
+            catch (ArtifactInstallationException e)
+            {
+                throw new MojoExecutionException("Error installing nvn file "
+                    + nvnFile + ": " + e.getMessage(), e);
             }
         }
 

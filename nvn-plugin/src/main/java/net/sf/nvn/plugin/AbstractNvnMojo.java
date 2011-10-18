@@ -135,6 +135,11 @@ public abstract class AbstractNvnMojo extends AbstractMojo
      * The property key for the project's documentation artifact.
      */
     protected final static String NPK_ARTIFACT_DOC = "artifact.doc";
+    
+    /**
+     * The proeprty key for the project's nvn artifact.
+     */
+    protected final static String NPK_ARTIFACT_NVN = "artifact.nvn";
 
     /**
      * The property key for the project's import library artifact. This may be

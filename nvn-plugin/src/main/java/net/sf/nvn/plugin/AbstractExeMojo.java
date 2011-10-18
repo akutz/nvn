@@ -517,6 +517,13 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                     "%1$s\\Windows Installer XML v3.5\\bin",
                     System.getenv("ProgramFiles"));
             path = String.format("%1$s;%2$s", installDir, path);
+
+            installDir =
+                String.format(
+                    "%1$s\\Windows Installer XML v3.5\\bin",
+                    System.getenv("ProgramFiles(x86)"));
+            path = String.format("%1$s;%2$s", installDir, path);
+
         }
 
         if (existsDotCover10())
@@ -555,7 +562,21 @@ public abstract class AbstractExeMojo extends AbstractNvnMojo
                 "%s\\Windows Installer XML v3.5",
                 System.getenv("ProgramFiles"));
         File f = new File(path);
-        return f.exists();
+
+        if (f.exists())
+        {
+            return true;
+        }
+        else
+        {
+            path =
+                String.format(
+                    "%s\\Windows Installer XML v3.5",
+                    System.getenv("ProgramFiles(x86)"));
+            f = new File(path);
+
+            return f.exists();
+        }
     }
 
     /**

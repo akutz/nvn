@@ -68,7 +68,7 @@ public class MSBuildProject
     private static Pattern CONDITION_PATT =
         Pattern
             .compile("^\\s?'\\$\\(Configuration\\)\\|\\$\\(Platform\\)'\\s?==\\s?'(.*)\\|(.*)'\\s?$");
-    
+
     @Override
     public String toString()
     {
@@ -159,8 +159,20 @@ public class MSBuildProject
             for (JAXBElement<?> jel : pg.getProperty())
             {
                 String jelName = jel.getName().getLocalPart();
-                String jelValu =
-                    ((StringPropertyType) jel.getValue()).getValue();
+                String jelValu;
+
+                if (jel.getValue() instanceof StringPropertyType)
+                {
+                    jelValu = ((StringPropertyType) jel.getValue()).getValue();
+                }
+                else if (jel.getValue() instanceof String)
+                {
+                    jelValu = (String) jel.getValue();
+                }
+                else
+                {
+                    jelValu = "";
+                }
 
                 if (jelName.equals("OutputPath"))
                 {
@@ -442,12 +454,12 @@ public class MSBuildProject
     /**
      * The default build configuration name.
      */
-    private String defaultConfig;
+    //private String defaultConfig;
 
     /**
      * The default build platform type.
      */
-    private String defaultPlatform;
+    //private String defaultPlatform;
 
     /**
      * The project's project references.
@@ -567,10 +579,10 @@ public class MSBuildProject
      * @return The project's build directory for the default build configuration
      *         and platform type.
      */
-    public File getBuildDir()
+    /*public File getBuildDir()
     {
         return getBuildDir(this.defaultConfig, this.defaultPlatform);
-    }
+    }*/
 
     /**
      * Gets the project's build directory.

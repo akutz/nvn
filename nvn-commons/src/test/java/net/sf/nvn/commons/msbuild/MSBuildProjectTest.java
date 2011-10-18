@@ -176,4 +176,19 @@ public class MSBuildProjectTest
             "SpmClient",
             p.getProjectReferences().get("..\\SpmClient\\SpmClient.csproj"));
     }
+    
+    @Test
+    public void testInstance6() throws Exception
+    {
+        File f = new File("src/test/resources/XamlProject.csproj");
+
+        MSBuildProject p = MSBuildProject.instance(f);
+        Assert.assertEquals(f, p.getFile());
+        Assert.assertEquals(ProjectLanguageType.CSharp, p.getProjectLanguage());
+        Assert.assertEquals("v3.5", p.getTargetFrameworkVersion());
+        Assert.assertEquals("StoragePerfCharts", p.getArtifactName("Debug", "AnyCPU"));
+
+        Assert.assertEquals(0, p.getProjectReferences().size());
+        System.out.println(p.getBuildDir("Release", "AnyCPU").toString());
+    }
 }

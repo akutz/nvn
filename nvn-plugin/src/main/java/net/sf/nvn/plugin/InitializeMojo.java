@@ -350,21 +350,27 @@ public class InitializeMojo extends AbstractNvnMojo
                 this.mavenProject.getVersion(),
                 this.mavenProject.getPackaging());
 
-        NvnArtifactMetadata nmd;
-
+        // Initialize the nvn artifact file.
         try
         {
-            nmd = NvnArtifactMetadata.instance(artBin, artName);
-            debug("created nvn artifact file: " + nmd.getFilename());
+            File artNvnFile = getNvnFile(artBin, artName);
+
+            if (artNvnFile != null)
+            {
+                initNvnProp(NPK_ARTIFACT_NVN, artNvnFile);
+                this.projectHelper.attachArtifact(
+                    this.mavenProject,
+                    "nvn",
+                    artNvnFile);
+                info("initialized nvn artifact: %s", artNvnFile);
+            }
         }
         catch (IOException e)
         {
             throw new MojoExecutionException(
-                "Error creating NvnArtifactMetadata",
+                "Error creating NvnNvnArtifact",
                 e);
         }
-
-        artBin.addMetadata(nmd);
 
         // Get the binary artifact's file.
         File artBinFile =
@@ -390,6 +396,15 @@ public class InitializeMojo extends AbstractNvnMojo
             initNvnProp(NPK_ARTIFACT_DOC, artDocFile);
             info("initialized doc artifact: %s", artDocFile);
         }
+    }
+    
+    static File getNvnFile(Artifact artBin, String assemblyName) throws IOException
+    {
+        File tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        String fileName = artBin.getArtifactId() + "-" + artBin.getVersion() + ".nvn";
+        File file = new File(tmpdir, fileName);
+        FileUtils.writeStringToFile(file, assemblyName);
+        return file;
     }
 
     /**

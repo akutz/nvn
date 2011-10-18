@@ -115,28 +115,30 @@ public class InstallPackage implements Serializable
 
         if (StringUtils.isNotEmpty(installArgs))
         {
-            buff.append(String.format("InstallArgs=@\"%s\",\r\n", installArgs));
+            buff.append(String.format(
+                "InstallArgs=@\"%s\",\r\n",
+                installArgs.replaceAll("\"", "\"\"")));
         }
 
         if (StringUtils.isNotEmpty(uninstallArgs))
         {
             buff.append(String.format(
                 "UninstallArgs=@\"%s\",\r\n",
-                uninstallArgs));
+                uninstallArgs.replaceAll("\"", "\"\"")));
         }
 
         if (StringUtils.isNotEmpty(quietInstallArgs))
         {
             buff.append(String.format(
                 "QuietInstallArgs=@\"%s\",\r\n",
-                quietInstallArgs));
+                quietInstallArgs.replaceAll("\"", "\"\"")));
         }
 
         if (StringUtils.isNotEmpty(quietUninstallArgs))
         {
             buff.append(String.format(
                 "QuietUninstallArgs=@\"%s\",\r\n",
-                quietUninstallArgs));
+                quietUninstallArgs.replaceAll("\"", "\"\"")));
         }
 
         if (StringUtils.isNotEmpty(prompt))

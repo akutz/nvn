@@ -741,7 +741,7 @@ namespace NvnBootstrapper
             {
                 argsPatt = !string.IsNullOrEmpty(ip.InstallArgs)
                     ? ip.InstallArgs
-                    : @"/i ""{0}"" /norestart /l ""{1}""";
+                    : @"/i ""{0}"" /norestart /lv ""{1}""";
             }
             else
             {
@@ -755,7 +755,7 @@ namespace NvnBootstrapper
                 }
                 else
                 {
-                    argsPatt = @"/i ""{0}"" /qn /norestart /l ""{1}""";
+                    argsPatt = @"/i ""{0}"" /qn /norestart /lv ""{1}""";
                 }
             }
 
@@ -793,7 +793,9 @@ namespace NvnBootstrapper
                 ? ip.InstallArgs
                 : ip.QuietInstallArgs;
 
-            var args = string.Format(argsPatt, ip.FilePath + ".install.log");
+            var logPath = string.Format(@"\""{0}.install.log\""", ip.FilePath);
+            
+            var args = string.Format(argsPatt, logPath);
 
             // Launch the target installer.
             var p = new Process
@@ -852,7 +854,7 @@ namespace NvnBootstrapper
             }
             else
             {
-                argsPatt = @"/uninstall ""{0}"" /qn /norestart /l ""{1}""";
+                argsPatt = @"/uninstall ""{0}"" /qn /norestart /lv ""{1}""";
             }
 
             var args = string.Format(
@@ -881,7 +883,9 @@ namespace NvnBootstrapper
                 ? ip.UninstallArgs
                 : ip.QuietUninstallArgs;
 
-            var args = string.Format(argsPatt, ip.FilePath + ".uninstall.log");
+            var logPath = string.Format(@"\""{0}.uninstall.log\""", ip.FilePath);
+            
+            var args = string.Format(argsPatt, logPath);
 
             var p = new Process
             {
