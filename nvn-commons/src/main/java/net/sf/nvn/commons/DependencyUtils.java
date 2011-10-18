@@ -166,7 +166,7 @@ public class DependencyUtils
 
         return f;
     }
-
+    
     /**
      * Gets the AssemblyName from the dependency. This method should only be
      * called for dependencies of type "dll" or "exe".

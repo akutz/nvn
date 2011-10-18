@@ -7,9 +7,7 @@
         <version>0.0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-plugin</artifactId>
-    <version>0.0.8-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>nvn-plugin</name>
     <description>A Maven plug-in for managing .NET projects.</description>

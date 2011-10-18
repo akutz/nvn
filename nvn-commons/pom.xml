@@ -8,9 +8,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>net.sf.nvn</groupId>
     <artifactId>nvn-commons</artifactId>
-    <version>0.0.8-SNAPSHOT</version>
     <name>nvn-commons</name>
     <description>A commons library for nvn.</description>
     <build>

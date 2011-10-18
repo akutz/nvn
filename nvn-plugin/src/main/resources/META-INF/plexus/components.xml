@@ -36,7 +36,8 @@
                                 net.sf.nvn:nvn-plugin:msbuild
                             </compile>
                             <install>
-                                org.apache.maven.plugins:maven-install-plugin:install
+                                org.apache.maven.plugins:maven-install-plugin:install,
+                                net.sf.nvn:nvn-plugin:install-assembly-file
                             </install>
                             <package>
                                 net.sf.nvn:nvn-plugin:candle,
@@ -86,7 +87,8 @@
                                 net.sf.nvn:nvn-plugin:msbuild
                             </compile>
                             <install>
-                                org.apache.maven.plugins:maven-install-plugin:install
+                                org.apache.maven.plugins:maven-install-plugin:install,
+                                net.sf.nvn:nvn-plugin:install-assembly-file
                             </install>
                             <package>
                                 net.sf.nvn:nvn-plugin:candle,
@@ -178,7 +180,8 @@
                                 net.sf.nvn:nvn-plugin:msbuild
                             </compile>
                             <install>
-                                org.apache.maven.plugins:maven-install-plugin:install
+                                org.apache.maven.plugins:maven-install-plugin:install,
+                                net.sf.nvn:nvn-plugin:install-assembly-file
                             </install>
                             <package>
                                 net.sf.nvn:nvn-plugin:candle,
