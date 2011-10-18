@@ -92,7 +92,7 @@ public class InstallAssemblyFileMojo extends AbstractNvnMojo
     @Override
     String getMojoName()
     {
-        return "install";
+        return "install-assembly-file";
     }
 
     @Override
