@@ -191,4 +191,18 @@ public class MSBuildProjectTest
         Assert.assertEquals(0, p.getProjectReferences().size());
         System.out.println(p.getBuildDir("Release", "AnyCPU").toString());*/
     }
+    
+    @Test
+    public void testInstance7() throws Exception
+    {
+        File f = new File("src/test/resources/MyProject3.csproj");
+
+        MSBuildProject p = MSBuildProject.instance(f);
+        Assert.assertEquals(f, p.getFile());
+        Assert.assertEquals(ProjectLanguageType.CSharp, p.getProjectLanguage());
+        Assert.assertEquals("v3.5", p.getTargetFrameworkVersion());
+        
+        Assert.assertEquals(1, p.getProjectReferences().size());
+        System.out.println(p.getBuildDir("Release", "AnyCPU").toString());
+    }
 }

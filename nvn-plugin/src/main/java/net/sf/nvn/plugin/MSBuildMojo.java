@@ -322,6 +322,20 @@ public class MSBuildMojo extends AbstractExeMojo
      */
     boolean nodeReuse;
 
+    /**
+     * Suppresses pre-build events.
+     * 
+     * @parameter default-value="${env.NVN_SUPPRESS_PRE_BUILD_EVENTS}"
+     */
+    boolean suppressPreBuildEvents;
+
+    /**
+     * Suppresses post-build events.
+     * 
+     * @parameter default-value="${env.NVN_SUPPRESS_POST_BUILD_EVENTS}"
+     */
+    boolean suppressPostBuildEvents;
+
     @Override
     boolean shouldExecute()
     {
@@ -543,6 +557,16 @@ public class MSBuildMojo extends AbstractExeMojo
             this.properties = new Properties();
         }
 
+        if (this.suppressPreBuildEvents)
+        {
+            this.properties.setProperty("PreBuildEvent", "");
+        }
+
+        if (this.suppressPostBuildEvents)
+        {
+            this.properties.setProperty("PostBuildEvent", "");
+        }
+
         if (!this.properties.containsKey("Configuration"))
         {
             this.properties.put("Configuration", getBuildConfig());
@@ -720,25 +744,46 @@ public class MSBuildMojo extends AbstractExeMojo
      */
     void loadBuildFile() throws MojoExecutionException
     {
-        boolean processProjectReferences = false;
+        // If this value is true then at least one project reference
+        // has been found in the project file that is not available on
+        // the file system.
+        boolean unavailableProjectReferenceFound = false;
 
         if (getMSBuildProject().getProjectReferences().size() > 0)
         {
-            // If any of the project references are not available then we need
-            // to process them.
+            info("project file contains project references");
+
             for (String k : getMSBuildProject().getProjectReferences().keySet())
             {
                 File f = new File(super.mavenProject.getBasedir(), k);
 
                 if (!f.exists())
                 {
-                    processProjectReferences = true;
+                    unavailableProjectReferenceFound = true;
+                    info("project reference not found: %s", k);
+                    break;
+                }
+                else if (f.getPath().endsWith("vcxproj"))
+                {
+                    unavailableProjectReferenceFound = true;
+                    info("c++ project reference found: %s", k);
                     break;
                 }
             }
 
-            if (!this.projectReferencesEnabled || processProjectReferences)
+            if (this.projectReferencesEnabled
+                && !unavailableProjectReferenceFound)
             {
+                info("using project references");
+            }
+
+            // If the projectReferencesEnabled flag is set to false or there are
+            // unavailable project references in the project file then
+            else if (!this.projectReferencesEnabled
+                || unavailableProjectReferenceFound)
+            {
+                info("refactoring project references");
+
                 StringBuilder buff = new StringBuilder();
                 buff.append("    <ItemGroup>\r\n");
 
@@ -748,10 +793,23 @@ public class MSBuildMojo extends AbstractExeMojo
                 {
                     File f = new File(super.mavenProject.getBasedir(), k);
 
-                    if (!this.projectReferencesEnabled || !f.exists())
+                    // Refactor the project reference if project references are disabled,
+                    // or if the project reference does not exist on the file system,
+                    // or if it is a C++ project.
+                    boolean doRefactor =
+                        !this.projectReferencesEnabled || !f.exists()
+                            || f.getPath().endsWith("vcxproj");
+
+                    // If the reference does not exist or if it is a C++ project
+                    // then refactor it into an explicit reference
+                    // instead of a project reference.
+                    if (doRefactor)
                     {
                         String name =
                             getMSBuildProject().getProjectReferences().get(k);
+
+                        info("project reference refactored: %s", k, name);
+
                         buff.append(String.format(
                             "        <Reference Include=\"%s\" />\r\n",
                             name));
@@ -760,8 +818,8 @@ public class MSBuildMojo extends AbstractExeMojo
 
                 buff.append("    </ItemGroup>");
 
-                String buffStr = buff.toString();
-                debug("Adding reference content: " + buffStr);
+                String explicitReferencesString = buff.toString();
+                debug("Adding reference content: " + explicitReferencesString);
 
                 @SuppressWarnings("rawtypes")
                 List buildFileLines;
@@ -780,16 +838,18 @@ public class MSBuildMojo extends AbstractExeMojo
 
                 List<String> tmpBuildFileLines = new ArrayList<String>();
 
-                int x = 0;
                 boolean foundProjRef = false;
 
                 for (Object o : buildFileLines)
                 {
                     String l = (String) o;
 
+                    // If this is the last line of the project file then before
+                    // we append it go ahead and append the explicit references
+                    // section.
                     if (l.matches("(?i)^\\s*\\</Project\\>\\s*$"))
                     {
-                        tmpBuildFileLines.add(buffStr);
+                        tmpBuildFileLines.add(explicitReferencesString);
                     }
 
                     if (!projectReferencesEnabled
@@ -798,19 +858,22 @@ public class MSBuildMojo extends AbstractExeMojo
                         foundProjRef = true;
                     }
 
-                    if (foundProjRef)
-                    {
-                        ++x;
-
-                        if (x == 4)
-                        {
-                            foundProjRef = false;
-                            x = 0;
-                        }
-                    }
-                    else
+                    if (!foundProjRef)
                     {
                         tmpBuildFileLines.add(l);
+                    }
+
+                    boolean closedProjRef = false;
+
+                    if (!projectReferencesEnabled && foundProjRef)
+                    {
+                        closedProjRef =
+                            l.matches("(?i)^\\s*\\</ProjectReference\\>.*?$");
+                    }
+
+                    if (closedProjRef)
+                    {
+                        foundProjRef = false;
                     }
                 }
 
@@ -862,7 +925,7 @@ public class MSBuildMojo extends AbstractExeMojo
         }
 
         initPdbAndDocArtifacts();
-        
+
         publishTeamCityArtifact(getBinArtifact());
         publishTeamCityArtifact(getPdbArtifact());
         publishTeamCityArtifact(getDocArtifact());
