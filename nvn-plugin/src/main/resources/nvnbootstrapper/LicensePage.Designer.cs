@@ -89,7 +89,7 @@ namespace NvnBootstrapper
             this.chkBoxAccept.Padding = new System.Windows.Forms.Padding(4);
             this.chkBoxAccept.Size = new System.Drawing.Size(298, 25);
             this.chkBoxAccept.TabIndex = 0;
-            this.chkBoxAccept.Text = "I accept the terms in the License Aggreement";
+            this.chkBoxAccept.Text = "I accept the terms in the License Agreement";
             this.chkBoxAccept.UseVisualStyleBackColor = false;
             // 
             // btnInstall
